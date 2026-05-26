@@ -1,4 +1,4 @@
-const CACHE_NAME = 'aurx-ai-v1';
+const CACHE_NAME = 'aurx-ai-v8';
 const URLS_TO_CACHE = [
   '/',
   '/index.html',
