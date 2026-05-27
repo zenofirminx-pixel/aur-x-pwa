@@ -1,9 +1,11 @@
-const API_BASE = "https://aurx-security.vercel.app/api";
-
-const API = {
-  gateway: `${API_BASE}/gateway`,
-  ai: `${API_BASE}/ai`,
-  health: `${API_BASE}/health`
+const CONFIG = {
+  ACTIVE_API: 'openai',
+  ENDPOINTS: {
+    openai: 'https://aur-x-backend.vercel.app/api/chat'
+  },
+  MODELS: {
+    openai: 'gpt-4o-mini'
+  }
 };
 
 function linkify(text) {
