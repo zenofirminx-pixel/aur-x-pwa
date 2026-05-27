@@ -1,4 +1,4 @@
-const API_BASE = "https://aurx-security.vercel.app/api/gateway";
+const API_BASE = "https://aurx-security.vercel.app/api";
 
 const API = {
   gateway: `${API_BASE}/gateway`,
