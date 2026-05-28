@@ -259,11 +259,8 @@ function initApp() {
     function formatMessage(text) {
   if (!text) return "";
 
-  // Liens cliquables
-  text = linkify(text);
-
-  // TITRES # style GPT
-  text = text.replace(/^# (.*$)/gim, `
+  // 1. TITRES (#)
+  text = text.replace(/^# (.*)$/gim, `
     <div class="aurx-title">
       <div class="line"></div>
       <div class="title-text">$1</div>
@@ -271,29 +268,32 @@ function initApp() {
     </div>
   `);
 
-  // TITRES style AurX ━━━━━━━━━
+  // 2. TITRES STYLE BLOC
   text = text.replace(
-    /━━━━━━━━━━━━━━━━━━\n(.*?)\n━━━━━━━━━━━━━━━━━━/g,
-    `<div class="aurx-title">
+    /━━━━━━━━━━━━━━━━━━\n(.*?)\n━━━━━━━━━━━━━━━━━━/gs,
+    `
+    <div class="aurx-title">
       <div class="line"></div>
       <div class="title-text">$1</div>
       <div class="line"></div>
-    </div>`
+    </div>
+  `
   );
 
-  // GRAS Markdown
+  // 3. GRAS
   text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
-  // ITALIQUE Markdown
+  // 4. ITALIQUE
   text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
 
-  // LISTES numérotées
+  // 5. LISTES
   text = text.replace(/^\d+\.\s+(.*)$/gm, "• $1");
-
-  // LISTES avec tirets
   text = text.replace(/^\-\s+(.*)$/gm, "• $1");
 
-  // RETOURS LIGNE
+  // 6. LIENS (TOUJOURS EN DERNIER)
+  text = linkify(text);
+
+  // 7. RETOURS LIGNE (TOUJOURS EN DERNIER)
   text = text.replace(/\n/g, "<br>");
 
   return text;
