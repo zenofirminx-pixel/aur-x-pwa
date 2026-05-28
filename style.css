@@ -666,3 +666,21 @@ line-height: 2;
 .msg code { background: #2a2a2a; padding: 0.2em 0.4em; border-radius: 4px; font-family: monospace; }
 .msg a { color: #0A84FF; text-decoration: none; }
 .msg a:hover { text-decoration: underline; }
+.msg p {
+  margin: 0 0 12px 0;
+  line-height: 1.6;
+}
+
+/* NUMÉROTATION PROPRE */
+.num-item {
+  display: flex;
+  gap: 10px;
+  margin: 6px 0;
+  line-height: 1.5;
+}
+
+.num {
+  color: #0A84FF;
+  font-weight: 700;
+  min-width: 22px;
+}
