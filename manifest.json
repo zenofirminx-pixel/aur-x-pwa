@@ -3,10 +3,10 @@
   "short_name": "ChatAurX",
   "start_url": "/",
   "scope": "/",
-  "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#0A84FF",
-  "orientation": "portrait",
+  "display": "standalone", 
+  "background_color": "#000", 
+  "theme_color": "#000", 
+  "orientation": "portrait", 
   "icons": [
     {
       "src": "/icon-192.png",
