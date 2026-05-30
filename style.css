@@ -380,3 +380,9 @@ header .btn:hover {
     backdrop-filter: blur(12px);
   }
 }
+/* HEADER NOIR PUR - PAS DE BLEU */
+header {
+  background: #000 !important;
+  border-bottom: none !important;
+  color: #fff !important;
+}
