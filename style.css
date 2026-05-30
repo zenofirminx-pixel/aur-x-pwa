@@ -386,3 +386,10 @@ header {
   border-bottom: none !important;
   color: #fff !important;
 }
+html {
+  background: #000 !important;
+}
+body {
+  background: #000 !important;
+  padding-top: env(safe-area-inset-top, 0) !important;
+}
