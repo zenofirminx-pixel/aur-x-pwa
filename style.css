@@ -240,3 +240,24 @@ textarea { flex: 1; background: transparent; border: none; outline: none; color:
     font-size: 12px;
   }
 }
+/* MOTS DE CODE - CADRE GRIS VISIBLE */
+.inline-code, .code-keyword {
+  background: #2a2a2a; /* gris opaque, plus visible */
+  border: 1px solid #444;
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 0.93em;
+  font-weight: 600;
+  white-space: nowrap;
+  letter-spacing: 0.3px;
+}
+
+/* Hover futuriste */
+.inline-code:hover, .code-keyword:hover {
+  background: #333;
+  border-color: #555;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
+  transition: all 0.15s ease;
+}
