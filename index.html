@@ -1,0 +1,304 @@
+<!DOCTYPE html>  <html lang="fr">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">  
+<title>AurX AI</title>  
+<link rel="manifest" href="manifest.json">  
+<link rel="stylesheet" href="style.css">  
+<meta name="theme-color" content="#000">  
+<meta name="apple-mobile-web-app-status-bar-style" content="black">  
+<meta name="msapplication-navbutton-color" content="#000">  
+<link rel="apple-touch-icon" href="icon-192.png">  <!-- KATEX CSS -->  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">  <style>  
+/* Ton CSS existant */  
+header .btn {  
+  position: absolute;  
+  top: 50%;  
+  transform: translateY(-50%);  
+  background: transparent;  
+  border: 1px solid #444;  
+  color: #fff;  
+  padding: 6px 10px;  
+  border-radius: 12px;  
+  z-index: 1001;  
+  cursor: pointer;  
+}  
+header .btn:active { opacity: 0.7; }  
+#historyBtn { left: 16px; }  
+#settingsBtn { right: 16px; }  
+.settings-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }  
+.settings-section h3 { margin: 0 0 12px 0; font-size: 16px; color: #fff; }  
+.setting-item { margin-bottom: 14px; list-style: none; }  
+.setting-item label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }  
+.info-text { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px; color: #fff; font-size: 14px; line-height: 1.5; }  
+.info-text a { color: #0A84FF; text-decoration: none; }  
+.info-text a:hover { text-decoration: underline; }  
+#continueBtn {  
+  position: relative;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  width: 100%;  
+  padding: 14px;  
+  background: #444;  
+  color: #888;  
+  border: none;  
+  border-radius: 12px;  
+  font-size: 16px;  
+  font-weight: 600;  
+  cursor: not-allowed;  
+}  
+#continueBtn.active { background: #0A84FF; color: #fff; cursor: pointer; }  
+#continueBtn.loading .btn-text { opacity: 0; position: absolute; }  
+#continueBtn .loader {  
+  display: none;  
+  width: 18px;  
+  height: 18px;  
+  border: 2px solid #fff;  
+  border-top: 2px solid transparent;  
+  border-radius: 50%;  
+  animation: spin 0.8s linear infinite;  
+}  
+#continueBtn.loading .loader { display: block; }  
+@keyframes spin { to { transform: rotate(360deg); } }  
+.send-btn {  
+  width: 40px;  
+  height: 40px;  
+  background: #0A84FF;  
+  border: none;  
+  border-radius: 50%;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  color: white;  
+  cursor: pointer;  
+  transition: transform 0.1s, opacity 0.2s;  
+  flex-shrink: 0;  
+}  
+.send-btn:active { transform: scale(0.92); }  
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }  
+.send-btn .loader {  
+  display: none;  
+  width: 18px;  
+  height: 18px;  
+  border: 2px solid #fff;  
+  border-top: 2px solid transparent;  
+  border-radius: 50%;  
+  animation: spin 0.8s linear infinite;  
+}  
+.send-btn.loading .loader { display: block; }  
+.send-btn.loading svg { display: none; }  
+.circle-progress { position: relative; width: 32px; height: 32px; flex-shrink: 0; margin-left: 8px; list-style: none; }  
+.circle-progress svg { transform: rotate(-90deg); }  
+.circle-bg { fill: none; stroke: #333; stroke-width: 2; }  
+.circle-fg { fill: none; stroke: #0A84FF; stroke-width: 2; stroke-linecap: round; transition: stroke-dashoffset 0.2s, stroke 0.2s; }  
+.circle-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; font-weight: 600; color: #fff; }  
+.input-box { align-items: center; }  
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; pointer-events: none; }  
+.modal.open { display: flex; pointer-events: auto; }  
+.modal > div { background: #111; width: 90%; max-width: 420px; max-height: 85vh; border-radius: 16px; border: 1px solid #333; overflow: hidden; display: flex; flex-direction: column; }  
+.settings-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #2a2a2a; background: #111; }  
+.settings-header h3 { color: #0A84FF; margin: 0; }  
+.close-btn { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 8px; }  
+.settings-body { overflow-y: auto; padding: 16px; background: #111; color: #fff; }  
+.danger-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }  
+.danger-btn:active { background: #ff3b30; color: #fff; }  
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1999; pointer-events: auto; }  
+.overlay.open { display: block; }  
+.sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #111; border-right: 1px solid #2a2a2a; transition: left 0.3s ease; z-index: 1500; display: flex; flex-direction: column; }  
+.sidebar.open { left: 0; }  
+.sidebar header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #2a2a2a; font-weight: 600; flex-shrink: 0; }  
+.sidebar-header-left { display: flex; align-items: center; gap: 10px; }  
+.new-chat-btn { position: static !important; transform: padding: 4px 8px; font-size: 13px; border-radius: 8px; }  
+.list { padding: 8px; overflow-y: auto; flex: 1; }  
+.sidebar-footer { padding: 12px; border-top: 1px solid #2a2a2a; flex-shrink: 0; }  
+.danger-btn-small { width: 100%; padding: 10px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }  
+.danger-btn-small:active { background: #ff3b30; color: #fff; }  
+.conv-item { padding: 12px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; color: #ccc; font-size: 14px; }  
+.conv-item:hover { background: #1a1a1a; color: #fff; }  
+.empty { padding: 20px; text-align: center; color: #666; font-size: 14px; }  
+  
+/* TYPING INDICATOR ANIMÉ */  
+.typing-wrapper { display: flex; align-items: flex-end; gap: 8px; padding: 4px 16px; }  
+.typing-bubble { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 18px; border-bottom-left-radius: 4px; padding: 12px 16px; display: inline-flex; align-items: center; gap: 5px; }  
+.typing-dot { width: 7px; height: 7px; background: #666; border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out; }  
+.typing-dot:nth-child(1) { animation-delay: 0s; }  
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }  
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }  
+@keyframes typingBounce {  
+ 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }  
+ 30% { transform: translateY(-6px); opacity: 1; }  
+}  
+.typing-text { font-size: 13px; color: #888; opacity: 0; transition: opacity 0.3s; }  
+.typing-text.show { opacity: 1; }  
+  
+/* KATEX THEME SOMBRE + LISIBILITÉ */  
+.katex { color: #fff; font-size: 1.1em; }  
+.katex-display { margin: 1.2em 0; overflow-x: auto; }  
+.katex-display > .katex { display: block; text-align: center; }  
+</style>  </head>  
+<body>  
+<button id="installBtn">Installer l'app</button>  <div id="termsScreen">  
+<h2>Conditions d'utilisation AurX AI</h2>  
+<div id="termsContent">  
+<h3>1. Acceptation</h3><p>En utilisant AurX AI, vous acceptez toutes les conditions.</p>  
+<h3>2. Service IA</h3><p>Assistant IA pouvant générer des réponses imparfaites.</p>  
+<h3>3. Âge minimum</h3><p>13 ans minimum requis.</p>  
+<h3>4. Usage légal</h3><p>Utilisation uniquement légale autorisée.</p>  
+<h3>5. Contenus interdits</h3><p>Spam, fraude, violence interdits.</p>  
+<h3>6. Responsabilité</h3><p>L'utilisateur est responsable de l’usage.</p>  
+<h3>7. Données</h3><p>Données stockées localement uniquement.</p>  
+<h3>8. Sécurité</h3><p>Ne partagez pas d'informations sensibles.</p>  
+<h3>9. Disponibilité</h3><p>Service non garanti 100% uptime.</p>  
+<h3>10. Modifications</h3><p>Conditions modifiables à tout moment.</p>  
+<h3>11. API externe</h3><p>Utilisation d’API tierces possible.</p>  
+<h3>12. Limitation</h3><p>Service fourni "tel quel".</p>  
+<h3>13. Confidentialité</h3><p>Aucune vente de données.</p>  
+<h3>14. Performance</h3><p>Dépend du réseau utilisateur.</p>  
+<h3>15. Connexion</h3><p>Internet requis pour fonctionner.</p>  
+<h3>16. Interdiction copie</h3><p>Reverse engineering interdit.</p>  
+<h3>17. Mise à jour</h3><p>App évolutive en continu.</p>  
+<h3>18. Support</h3><p>Support limité.</p>  
+<h3>19. Mobile</h3><p>Optimisé Android PWA.</p>  
+<h3>20. Accord final</h3><p>Vous acceptez toutes les règles.</p>  
+<div class="terms-check">  
+<input type="checkbox" id="acceptTerms">  
+<label for="acceptTerms">J'accepte les 20 conditions</label>  
+</div>  
+</div>  
+<button id="continueBtn" disabled>  
+<span class="loader"></span>  
+<span class="btn-text">Continuer</span>  
+</button>  
+</div>  <header>  
+<button class="btn" id="historyBtn">☰</button>  
+AurX AI  
+<button class="btn" id="settingsBtn">⚙</button>  
+</header>  <div id="chat">  
+<div id="welcome">AurX AI<span>Pose-moi une question</span></div>  
+</div>  <div class="input-area">  
+<div class="input-wrap">  
+<div class="input-box">  
+<textarea id="input" rows="1" placeholder="Message..."></textarea>  
+<div class="circle-progress">  
+<svg width="32" height="32">  
+<circle class="circle-bg" cx="16" cy="16" r="13"/>  
+<circle class="circle-fg" cx="16" cy="16" r="13" stroke-dasharray="81.68" stroke-dashoffset="81.68"/>  
+</svg>  
+<div class="circle-text">0</div>  
+</div>  
+</div>  
+<button class="send-btn" id="sendBtn">  
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none">  
+<path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>  
+<path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>  
+</svg>  
+<span class="loader"></span>  
+</button>  
+</div>  
+</div>  <div class="sidebar" id="sidebar">  
+<header>  
+<div class="sidebar-header-left">  
+<span>Historique</span>  
+<button class="btn new-chat-btn" id="newChatBtn">+ Nouveau</button>  
+</div>  
+<button class="close-btn" id="closeSidebar">×</button>  
+</header>  
+<div class="list" id="convList"></div>  
+<div class="sidebar-footer">  
+<button class="danger-btn-small" id="deleteAllBtn">WIPE CONVS</button>  
+</div>  
+</div>  <div class="modal" id="settingsModal">  
+<div>  
+<div class="settings-header">  
+<h3>Paramètres</h3>  
+<button class="close-btn" id="closeSettings">×</button>  
+</div>  
+<div class="settings-body">  
+<div class="settings-section">  
+<h3>👑 Créateur FIRMINX</h3>  
+<div class="setting-item">  
+<label>Nom complet</label>  
+<div class="info-text">Firmin - FIRMINX Founder</div>  
+</div>  
+<div class="setting-item">  
+<label>Pays</label>  
+<div class="info-text">RDC 🇨🇩</div>  
+</div>  
+<div class="setting-item">  
+<label>Rôle</label>  
+<div class="info-text">Lead Developer & AI Architect</div>  
+</div>  
+<div class="setting-item">  
+<label>Bio</label>  
+<div class="info-text">Créateur d'AurX AI. Passionné par l'IA et le développement mobile. Construit des outils qui rendent l'IA accessible à tous, notre but à atteindre est de faire de la RDC un pays avancé en tech moderne.</div>  
+</div>  
+<div class="setting-item">  
+<label>Contact</label>  
+<div class="info-text"><a href="mailto:firminphinees@gmail.com">firminphinees@gmail.com</a></div>  
+</div>  
+</div>  
+<div class="settings-section">  
+<button class="danger-btn" id="reviewTermsBtn">Revoir les conditions</button>  
+</div>  
+</div>  
+</div>  
+</div>  <div class="overlay" id="overlay"></div>  <script src="config.js"></script>  <script src="script.js"></script>  <!-- KATEX JS -->  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>  <script>  
+// TYPING INDICATOR ANIMÉ  
+let typingElement = null;  
+let thinkingTimeout = null;  
+  
+function showTypingIndicator() {  
+  hideTypingIndicator();  
+  const chat = document.getElementById('chat');  
+  typingElement = document.createElement('div');  
+  typingElement.className = 'typing-wrapper';  
+  typingElement.innerHTML = `  
+    <div class="typing-bubble">  
+      <div class="typing-dot"></div>  
+      <div class="typing-dot"></div>  
+      <div class="typing-dot"></div>  
+    </div>  
+    <span class="typing-text" id="typingText">AurX réfléchit</span>  
+  `;  
+  chat.appendChild(typingElement);  
+  chat.scrollTop = chat.scrollHeight;  
+  thinkingTimeout = setTimeout(() => {  
+    document.getElementById('typingText')?.classList.add('show');  
+  }, 1500);  
+}  
+  
+function hideTypingIndicator() {  
+  clearTimeout(thinkingTimeout);  
+  if (typingElement) {  
+    typingElement.remove();  
+    typingElement = null;  
+  }  
+}  
+  
+window.showTypingIndicator = showTypingIndicator;  
+window.hideTypingIndicator = hideTypingIndicator;  
+  
+// RENDER KATEX APRES CHAQUE MESSAGE  
+function renderMath() {  
+  if (window.renderMathInElement) {  
+    renderMathInElement(document.getElementById('chat'), {  
+      delimiters: [  
+        {left: '$$', right: '$$', display: true},  
+        {left: '$', right: '$', display: false},  
+        {left: '\', right: '\', display: true},  
+        {left: '\', right: '\', display: false}  
+      ],  
+      throwOnError: false,  
+      strict: false  
+    });  
+  }  
+}  
+  
+// Hook sur highlightCode existant  
+const oldHighlight = window.highlightCode;  
+window.highlightCode = function() {  
+  if (oldHighlight) oldHighlight();  
+  setTimeout(renderMath, 50);  
+}  
+</script>  </body>  
+</html>
