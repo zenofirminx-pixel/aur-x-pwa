@@ -278,21 +278,22 @@ function hideTypingIndicator() {
 window.showTypingIndicator = showTypingIndicator;  
 window.hideTypingIndicator = hideTypingIndicator;  
   
-// RENDER KATEX APRES CHAQUE MESSAGE  
-function renderMath() {  
-  if (window.renderMathInElement) {  
-    renderMathInElement(document.getElementById('chat'), {  
-      delimiters: [  
-        {left: '$$', right: '$$', display: true},  
-        {left: '$', right: '$', display: false},  
-        {left: '\', right: '\', display: true},  
-        {left: '\', right: '\', display: false}  
-      ],  
-      throwOnError: false,  
-      strict: false  
-    });  
-  }  
-}  
+// KaTeX – rend seulement le dernier message
+function renderKaTeX(messageEl) {
+  if (!window.renderMathInElement) return;
+
+  renderMathInElement(messageEl, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },   // pour les blocs
+      { left: '\\[', right: '\\]', display: true }, // alternative bloc
+      { left: '$', right: '$', display: false },    // inline
+      { left: '\\(', right: '\\)', display: false } // alternative inline
+    ],
+    throwOnError: false,
+    strict: false
+  });
+} 
+  
   
 // Hook sur highlightCode existant  
 const oldHighlight = window.highlightCode;  
