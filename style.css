@@ -487,3 +487,8 @@ header {
   border-bottom: none !important;
   color: #fff !important;
 }
+#chat .message, .typing-bubble {
+  min-height: 20px; /* ou la hauteur estimée d'une ligne de texte */
+  line-height: 1.4;
+  word-wrap: break-word;
+}
