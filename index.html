@@ -309,19 +309,26 @@ window.showTypingIndicator = showTypingIndicator;
 window.hideTypingIndicator = hideTypingIndicator;
 
 // RENDER KATEX APRES CHAQUE MESSAGE
-function renderMath() {
-  if (window.renderMathInElement) {
-    renderMathInElement(document.getElementById('chat'), {
-      delimiters: [
-        {left: '$$', right: '$$', display: true},
-        {left: '$', right: '$', display: false},
-        {left: '\\[', right: '\\]', display: true},
-        {left: '\\(', right: '\\)', display: false}
-      ],
-      throwOnError: false,
-      strict: false
-    });
-  }
+function appendMessage(content) {
+  const chat = document.getElementById('chat');
+  const msgEl = document.createElement('div');
+  msgEl.className = 'message';
+  msgEl.innerHTML = content; // ici le texte complet du message
+
+  chat.appendChild(msgEl);
+  chat.scrollTop = chat.scrollHeight;
+
+  // Rendu KaTeX seulement après insertion complète
+  renderMathInElement(msgEl, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false,
+    strict: false
+  });
 }
 
 // Hook sur highlightCode existant
