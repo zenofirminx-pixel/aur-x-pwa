@@ -516,10 +516,7 @@ header {
   display: flex;
   flex-direction: column;
 }
-.msg.user {
-  color: rgba(255,255,255,0.96);
-}
-
 .msg.bot-full-text {
-  color: rgba(255,255,255,0.96);
+  color: #fff;
+  font-weight: 500;
 }
