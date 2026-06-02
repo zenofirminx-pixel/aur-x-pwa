@@ -516,3 +516,8 @@ header {
   display: flex;
   flex-direction: column;
 }
+/* MESSAGE D'ERREUR AURX - rouge doux */
+.msg.bot-full-text {
+  color: #ff6b6b; /* rouge doux */
+  font-weight: 500;
+}
