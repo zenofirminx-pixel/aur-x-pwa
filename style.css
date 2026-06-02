@@ -516,7 +516,3 @@ header {
   display: flex;
   flex-direction: column;
 }
-.msg.bot-full-text {
-  color: #fff;
-  font-weight: 500;
-}
