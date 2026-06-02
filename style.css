@@ -513,10 +513,3 @@ header {
   display: flex;
   flex-direction: column;
 }
-.msg-wrapper:hover .msg-time {
-  opacity: 1;
-  transform: translateY(0);
-}
-.msg-wrapper.user .msg-time {
-  text-align: right;
-}
