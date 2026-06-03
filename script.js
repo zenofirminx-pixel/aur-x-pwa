@@ -337,7 +337,8 @@ function initApp() {
       console.error('addMessage error:', e);
     }
     return text;
-  function formatMessage(text) {
+  
+function formatMessage(text) {
   if (!text) return "";
   const mathBlocks = [];
   const codeBlocks = [];
