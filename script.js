@@ -378,7 +378,7 @@ function formatMessage(text) {
       text = text.replace(`__MATH_${i}__`, math);
     });
     return text;
-
+    }
   function showTypingIndicator() {
     hideTypingIndicator();
     typingElement = document.createElement('div');
