@@ -406,53 +406,55 @@ function initApp() {
   }
 
   async function sendMessage() {
-    const msg = input.value.trim();
-    if (!msg) return;
-    const now = Date.now();
-    addMessage(msg, 'user', now);
-    const currentMessages = [{text: msg, type: 'user', timestamp: now}];
-    input.value = '';
-    input.style.height = 'auto';
-    updateCharCounter();
-    showTypingIndicator();
-    const sendBtnEl = document.getElementById('sendBtn');
-    sendBtnEl.classList.add('loading');
-    sendBtnEl.disabled = true;
-    try {
-      const res = await fetch(CONFIG.ENDPOINTS.openai, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api: 'openai', message: msg, userId: userId, model: CONFIG.MODELS.openai })
-      });
-      const data = await res.json().catch(() => ({}));
-      hideTypingIndicator();
-      if (!res.ok) {
-        const errorText = data.error || "Erreur serveur";
-        const errTime = Date.now();
-        addMessage(errorText, 'bot error', errTime);
-        currentMessages.push({text: errorText, type: 'bot error', timestamp: errTime});
-        saveConversation(msg.slice(0, 40), currentMessages);
-        return;
-      }
-      const botTime = Date.now();
-      const replyText = await typeMessage(data.reply || "...", 'bot', botTime);
-      currentMessages.push({text: replyText, type: 'bot', timestamp: botTime});
-      saveConversation(msg.slice(0, 40), currentMessages);
-    } catch (e) {
-      hideTypingIndicator();
-      const errorText = 'Erreur réseau / serveur';
-      const errTime = Date.now();
-      addMessage(errorText, 'bot error', errTime);
-      currentMessages.push({text: errorText, type: 'bot error', timestamp: errTime});
-      saveConversation(msg.slice(0, 40), currentMessages);
-      console.error(e);
-    } finally {
-      sendBtnEl.classList.remove('loading');
-      sendBtnEl.disabled = false;
-    }
-  }
-
-  function typeMessage(text, type, timestamp = Date.now()) {
+const msg = input.value.trim();
+if (!msg) return;
+const now = Date.now();
+addMessage(msg, 'user', now);
+const currentMessages = [{text: msg, type: 'user', timestamp: now}];
+input.value = '';
+input.style.height = 'auto';
+updateCharCounter();
+showTypingIndicator();
+const sendBtnEl = document.getElementById('sendBtn');
+sendBtnEl.classList.add('loading');
+sendBtnEl.disabled = true;
+try {
+const res = await fetch(CONFIG.ENDPOINTS.openai, {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ api: 'openai', message: msg, userId: userId, model: CONFIG.MODELS.openai })
+});
+const data = await res.json().catch(() => ({}));
+hideTypingIndicator();
+if (!res.ok) {
+const errorText =
+"⚠️ Le serveur AurX rencontre actuellement un problème.\nRéessaie dans quelques instants.";
+const errTime = Date.now();
+addMessage(errorText, 'bot error', errTime);
+currentMessages.push({text: errorText, type: 'bot error', timestamp: errTime});
+saveConversation(msg.slice(0, 40), currentMessages);
+return;
+}
+const botTime = Date.now();
+const replyText = await typeMessage(data.reply || "...", 'bot', botTime);
+currentMessages.push({text: replyText, type: 'bot', timestamp: botTime});
+saveConversation(msg.slice(0, 40), currentMessages);
+} catch (e) {
+hideTypingIndicator();
+const errorText =
+"⚠️ Impossible de se connecter à AurX.\nVérifie ta connexion Internet puis réessaie.";
+const errTime = Date.now();
+addMessage(errorText, 'bot error', errTime);
+currentMessages.push({text: errorText, type: 'bot error', timestamp: errTime});
+saveConversation(msg.slice(0, 40), currentMessages);
+console.error(e);
+} finally {
+sendBtnEl.classList.remove('loading');
+sendBtnEl.disabled = false;
+}
+}
+        
+ function typeMessage(text, type, timestamp = Date.now()) {
     return new Promise(resolve => {
       const parts = parseMessage(text);
       let partIndex = 0;
