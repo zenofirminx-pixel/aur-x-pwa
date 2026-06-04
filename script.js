@@ -378,25 +378,43 @@ function initApp() {
     return text;
   }
 
-  // TYPING INDICATOR AVEC IMAGE QUI TOURNE
+  // TYPING INDICATOR FIXÉ - ATTEND LE CHARGEMENT DE L'IMAGE
   function showTypingIndicator() {
     hideTypingIndicator();
     typingElement = document.createElement('div');
     typingElement.className = 'typing-wrapper';
     typingElement.id = 'typingIndicator';
     
+    const img = new Image();
+    img.src = 'icon-static.png';
+    img.alt = 'AurX thinking';
+    
     typingElement.innerHTML = `
-      <div class="aurx-thinking spinning">
-        <img src="icon-static.png" alt="AurX thinking">
+      <div class="aurx-thinking">
+        <span class="typing-text">AurX réfléchit...</span>
       </div>
-      <span class="typing-text">AurX réfléchit...</span>
     `;
     
-    chat.appendChild(typingElement);
-    setTimeout(() => {
+    const iconDiv = typingElement.querySelector('.aurx-thinking');
+    
+    img.onload = () => {
+      iconDiv.prepend(img);
+      iconDiv.classList.add('spinning');
       const text = typingElement.querySelector('.typing-text');
       if (text) text.classList.add('show');
-    }, 100);
+    };
+    
+    // Fallback si l'image met trop de temps
+    setTimeout(() => {
+      if (!iconDiv.querySelector('img')) {
+        iconDiv.prepend(img);
+        iconDiv.classList.add('spinning');
+        const text = typingElement.querySelector('.typing-text');
+        if (text) text.classList.add('show');
+      }
+    }, 300);
+    
+    chat.appendChild(typingElement);
     chat.scrollTop = chat.scrollHeight;
   }
 
@@ -522,22 +540,4 @@ function initApp() {
 
 function copyCode(btn) {
   const code = btn.nextElementSibling.textContent;
-  navigator.clipboard.writeText(code).then(() => {
-    btn.textContent = 'Copié!';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = 'Copier';
-      btn.classList.remove('copied');
-    }, 2000);
-  });
-}
-
-function highlightCode() {
-  if (typeof hljs !== 'undefined') {
-    setTimeout(() => {
-      document.querySelectorAll('pre code:not(.hljs)').forEach(block => {
-        hljs.highlightElement(block);
-      });
-    }, 0);
-  }
-}
+  navigator.clipboard.writeText
