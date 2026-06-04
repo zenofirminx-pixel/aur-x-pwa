@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="msapplication-navbutton-color" content="#000">
 <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preload" href="icon-static.png" as="image">
 
 <!-- KATEX CSS -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
@@ -123,7 +124,7 @@ header .btn:active { opacity: 0.7; }
 .conv-item:hover { background: #1a1a1a; color: #fff; }
 .empty { padding: 20px; text-align: center; color: #666; font-size: 14px; }
 
-/* TYPING INDICATOR AVEC IMAGE QUI TOURNE */
+/* TYPING INDICATOR FIXÉ - PLUS DE CROP */
 .typing-wrapper { 
   display: flex; 
   align-items: center; 
@@ -137,22 +138,28 @@ header .btn:active { opacity: 0.7; }
   height: 36px;
   position: relative;
   flex-shrink: 0;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .aurx-thinking img {
-  width: 100%;
-  height: 100%;
+  width: 36px;
+  height: 36px;
   border-radius: 50%;
-  object-fit: cover;
+  object-fit: contain;
+  display: block;
 }
 
 .aurx-thinking.spinning img {
   animation: spinNeural 1.2s linear infinite;
+  transform-origin: center center;
 }
 
 @keyframes spinNeural {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .typing-text { 
