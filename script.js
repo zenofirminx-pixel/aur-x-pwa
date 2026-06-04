@@ -378,43 +378,55 @@ function initApp() {
     return text;
   }
 
-  // TYPING INDICATOR FIXÉ - ATTEND LE CHARGEMENT DE L'IMAGE
+  // TYPING INDICATOR BULLETPROOF - CRASH PLUS
   function showTypingIndicator() {
     hideTypingIndicator();
+    
     typingElement = document.createElement('div');
     typingElement.className = 'typing-wrapper';
     typingElement.id = 'typingIndicator';
     
-    const img = new Image();
+    const iconDiv = document.createElement('div');
+    iconDiv.className = 'aurx-thinking';
+    
+    const textSpan = document.createElement('span');
+    textSpan.className = 'typing-text';
+    textSpan.textContent = 'AurX réfléchit...';
+    
+    iconDiv.appendChild(textSpan);
+    typingElement.appendChild(iconDiv);
+    chat.appendChild(typingElement);
+    
+    const img = document.createElement('img');
     img.src = 'icon-static.png';
     img.alt = 'AurX thinking';
+    img.style.display = 'none';
     
-    typingElement.innerHTML = `
-      <div class="aurx-thinking">
-        <span class="typing-text">AurX réfléchit...</span>
-      </div>
-    `;
-    
-    const iconDiv = typingElement.querySelector('.aurx-thinking');
-    
-    img.onload = () => {
-      iconDiv.prepend(img);
+    img.onload = function() {
+      img.style.display = 'block';
+      iconDiv.insertBefore(img, textSpan);
       iconDiv.classList.add('spinning');
-      const text = typingElement.querySelector('.typing-text');
-      if (text) text.classList.add('show');
+      textSpan.classList.add('show');
     };
     
-    // Fallback si l'image met trop de temps
+    img.onerror = function() {
+      const fallback = document.createElement('div');
+      fallback.className = 'fallback-spinner';
+      iconDiv.insertBefore(fallback, textSpan);
+      iconDiv.classList.add('spinning');
+      textSpan.classList.add('show');
+    };
+    
     setTimeout(() => {
-      if (!iconDiv.querySelector('img')) {
-        iconDiv.prepend(img);
+      if (!textSpan.classList.contains('show')) {
+        textSpan.classList.add('show');
+      }
+      if (!iconDiv.querySelector('img') && !iconDiv.querySelector('.fallback-spinner')) {
+        iconDiv.insertBefore(img, textSpan);
         iconDiv.classList.add('spinning');
-        const text = typingElement.querySelector('.typing-text');
-        if (text) text.classList.add('show');
       }
     }, 300);
     
-    chat.appendChild(typingElement);
     chat.scrollTop = chat.scrollHeight;
   }
 
@@ -524,20 +536,4 @@ function initApp() {
             charIndex = 0;
             setTimeout(typeNext, 100);
           }
-        }, speed);
-      }
-      typeNext();
-    });
-  }
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('SW registered:', reg.scope))
-      .catch(err => console.error('SW registration failed:', err));
-  }
-  updateCharCounter();
-}
-
-function copyCode(btn) {
-  const code = btn.nextElementSibling.textContent;
-  navigator.clipboard.writeText
+        
