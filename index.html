@@ -53,7 +53,6 @@ header .btn:active { opacity: 0.7; }
 .danger-btn:active { background: #ff3b30; color: #fff; }
 .login-btn { width: 100%; padding: 12px; background: #0A84FF; border: none; color: #fff; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; margin-bottom: 12px; }
 .login-btn:active { opacity: 0.8; }
-.login-btn.google { background: #1a2332; border: 1px solid #2a3441; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1999; pointer-events: auto; }
 .overlay.open { display: block; }
 .sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #111; border-right: 1px solid #2a2a2a; transition: left 0.3s ease; z-index: 1500; display: flex; flex-direction: column; }
@@ -78,8 +77,6 @@ header .btn:active { opacity: 0.7; }
 .katex { color: #fff; font-size: 1.1em; }
 .katex-display { margin: 1.2em 0; overflow-x: auto; }
 .katex-display > .katex { display: block; text-align: center; }
-
-/* LOGIN MODAL */
 .login-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 4000; backdrop-filter: blur(8px); }
 .login-modal.open { display: flex; }
 .login-box { background: #121a2b; width: 90%; max-width: 380px; border-radius: 16px; border: 1px solid #2a3441; padding: 28px; position: relative; }
@@ -97,7 +94,6 @@ header .btn:active { opacity: 0.7; }
 </head>
 <body>
 <button id="installBtn">Installer l'app</button>
-
 <div id="termsScreen">
 <h2>Conditions d'utilisation AurX AI</h2>
 <div id="termsContent">
@@ -131,17 +127,14 @@ header .btn:active { opacity: 0.7; }
 <span class="btn-text">Continuer</span>
 </button>
 </div>
-
 <header>
 <button class="btn" id="historyBtn">☰</button>
 AurX AI
 <button class="btn" id="settingsBtn">⚙</button>
 </header>
-
 <div id="chat">
 <div id="welcome">AurX AI<span>Pose-moi une question</span></div>
 </div>
-
 <div class="input-area">
 <div class="input-wrap">
 <div class="input-box">
@@ -163,7 +156,6 @@ AurX AI
 </button>
 </div>
 </div>
-
 <div class="sidebar" id="sidebar">
 <header>
 <div class="sidebar-header-left">
@@ -177,7 +169,6 @@ AurX AI
 <button class="danger-btn-small" id="deleteAllBtn">WIPE CONVS</button>
 </div>
 </div>
-
 <div class="modal" id="settingsModal">
 <div>
 <div class="settings-header">
@@ -218,10 +209,7 @@ AurX AI
 </div>
 </div>
 </div>
-
 <div class="overlay" id="overlay"></div>
-
-<!-- MODAL LOGIN -->
 <div class="login-modal" id="loginModal">
 <div class="login-box">
 <button class="close-login" id="closeLogin">×</button>
@@ -242,13 +230,14 @@ Continuer avec Google
 <div class="signup-link"> Pas de compte ? <a href="#" id="signupLink">S’inscrire</a> </div>
 </div>
 </div>
-
 <script src="config.js"></script>
 <script src="script.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 <script>
-// KATEX
+const BACKEND_URL = 'https://aur-x-backend.vercel.app';
+
+// KaTeX
 function waitForKatex(callback) {
   if (window.renderMathInElement) callback();
   else setTimeout(() => waitForKatex(callback), 100);
@@ -272,98 +261,119 @@ document.addEventListener('DOMContentLoaded', () => {
   waitForKatex(() => {
     setTimeout(renderMath, 300);
     const chat = document.getElementById('chat');
-    const observer = new MutationObserver(() => {
-      clearTimeout(renderTimeout);
-      renderTimeout = setTimeout(renderMath, 400);
-    });
-    observer.observe(chat, { childList: true, subtree: true });
+    if (chat) {
+      const observer = new MutationObserver(() => {
+        clearTimeout(renderTimeout);
+        renderTimeout = setTimeout(renderMath, 400);
+      });
+      observer.observe(chat, { childList: true, subtree: true });
+    }
   });
 
-  // LOGIN MODAL - BACKEND ONLY
-  const loginModal = document.getElementById('loginModal');
   const settingsModal = document.getElementById('settingsModal');
-  const loginBtn = document.getElementById('handleLoginBtn');
-  const openLoginBtn = document.getElementById('openLoginBtn');
+  const loginModal = document.getElementById('loginModal');
+  const overlay = document.getElementById('overlay');
 
-  openLoginBtn.addEventListener('click', () => {
+  // OUVRIR SETTINGS
+  document.getElementById('settingsBtn').onclick = () => {
+    settingsModal.classList.add('open');
+    overlay.classList.add('open');
+  };
+  document.getElementById('closeSettings').onclick = () => {
+    settingsModal.classList.remove('open');
+    overlay.classList.remove('open');
+  };
+
+  // OUVRIR/FERMER LOGIN
+  function openLogin() {
     loginModal.classList.add('open');
     settingsModal.classList.remove('open');
-  });
-
-  document.getElementById('closeLogin').addEventListener('click', () => {
+  }
+  function closeLogin() {
     loginModal.classList.remove('open');
-  });
+  }
+  document.getElementById('closeLogin').onclick = closeLogin;
+  loginModal.onclick = (e) => { if(e.target === loginModal) closeLogin(); };
 
-  loginModal.addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('open');
-  });
+  // CHECK AUTH
+  async function checkAuth() {
+    const loginBtn = document.getElementById('openLoginBtn');
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/me`, {
+        method: 'GET',
+        credentials: 'include'
+      });
+      if (res.ok) {
+        const user = await res.json();
+        loginBtn.textContent = user.email || 'Mon compte';
+        loginBtn.onclick = async () => {
+          if(confirm('Se déconnecter ?')) {
+            await fetch(`${BACKEND_URL}/api/auth/logout`, {
+              method: 'POST',
+              credentials: 'include'
+            });
+            location.reload();
+          }
+        };
+      } else {
+        loginBtn.textContent = 'Se connecter';
+        loginBtn.onclick = openLogin;
+      }
+    } catch(e) {
+      loginBtn.textContent = 'Se connecter';
+      loginBtn.onclick = openLogin;
+    }
+  }
+  checkAuth();
 
-  // VRAI LOGIN BACKEND AVEC COOKIES
-  loginBtn.addEventListener('click', async () => {
+  // LOGIN
+  document.getElementById('handleLoginBtn').onclick = async () => {
+    const btn = document.getElementById('handleLoginBtn');
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
-    
-    if (!email || !password) {
-      alert('Remplis tous les champs');
-      return;
-    }
-
-    loginBtn.disabled = true;
-    loginBtn.textContent = 'Connexion...';
-
+    if (!email || !password) return alert('Remplis tous les champs');
+    btn.disabled = true;
+    btn.textContent = 'Connexion...';
     try {
-      const res = await fetch('https://aur-x-backend.vercel.app/api/auth/login', {
+      const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ email, password })
       });
-
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur de connexion');
-
-      loginModal.classList.remove('open');
+      if (!res.ok) throw new Error(data.error || 'Erreur');
+      closeLogin();
       alert('Connecté ✅');
       location.reload();
     } catch (err) {
       alert('Erreur: ' + err.message);
     } finally {
-      loginBtn.disabled = false;
-      loginBtn.textContent = 'Se connecter';
+      btn.disabled = false;
+      btn.textContent = 'Se connecter';
     }
-  });
+  };
 
-  // GOOGLE OAUTH POPUP
-  document.getElementById('handleGoogleBtn').addEventListener('click', () => {
-    const width = 500, height = 600;
-    const left = window.screenX + (window.innerWidth - width) / 2;
-    const top = window.screenY + (window.innerHeight - height) / 2;
-    window.open(
-      'https://aur-x-backend.vercel.app/api/auth/google',
-      'googleOAuth',
-      `width=${width},height=${height},left=${left},top=${top}`
-    );
-  });
+  // GOOGLE
+  document.getElementById('handleGoogleBtn').onclick = () => {
+    const w = 500, h = 600;
+    const left = window.screenX + (window.innerWidth - w) / 2;
+    const top = window.screenY + (window.innerHeight - h) / 2;
+    window.open(`${BACKEND_URL}/api/auth/google`, 'googleOAuth', `width=${w},height=${h},left=${left},top=${top}`);
+  };
 
-  // SIGNUP REDIRECT BACKEND
-  document.getElementById('signupLink').addEventListener('click', (e) => {
+  // SIGNUP
+  document.getElementById('signupLink').onclick = (e) => {
     e.preventDefault();
-    window.location.href = 'https://aur-x-backend.vercel.app/api/auth/register';
-  });
+    window.location.href = `${BACKEND_URL}/api/auth/register`;
+  };
 
-  // CHECK SESSION AU CHARGEMENT
-  fetch('https://aur-x-backend.vercel.app/api/auth/me', {
-    method: 'GET',
-    credentials: 'include'
-  }).then(r => {
-    if (r.ok) {
-      openLoginBtn.textContent = 'Mon compte';
-    } else {
-      openLoginBtn.textContent = 'Se connecter';
-    }
-  }).catch(() => {
-    openLoginBtn.textContent = 'Se connecter';
-  });
+  // OVERLAY ferme tout
+  overlay.onclick = () => {
+    settingsModal.classList.remove('open');
+    loginModal.classList.remove('open');
+    overlay.classList.remove('open');
+  };
 });
 </script>
 </body>
