@@ -19,33 +19,26 @@ async function checkLogin() {
     const res = await fetch('https://aur-x-backend.vercel.app/api/history', {
       credentials: 'include'
     });
-    if (res.ok) {
-      isLoggedIn = true;
-      const data = await res.json();
-      serverConversations = data.conversations || [];
-      conversations = serverConversations;
-      
-      // Vide UI guest et localStorage
-      const chat = document.getElementById('chat');
-      if (chat) chat.innerHTML = '<div id="welcome">AurX AI<span>Pose-moi une question</span></div>';
-      currentConvId = null;
-      localStorage.removeItem('aurx_convs');
-      localStorage.removeItem('aurx_current');
-      
-      renderHistory();
-      console.log('Connecté: histo serveur chargé');
-    } else {
-      throw new Error('No session');
-    }
-  } catch(e) {
+
+    if (!res.ok) throw new Error('No session');
+
+    isLoggedIn = true;
+
+    const data = await res.json();
+    serverConversations = data.conversations || [];
+
+    // 🔥 priorité serveur si dispo
+    conversations = serverConversations.length
+      ? serverConversations
+      : JSON.parse(localStorage.getItem('aurx_convs') || '[]');
+
+  } catch (e) {
     isLoggedIn = false;
+
     conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
-    currentConvId = null;
-    const chat = document.getElementById('chat');
-    if (chat) chat.innerHTML = '<div id="welcome">AurX AI<span>Pose-moi une question</span></div>';
-    renderHistory();
-    console.log('Mode guest');
   }
+
+  renderHistory();
 }
 
 function linkify(text) {
