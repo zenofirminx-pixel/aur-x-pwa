@@ -728,3 +728,99 @@ p {
   padding: 0.125rem 0.25rem;
   border-radius: 2px;
 }
+/* === SYNTAX HIGHLIGHTING - THÈME AURX === */
+
+/* Base */
+#chat pre code.hljs {
+  background: #0d1117 !important;
+  color: #e6edf3;
+  padding: 2.5rem 1rem 1rem;
+}
+
+/* HTML/XML Tags */
+#chat pre code .hljs-tag {
+  color: #7ee787; /* < > */
+}
+
+#chat pre code .hljs-name {
+  color: #ff7b72; /* div, span, p */
+}
+
+#chat pre code .hljs-attr {
+  color: #79c0ff; /* class, id, href */
+}
+
+/* Strings - "valeurs" */
+#chat pre code .hljs-string {
+  color: #a5d6ff; /* "hello" */
+}
+
+/* JavaScript */
+#chat pre code .hljs-keyword {
+  color: #ff7b72; /* const, function, return, if */
+}
+
+#chat pre code .hljs-built_in {
+  color: #ffa657; /* console, document */
+}
+
+#chat pre code .hljs-function .hljs-title,
+#chat pre code .hljs-title.function_ {
+  color: #d2a8ff; /* nomDeFonction() */
+}
+
+#chat pre code .hljs-variable,
+#chat pre code .hljs-params {
+  color: #ffa657; /* variables */
+}
+
+#chat pre code .hljs-property {
+  color: #79c0ff; /* object.property */
+}
+
+/* Numbers & Booleans */
+#chat pre code .hljs-number {
+  color: #79c0ff; /* 123 */
+}
+
+#chat pre code .hljs-literal {
+  color: #79c0ff; /* true, false, null */
+}
+
+/* Comments */
+#chat pre code .hljs-comment {
+  color: #8b949e; /* // comment */
+  font-style: italic;
+}
+
+/* CSS */
+#chat pre code .hljs-selector-tag {
+  color: #7ee787; /* body, div */
+}
+
+#chat pre code .hljs-selector-class {
+  color: #d2a8ff; /* .class */
+}
+
+#chat pre code .hljs-selector-id {
+  color: #d2a8ff; /* #id */
+}
+
+#chat pre code .hljs-attribute {
+  color: #79c0ff; /* color: */
+}
+
+/* Operators & Punctuation */
+#chat pre code .hljs-operator,
+#chat pre code .hljs-punctuation {
+  color: #e6edf3; /* = + - { } ; */
+}
+
+/* Python */
+#chat pre code .hljs-decorator {
+  color: #d2a8ff; /* @decorator */
+}
+
+#chat pre code .hljs-meta {
+  color: #8b949e; /* import, from */
+}
