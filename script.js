@@ -4,6 +4,49 @@ const CONFIG = {
   MODELS: { openai: 'gpt-4o-mini' }
 };
 
+// Variables globales auth
+let isLoggedIn = false;
+let serverConversations = [];
+let conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
+let currentConvId = localStorage.getItem('aurx_current') || null;
+let settings = JSON.parse(localStorage.getItem('aurx_settings') || '{"anim":true,"autosave":true,"timestamp":true,"notif":true}');
+let messageCounter = 0;
+
+checkLogin();
+
+async function checkLogin() {
+  try {
+    const res = await fetch('https://aur-x-backend.vercel.app/api/history', {
+      credentials: 'include'
+    });
+    if (res.ok) {
+      isLoggedIn = true;
+      const data = await res.json();
+      serverConversations = data.conversations || [];
+      conversations = serverConversations;
+      
+      // Vide UI guest et localStorage
+      const chat = document.getElementById('chat');
+      if (chat) chat.innerHTML = '<div id="welcome">AurX AI<span>Pose-moi une question</span></div>';
+      currentConvId = null;
+      localStorage.removeItem('aurx_convs');
+      localStorage.removeItem('aurx_current');
+      
+      renderHistory();
+      console.log('Connecté: histo serveur chargé');
+    } else {
+      throw new Error('No session');
+    }
+  } catch(e) {
+    isLoggedIn = false;
+    conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
+    currentConvId = localStorage.getItem('aurx_current') || null;
+    renderHistory();
+    if (currentConvId) loadConversation(currentConvId);
+    console.log('Mode guest');
+  }
+}
+
 function linkify(text) {
   if (!text) return '';
   const urlPattern = /(https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
@@ -46,16 +89,6 @@ function autoMathify(text) {
 document.addEventListener('DOMContentLoaded', initApp);
 
 function initApp() {
-  let conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
-  let currentConvId = localStorage.getItem('aurx_current') || null;
-  let settings = JSON.parse(localStorage.getItem('aurx_settings') || '{"anim":true,"autosave":true,"timestamp":true,"notif":true}');
-  let messageCounter = 0;
-  let userId = localStorage.getItem("aurx_user_id");
-  if (!userId) {
-    userId = crypto.randomUUID();
-    localStorage.setItem("aurx_user_id", userId);
-  }
-
   const input = document.getElementById('input');
   const chat = document.getElementById('chat');
   const sendBtn = document.getElementById('sendBtn');
@@ -157,15 +190,26 @@ function initApp() {
     e.stopPropagation();
     chat.innerHTML = '<div id="welcome">AurX AI<span>Pose-moi une question</span></div>';
     currentConvId = null;
-    localStorage.removeItem('aurx_current');
+    if (!isLoggedIn) localStorage.removeItem('aurx_current');
     sidebar?.classList.remove('open');
   });
 
-  deleteAllBtn?.addEventListener('click', () => {
+  deleteAllBtn?.addEventListener('click', async () => {
     if (!confirm('WIPE toutes les conversations? Cette action est irréversible.')) return;
-    localStorage.removeItem('aurx_convs');
-    localStorage.removeItem('aurx_current');
-    conversations = [];
+    
+    if (isLoggedIn) {
+      await fetch('https://aur-x-backend.vercel.app/api/deleteAll', {
+        method: 'POST',
+        credentials: 'include'
+      });
+      serverConversations = [];
+      conversations = [];
+    } else {
+      localStorage.removeItem('aurx_convs');
+      localStorage.removeItem('aurx_current');
+      conversations = [];
+    }
+    
     currentConvId = null;
     chat.innerHTML = '<div id="welcome">AurX AI<span>Pose-moi une question</span></div>';
     renderHistory();
@@ -175,11 +219,13 @@ function initApp() {
   function renderHistory() {
     if (!convList) return;
     convList.innerHTML = '';
-    if (conversations.length === 0) {
+    const convsToShow = isLoggedIn ? serverConversations : conversations;
+    
+    if (convsToShow.length === 0) {
       convList.innerHTML = '<div class="empty">Aucune conversation</div>';
       return;
     }
-    conversations.forEach(conv => {
+    convsToShow.forEach(conv => {
       const item = document.createElement('div');
       item.className = 'conv-item';
       item.textContent = conv.title || 'Nouvelle conversation';
@@ -190,8 +236,9 @@ function initApp() {
 
   function loadConversation(id) {
     currentConvId = id;
-    localStorage.setItem('aurx_current', id);
-    const conv = conversations.find(c => c.id === id);
+    if (!isLoggedIn) localStorage.setItem('aurx_current', id);
+    
+    const conv = (isLoggedIn ? serverConversations : conversations).find(c => c.id === id);
     if (!conv) return;
     chat.innerHTML = '';
     document.getElementById('welcome')?.classList.add('hidden');
@@ -199,55 +246,53 @@ function initApp() {
       conv.messages.forEach(m => addMessage(m.text, m.type, m.timestamp || Date.now(), false));
     } catch(e) {
       console.error('Erreur load conv:', e);
-      chat.innerHTML = '<div class="msg bot">Erreur de chargement de cette conversation</div>';
+      chat.innerHTML = '<div class="msg bot">Erreur de chargement</div>';
     }
     sidebar?.classList.remove('open');
     overlay?.classList.remove('open');
   }
 
-async function saveConversation(title, messages) {
-  if (!settings.autosave || messages.length === 0) return;
+  async function saveConversation(title, messages) {
+    if (!settings.autosave || messages.length === 0) return;
 
-  // 1. SI CONNECTÉ = on envoie au serveur et on return
-  if (isLoggedIn) {
-    try {
-      await fetch('https://aur-x-backend.vercel.app/api/chat', {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: messages[messages.length - 1].text,
-          convId: currentConvId,
-          title: title,
-          saveOnly: true
-        })
-      });
-      return; // ← on sort direct, pas de localStorage
-    } catch(e) {
-      console.error('Save serveur failed');
+    if (isLoggedIn) {
+      try {
+        await fetch('https://aur-x-backend.vercel.app/api/chat', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: messages[messages.length - 1].text,
+            convId: currentConvId,
+            title: title,
+            saveOnly: true
+          })
+        });
+        return;
+      } catch(e) {
+        console.error('Save serveur failed');
+      }
     }
-  }
 
-  // 2. SINON = ton code localStorage actuel, tu touches à rien
-  conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
-  let id = currentConvId;
-  if (!id) {
-    id = Date.now().toString();
-    currentConvId = id;
+    conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
+    let id = currentConvId;
+    if (!id) {
+      id = Date.now().toString();
+      currentConvId = id;
+    }
+    const conv = { id, title, messages, date: Date.now() };
+    const index = conversations.findIndex(c => c.id === id);
+    if (index > -1) {
+      conversations[index] = conv;
+    } else {
+      conversations.unshift(conv);
+    }
+    if (conversations.length > 50) {
+      conversations = conversations.slice(0, 50);
+    }
+    localStorage.setItem('aurx_convs', JSON.stringify(conversations));
+    localStorage.setItem('aurx_current', id);
   }
-  const conv = { id, title, messages, date: Date.now() };
-  const index = conversations.findIndex(c => c.id === id);
-  if (index > -1) {
-    conversations[index] = conv;
-  } else {
-    conversations.unshift(conv);
-  }
-  if (conversations.length > 50) {
-    conversations = conversations.slice(0, 50);
-  }
-  localStorage.setItem('aurx_convs', JSON.stringify(conversations));
-  localStorage.setItem('aurx_current', id);
-}
 
   settingsBtn?.addEventListener('click', () => {
     settingsModal?.classList.add('open');
@@ -400,7 +445,6 @@ async function saveConversation(title, messages) {
     return text;
   }
 
-  // TYPING INDICATOR AVEC IMAGE QUI TOURNE
   function showTypingIndicator() {
     hideTypingIndicator();
     typingElement = document.createElement('div');
@@ -435,7 +479,15 @@ async function saveConversation(title, messages) {
     if (!msg) return;
     const now = Date.now();
     addMessage(msg, 'user', now);
-    const currentMessages = [{text: msg, type: 'user', timestamp: now}];
+    
+    const currentMessages = [];
+    const convsToUse = isLoggedIn ? serverConversations : conversations;
+    const currentConv = convsToUse.find(c => c.id === currentConvId);
+    if (currentConv) {
+      currentMessages.push(...currentConv.messages);
+    }
+    currentMessages.push({text: msg, type: 'user', timestamp: now});
+    
     input.value = '';
     input.style.height = 'auto';
     updateCharCounter();
@@ -443,11 +495,18 @@ async function saveConversation(title, messages) {
     const sendBtnEl = document.getElementById('sendBtn');
     sendBtnEl.classList.add('loading');
     sendBtnEl.disabled = true;
+    
     try {
       const res = await fetch(CONFIG.ENDPOINTS.openai, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ api: 'openai', message: msg, userId: userId, model: CONFIG.MODELS.openai })
+        body: JSON.stringify({ 
+          api: 'openai', 
+          message: msg, 
+          convId: currentConvId,
+          model: CONFIG.MODELS.openai 
+        })
       });
       const data = await res.json().catch(() => ({}));
       hideTypingIndicator();
@@ -462,7 +521,19 @@ async function saveConversation(title, messages) {
       const botTime = Date.now();
       const replyText = await typeMessage(data.reply || "...", 'bot', botTime);
       currentMessages.push({text: replyText, type: 'bot', timestamp: botTime});
+      
+      if (!currentConvId) currentConvId = data.convId || Date.now().toString();
       saveConversation(msg.slice(0, 40), currentMessages);
+      
+      if (isLoggedIn) {
+        const histRes = await fetch('https://aur-x-backend.vercel.app/api/history', {
+          credentials: 'include'
+        });
+        const histData = await histRes.json();
+        serverConversations = histData.conversations || [];
+        conversations = serverConversations;
+        renderHistory();
+      }
     } catch (e) {
       hideTypingIndicator();
       const errorText = 'Erreur réseau / serveur';
@@ -540,6 +611,8 @@ async function saveConversation(title, messages) {
       .catch(err => console.error('SW registration failed:', err));
   }
   updateCharCounter();
+  renderHistory();
+  if (currentConvId) loadConversation(currentConvId);
 }
 
 function copyCode(btn) {
