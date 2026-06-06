@@ -552,7 +552,7 @@ header {
 .msg.bot pre code.language-bash::before { content: 'Bash'; }
 .msg.bot pre code.language-plaintext::before { content: 'Text'; }
 .msg.bot pre code:not([class*="language-"])::before { content: 'Code'; }
-/* ===== WRAPPER BOT (force pleine largeur ligne) ===== */
+/* ===== WRAPPER BOT ===== */
 .msg-wrapper.bot,
 .msg-wrapper.bot-full {
   width: 100%;
@@ -560,19 +560,13 @@ header {
   justify-content: flex-start;
 }
 
-/* ===== MESSAGE BOT (force vraie expansion comme ChatGPT) ===== */
+/* IMPORTANT: empêche flex de shrink */
+.msg-wrapper.bot .msg,
+.msg-wrapper.bot-full .msg,
 .msg.bot,
 .msg.bot-full-text {
+  flex: 1 1 auto;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  display: block;
-}
-
-/* ===== CONTENU BOT (évite effet "texte collé") ===== */
-.msg.bot-full-text,
-.msg.bot {
-  line-height: 1.6;
-  word-wrap: break-word;
-  white-space: pre-wrap;
 }
