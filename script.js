@@ -205,27 +205,49 @@ function initApp() {
     overlay?.classList.remove('open');
   }
 
-  function saveConversation(title, messages) {
-    if (!settings.autosave || messages.length === 0) return;
-    conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
-    let id = currentConvId;
-    if (!id) {
-      id = Date.now().toString();
-      currentConvId = id;
+async function saveConversation(title, messages) {
+  if (!settings.autosave || messages.length === 0) return;
+
+  // 1. SI CONNECTÉ = on envoie au serveur et on return
+  if (isLoggedIn) {
+    try {
+      await fetch('https://aur-x-backend.vercel.app/api/chat', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: messages[messages.length - 1].text,
+          convId: currentConvId,
+          title: title,
+          saveOnly: true
+        })
+      });
+      return; // ← on sort direct, pas de localStorage
+    } catch(e) {
+      console.error('Save serveur failed');
     }
-    const conv = { id, title, messages, date: Date.now() };
-    const index = conversations.findIndex(c => c.id === id);
-    if (index > -1) {
-      conversations[index] = conv;
-    } else {
-      conversations.unshift(conv);
-    }
-    if (conversations.length > 50) {
-      conversations = conversations.slice(0, 50);
-    }
-    localStorage.setItem('aurx_convs', JSON.stringify(conversations));
-    localStorage.setItem('aurx_current', id);
   }
+
+  // 2. SINON = ton code localStorage actuel, tu touches à rien
+  conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
+  let id = currentConvId;
+  if (!id) {
+    id = Date.now().toString();
+    currentConvId = id;
+  }
+  const conv = { id, title, messages, date: Date.now() };
+  const index = conversations.findIndex(c => c.id === id);
+  if (index > -1) {
+    conversations[index] = conv;
+  } else {
+    conversations.unshift(conv);
+  }
+  if (conversations.length > 50) {
+    conversations = conversations.slice(0, 50);
+  }
+  localStorage.setItem('aurx_convs', JSON.stringify(conversations));
+  localStorage.setItem('aurx_current', id);
+}
 
   settingsBtn?.addEventListener('click', () => {
     settingsModal?.classList.add('open');
