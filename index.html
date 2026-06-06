@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -254,10 +254,51 @@ header .btn:active { opacity: 0.7; }
 }
 .typing-text.show { opacity: 1; }
 
-/* KATEX THEME SOMBRE + LISIBILITÉ */
-.katex { color: #fff; font-size: 1.1em; }
-.katex-display { margin: 1.2em 0; overflow-x: auto; }
-.katex-display > .katex { display: block; text-align: center; }
+/* KATEX THEME SOMBRE + NO FRAME FIX */
+.katex { 
+  color: #fff !important; 
+  font-size: 1.1em;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+.katex-display { 
+  margin: 1.2em 0; 
+  overflow-x: auto;
+  border: none !important;
+  background: transparent !important;
+}
+.katex-display > .katex { 
+  display: block; 
+  text-align: center;
+  border: none !important;
+}
+.katex-html {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* VIRE LES FRAMES SUR LES LIENS ET CODE */
+a, a:has(.katex), a .katex {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+.code-frame {
+  border: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+.inline-code {
+  background: #1a1a1a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
 </style>
 </head>
 <body>
@@ -398,7 +439,7 @@ AurX AI
 <script src="config.js"></script>
 <script src="script.js"></script>
 
-<!-- KATEX JS SANS DEFER -->
+<!-- KATEX JS -->
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
@@ -409,7 +450,6 @@ const BACKEND_URL = 'https://aur-x-backend.vercel.app';
 // === GOOGLE AUTH VIA BACKEND VERCEL ===
 let googleUser = null;
 
-// Check si user déjà connecté au chargement
 async function checkAuth() {
   try {
     const res = await fetch(`${BACKEND_URL}/api/auth/me`, { credentials: 'include' });
@@ -422,7 +462,6 @@ async function checkAuth() {
   }
 }
 
-// Update UI du bouton
 function updateGoogleUI(isConnected) {
   const googleBtn = document.getElementById('googleAuthBtn');
   const googleText = document.getElementById('googleAuthText');
@@ -443,10 +482,8 @@ function updateGoogleUI(isConnected) {
   }
 }
 
-// Click sur le bouton Google
 document.getElementById('googleAuthBtn')?.addEventListener('click', async () => {
   if (googleUser) {
-    // Déconnexion
     try {
       await fetch(`${BACKEND_URL}/api/auth/logout`, { 
         method: 'POST',
@@ -458,7 +495,6 @@ document.getElementById('googleAuthBtn')?.addEventListener('click', async () => 
       console.error('Erreur déconnexion:', e);
     }
   } else {
-    // Connexion - redirige vers ton backend
     window.location.href = `${BACKEND_URL}/api/auth/google`;
   }
 });
@@ -469,11 +505,11 @@ function toggleWelcome() {
   const welcome = document.getElementById('welcome');
   if (!welcome) return;
   
-  const hasMessages = chat.querySelector('.message, .typing-wrapper');
+  const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
 
-// === KATEX ===
+// === KATEX RENDER FIX ===
 function waitForKatex(callback) {
   if (window.renderMathInElement) {
     callback();
@@ -486,15 +522,24 @@ let renderTimeout = null;
 
 function renderMath() {
   if (!window.renderMathInElement) return;
-  renderMathInElement(document.getElementById('chat'), {
-    delimiters: [
-      {left: '$$', right: '$$', display: true},
-      {left: '$', right: '$', display: false},
-      {left: '\\[', right: '\\]', display: true},
-      {left: '\\(', right: '\\)', display: false}
-    ],
-    throwOnError: false,
-    strict: false
+  
+  // Render seulement dans les messages, pas dans tout le chat
+  document.querySelectorAll('.msg').forEach(msg => {
+    if (msg.dataset.katexRendered) return; // Évite de re-render
+    
+    renderMathInElement(msg, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\[', right: '\\]', display: true},
+        {left: '\\(', right: '\\)', display: false}
+      ],
+      throwOnError: false,
+      strict: false,
+      trust: true,
+      output: 'html'
+    });
+    msg.dataset.katexRendered = 'true';
   });
 }
 
@@ -510,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderTimeout = setTimeout(() => {
         renderMath();
         toggleWelcome();
-      }, 400);
+      }, 200);
     });
     observer.observe(chat, { childList: true, subtree: true });
   });
