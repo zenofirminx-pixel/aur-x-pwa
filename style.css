@@ -573,3 +573,11 @@ header {
 p {
   margin: 0 0 10px 0;
 }
+.bot-full-text p {
+    margin: 0 0 12px 0;
+    line-height: 1.7;
+}
+.bot-full-text {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+}
