@@ -570,3 +570,6 @@ header {
   max-width: 100%;
   box-sizing: border-box;
 }
+p {
+  margin: 0 0 10px 0;
+}
