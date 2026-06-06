@@ -352,20 +352,8 @@ function initApp() {
   }
 
   function formatMessage(text) {
-    if (!text) return "";
-    const mathBlocks = [];
-    const codeBlocks = [];
-    text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g, match => {
-      const id = `__MATH_${mathBlocks.length}__`;
-      mathBlocks.push(match);
-      return id;
-    });
-    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-      const id = `__CODE_${codeBlocks.length}__`;
-      codeBlocks.push({ lang: lang || "plaintext", code });
-      return id;
-    });
-    function formatMessage(text) {
+  if (!text) return "";
+  
   // 1. Extraire les blocs de code ```lang ... ``` AVANT d'échapper
   const codeBlocks = [];
   text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
@@ -390,7 +378,7 @@ function initApp() {
   text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
   text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
 
-  // 5. Styles - ordre important pour éviter conflit * et **
+  // 5. Styles - ordre important
   text = text.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
   text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
@@ -405,12 +393,12 @@ function initApp() {
   // 8. Citations
   text = text.replace(/^&gt;\s+(.*)$/gm, "<blockquote>$1</blockquote>");
 
-  // 9. Listes à puces - et *
+  // 9. Listes à puces
   text = text.replace(/^(?:- |\* )(.+)$/gm, "<li>$1</li>");
   text = text.replace(/(<li>.*?<\/li>)/gs, "<ul>$1</ul>");
-  text = text.replace(/<\/ul>\s*<ul>/g, ''); // Fusionne les ul
+  text = text.replace(/<\/ul>\s*<ul>/g, '');
 
-  // 10. Listes numérotées 1. 2. 3.
+  // 10. Listes numérotées
   text = text.replace(/^\d+\.\s(.+)$/gm, "<li>$1</li>");
   text = text.replace(/(<li>.*?<\/li>)/gs, (match) => {
     if (match.includes('<ul>') || match.includes('<ol>')) return match;
