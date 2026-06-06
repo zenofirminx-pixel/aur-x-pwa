@@ -377,6 +377,12 @@ function initApp() {
     text = text.replace(/^\* (.*)$/gm, "<li>$1</li>");
     text = text.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
     text = text.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
+    text = text
+  .replace(/\.([A-Za-zÀ-ÿ])/g, '. $1')
+  .replace(/!\s*([A-Za-zÀ-ÿ])/g, '! $1')
+  .replace(/\?\s*([A-Za-zÀ-ÿ])/g, '? $1')
+  .replace(/,\s*([A-Za-zÀ-ÿ])/g, ', $1');
+    
     text = linkify(text);
     text = text.replace(/\n\n+/g, "</p><p>");
     text = text.replace(/\n/g, "<br>");
