@@ -350,15 +350,14 @@ function initApp() {
     if (parts.length === 0) parts.push({ type: 'text', content: text });
     return parts;
   }
-
-  function formatMessage(text) {
+function formatMessage(text) {
   if (!text) return "";
   
   // 1. Extraire les blocs de code ```lang ... ``` AVANT d'échapper
   const codeBlocks = [];
   text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
     const index = codeBlocks.length;
-    codeBlocks.push({ lang: lang || 'text', code: code.trim() });
+    codeBlocks.push({ lang: lang || 'text', code: code });
     return `__CODE_${index}__`;
   });
 
@@ -395,60 +394,54 @@ function initApp() {
 
   // 9. Listes à puces
   text = text.replace(/^(?:- |\* )(.+)$/gm, "<li>$1</li>");
-  text = text.replace(/(<li>.*?<\/li>)/gs, "<ul>$1</ul>");
-  text = text.replace(/<\/ul>\s*<ul>/g, '');
+  text = text.replace(/(<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*)/gs, "<ul>$1</ul>");
 
   // 10. Listes numérotées
   text = text.replace(/^\d+\.\s(.+)$/gm, "<li>$1</li>");
-  text = text.replace(/(<li>.*?<\/li>)/gs, (match) => {
+  text = text.replace(/(<li>.*?<\/li>(?:\s*<li>.*?<\/li>)*)/gs, (match) => {
     if (match.includes('<ul>') || match.includes('<ol>')) return match;
     return '<ol>' + match + '</ol>';
   });
 
-  // 11. Correction ponctuation + espaces entre phrases
-  text = text
-    .replace(/\s*\.([A-Za-zÀ-ÿ0-9])/g, '. $1')
-    .replace(/\s*!([A-Za-zÀ-ÿ0-9])/g, '! $1')
-    .replace(/\s*\?([A-Za-zÀ-ÿ0-9])/g, '? $1')
-    .replace(/\s*,([A-Za-zÀ-ÿ0-9])/g, ', $1')
-    .replace(/\s+/g, ' ')
-    .trim();
+  // 11. CORRECTION ESPACES : ajoute espace après ponctuation SEULEMENT si collé
+  text = text.replace(/([.!?])([A-Za-zÀ-ÿ0-9])/g, '$1 $2');
+  text = text.replace(/,([A-Za-zÀ-ÿ0-9])/g, ', $1');
+  
+  // 12. Nettoie espaces multiples MAIS garde les sauts de ligne
+  text = text.replace(/[ \t]+/g, ' ').trim();
 
-  // 12. Paragraphes
-  text = text.split(/\n\n+/).map(para => {
+  // 13. Paragraphes : split sur double saut de ligne
+  const paragraphs = text.split(/\n{2,}/);
+  text = paragraphs.map(para => {
+    para = para.trim();
+    if (!para) return '';
+    // Skip si c'est déjà un bloc HTML ou placeholder
     if (para.match(/^<(h[1-3]|ul|ol|blockquote)/) || para.startsWith('__CODE_') || para.startsWith('__MATH_')) {
       return para;
     }
-    return para ? `<p>${para}</p>` : '';
-  }).join('\n');
-
-  // 13. Sauts de ligne simples dans les <p>
-  text = text.replace(/<p>(.*?)<\/p>/gs, (match, content) => {
-    return `<p>${content.replace(/\n/g, '<br>')}</p>`;
-  });
+    // Remplace \n simple par <br> dans le paragraphe
+    para = para.replace(/\n/g, '<br>');
+    return `<p>${para}</p>`;
+  }).filter(Boolean).join('\n');
 
   // 14. Nettoie <p> autour des blocs
   text = text.replace(/<p>(<(?:h[1-3]|ul|ol|blockquote)>.*?<\/(?:h[1-3]|ul|ol|blockquote)>)<\/p>/gs, '$1');
 
-  // 15. Wrap final si c'est que du texte
-  if (!text.match(/^<(h[1-3]|ul|ol|pre|blockquote|p)/)) {
-    text = "<p>" + text + "</p>";
-  }
-
-  // 16. Remettre les blocs de code avec label de langage
+  // 15. Remettre les blocs de code avec label de langage
   codeBlocks.forEach((block, i) => {
     const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const langLabel = block.lang !== 'text' ? block.lang : '';
     text = text.replace(`__CODE_${i}__`, `<pre><div class="code-lang">${langLabel}</div><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="language-${block.lang}">${escapedCode}</code></pre>`);
   });
 
-  // 17. Remettre les blocs math
+  // 16. Remettre les blocs math
   mathBlocks.forEach((math, i) => {
     text = text.replace(`__MATH_${i}__`, `$$${math}$$`);
   });
 
   return text;
 }
+  
     
 
 
