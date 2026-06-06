@@ -365,41 +365,112 @@ function initApp() {
       codeBlocks.push({ lang: lang || "plaintext", code });
       return id;
     });
-    text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
-    text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
-    text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
-    text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
-    text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
-    text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-    text = text.replace(/^\- (.*)$/gm, "<li>$1</li>");
-    text = text.replace(/^\* (.*)$/gm, "<li>$1</li>");
-    text = text.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
-    text = text.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
-    text = text
-  .replace(/\.([A-Za-zÀ-ÿ])/g, '. $1')
-  .replace(/!\s*([A-Za-zÀ-ÿ])/g, '! $1')
-  .replace(/\?\s*([A-Za-zÀ-ÿ])/g, '? $1')
-  .replace(/,\s*([A-Za-zÀ-ÿ])/g, ', $1');
     
-    text = linkify(text);
-    text = text.replace(/\n\n+/g, "</p><p>");
-    text = text.replace(/\n/g, "<br>");
-    if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote")) {
-      text = "<p>" + text + "</p>";
-    }
-    codeBlocks.forEach((block, i) => {
-      const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      text = text.replace(`__CODE_${i}__`, `<pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="language-${block.lang}">${escapedCode}</code></pre>`);
-    });
-    mathBlocks.forEach((math, i) => {
-      text = text.replace(`__MATH_${i}__`, math);
-    });
-    return text;
-  }
+    function formatMessage(text) {
+  // 1. Extraire les blocs de code ```lang ... ``` AVANT d'échapper le HTML
+  const codeBlocks = [];
+  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    const index = codeBlocks.length;
+    codeBlocks.push({ lang: lang || 'text', code: code.trim() });
+    return `__CODE_${index}__`;
+  });
 
-  function addMessage(text, type, timestamp = null, isNew = true) {
+  // 2. Extraire les blocs math $$...$$ si t'en as
+  const mathBlocks = [];
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
+    const index = mathBlocks.length;
+    mathBlocks.push(math);
+    return `__MATH_${index}__`;
+  });
+
+  // 3. Échapper le HTML pour éviter XSS
+  text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  // 4. Titres
+  text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+  text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+  text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+
+  // 5. Styles - ordre important pour ***gras italique***
+  text = text.replace(/\*\*\*(.*?)\*\*\*/g, "<strong><em>$1</em></strong>");
+  text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
+
+  // 6. Code inline `code`
+  text = text.replace(/`([^`\n]+)`/g, '<code class="inline-code">$1</code>');
+
+  // 7. Liens [text](url)
+  text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // 8. Auto-link URLs brutes
+  text = text.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
+
+  // 9. Citations
+  text = text.replace(/^&gt;\s+(.*)$/gm, "<blockquote>$1</blockquote>");
+
+  // 10. Listes à puces
+  text = text.replace(/^(?:- |\* )(.+)$/gm, "<li>$1</li>");
+  text = text.replace(/(<li>.*?<\/li>)/gs, "<ul>$1</ul>");
+  text = text.replace(/<\/ul>\s*<ul>/g, ''); // Fusionne les ul collés
+
+  // 11. Listes numérotées
+  text = text.replace(/^\d+\.\s(.+)$/gm, "<li>$1</li>");
+  text = text.replace(/(<li>.*?<\/li>)/gs, (match) => {
+    if (match.includes('<ul>') || match.includes('<ol>')) return match;
+    return '<ol>' + match + '</ol>';
+  });
+
+  // 12. Correction ponctuation + espace entre phrases
+  text = text
+    .replace(/\s*\.([A-Za-zÀ-ÿ0-9])/g, '. $1')
+    .replace(/\s*!([A-Za-zÀ-ÿ0-9])/g, '! $1')
+    .replace(/\s*\?([A-Za-zÀ-ÿ0-9])/g, '? $1')
+    .replace(/\s*,([A-Za-zÀ-ÿ0-9])/g, ', $1')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // 13. Paragraphes : double \n = nouveau paragraphe
+  text = text.split(/\n\n+/).map(para => {
+    if (para.match(/^<(h[1-3]|ul|ol|pre|blockquote)/) || para.startsWith('__CODE_') || para.startsWith('__MATH_')) {
+      return para;
+    }
+    return para ? `<p>${para}</p>` : '';
+  }).join('\n');
+
+  // 14. Simple \n = <br> mais seulement dans les <p>
+  text = text.replace(/<p>(.*?)<\/p>/gs, (match, content) => {
+    return `<p>${content.replace(/\n/g, '<br>')}</p>`;
+  });
+
+  // 15. Nettoie les <p> autour des blocs
+  text = text.replace(/<p>(<(?:h[1-3]|ul|ol|blockquote)>.*?<\/(?:h[1-3]|ul|ol|blockquote)>)<\/p>/gs, '$1');
+
+  // 16. Remettre les blocs de code avec label de langage + bouton copier
+  codeBlocks.forEach((block, i) => {
+    const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const langLabel = block.lang !== 'text' ? block.lang : '';
+    text = text.replace(`__CODE_${i}__`, `
+      <div class="code-block">
+        <div class="code-header">
+          <span class="code-lang">${langLabel}</span>
+          <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+        </div>
+        <pre><code class="language-${block.lang}">${escapedCode}</code></pre>
+      </div>
+    `);
+  });
+
+  // 17. Remettre les blocs math
+  mathBlocks.forEach((math, i) => {
+    text = text.replace(`__MATH_${i}__`, `$$${math}$$`);
+  });
+
+  return text;
+}
+
+
+ function addMessage(text, type, timestamp = null, isNew = true) {
     if (isNew) hideWelcome();
     try {
       const parts = parseMessage(text);
