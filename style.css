@@ -552,3 +552,9 @@ header {
 .msg.bot pre code.language-bash::before { content: 'Bash'; }
 .msg.bot pre code.language-plaintext::before { content: 'Text'; }
 .msg.bot pre code:not([class*="language-"])::before { content: 'Code'; }
+.msg.bot,
+.msg-wrapper.bot .msg,
+.msg.bot-full-text {
+  max-width: calc(100% - 32px) !important;
+  width: calc(100% - 32px) !important;
+}
