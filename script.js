@@ -8,7 +8,7 @@ const CONFIG = {
 let isLoggedIn = false;
 let serverConversations = [];
 let conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
-let currentConvId = localStorage.getItem('aurx_current') || null;
+let currentConvId = null;
 let settings = JSON.parse(localStorage.getItem('aurx_settings') || '{"anim":true,"autosave":true,"timestamp":true,"notif":true}');
 let messageCounter = 0;
 
@@ -40,9 +40,10 @@ async function checkLogin() {
   } catch(e) {
     isLoggedIn = false;
     conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
-    currentConvId = localStorage.getItem('aurx_current') || null;
+    currentConvId = null;
+    const chat = document.getElementById('chat');
+    if (chat) chat.innerHTML = '<div id="welcome">AurX AI<span>Pose-moi une question</span></div>';
     renderHistory();
-    if (currentConvId) loadConversation(currentConvId);
     console.log('Mode guest');
   }
 }
