@@ -552,134 +552,53 @@ function formatMessage(text) {
   return text;
 }
   
-    
-
-async function sendMessage() {
-  const msg = input.value.trim();
-  if (!msg) return;
-  const now = Date.now();
-  
-  addMessage(msg, 'user', now);
-  
-  const convsToUse = isLoggedIn ? serverConversations : conversations;
-  let currentConv = convsToUse.find(c => c.id === currentConvId);
-  
-  if (!currentConv) {
-    currentConv = { id: currentConvId, title: msg.slice(0, 40), messages: [], date: now, updatedAt: now };
-    convsToUse.unshift(currentConv);
-  }
-  currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
-  
-  input.value = '';
-  input.style.height = 'auto';
-  updateCharCounter();
-  showTypingIndicator();
-  
-  const sendBtnEl = document.getElementById('sendBtn');
-  sendBtnEl.classList.add('loading');
-  sendBtnEl.disabled = true;
-
-  // Crée le message bot vide
-  const botTime = Date.now();
-  addMessage('', 'bot', botTime);
-  
-  // Récupère le dernier wrapper bot qu'on vient de créer
-  const botWrapper = document.querySelector(`[data-timestamp="${botTime}"]`);
-  const botMsgEl = botWrapper?.querySelector('.msg, .bot-full-text');
-  let botText = '';
-
-  try {
-    const res = await fetch(CONFIG.ENDPOINTS.openai, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        api: 'openai', 
-        message: msg, 
-        convId: currentConvId,
-        model: CONFIG.MODELS.openai 
-      })
-    });
-
-    hideTypingIndicator();
-
-    if (!res.ok) {
-      if (botMsgEl) {
-        botMsgEl.innerHTML = 'Erreur serveur';
-        botMsgEl.classList.add('error');
-      }
-      currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
-      saveConversation(msg.slice(0, 40), currentConv.messages);
-      return;
-    }
-
-    // LECTURE DU STREAM SSE
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') {
-            currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
-            saveConversation(msg.slice(0, 40), currentConv.messages);
-            
-            if (isLoggedIn) {
-              const histRes = await fetch('https://aur-x-backend.vercel.app/api/history', {
-                credentials: 'include'
-              });
-              const histData = await histRes.json();
-              serverConversations = histData.conversations || [];
-              conversations = serverConversations;
-              renderHistory();
-            }
-            return;
-          }
-
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) {
-              botText += parsed.content;
-              if (botMsgEl) {
-                // Utilise ton formatMessage pour garder le rendu
-                botMsgEl.innerHTML = formatMessage(autoMathify(botText));
-                highlightCode(); // Re-highlight à chaque chunk
-                chat.scrollTop = chat.scrollHeight;
-              }
-            }
-            if (parsed.error) {
-              if (botMsgEl) {
-                botMsgEl.innerHTML = parsed.error;
-                botMsgEl.classList.add('error');
-              }
-            }
-          } catch (e) {}
+function addMessage(text, type, timestamp = null, isNew = true) {
+    if (isNew) hideWelcome();
+    try {
+      const parts = parseMessage(text);
+      parts.forEach(part => {
+        const wrapper = document.createElement('div');
+        wrapper.dataset.timestamp = timestamp || Date.now();
+        if (type === 'user') {
+          wrapper.className = `msg-wrapper user`;
+          const msg = document.createElement('div');
+          msg.className = `msg user`;
+          const processedText = autoMathify(part.content);
+          msg.innerHTML = formatMessage(processedText);
+          msg.dataset.index = messageCounter++;
+          wrapper.appendChild(msg);
+        } else if (part.type === 'code') {
+          wrapper.className = `msg-wrapper bot`;
+          const msg = document.createElement('div');
+          msg.className = `msg bot`;
+          msg.innerHTML = formatMessage('```' + part.lang + '\n' + part.content + '```');
+          msg.dataset.index = messageCounter++;
+          wrapper.appendChild(msg);
+        } else {
+          wrapper.className = `msg-wrapper bot-full`;
+          const msg = document.createElement('div');
+          msg.className = `msg bot-full-text`;
+          msg.innerHTML = formatMessage(part.content);
+          msg.dataset.index = messageCounter++;
+          wrapper.appendChild(msg);
         }
-      }
+        if (settings.timestamp) {
+          const time = document.createElement('div');
+          time.className = 'msg-time';
+          time.textContent = new Date(Number(wrapper.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          wrapper.appendChild(time);
+        }
+        chat.appendChild(wrapper);
+      });
+      chat.scrollTop = chat.scrollHeight;
+      highlightCode();
+    } catch(e) {
+      console.error('addMessage error:', e);
     }
+    return text;
+  }    
 
-  } catch (e) {
-    hideTypingIndicator();
-    const errorText = 'Erreur réseau / serveur';
-    if (botMsgEl) {
-      botMsgEl.innerHTML = errorText;
-      botMsgEl.classList.add('error');
-    }
-    currentConv.messages.push({ text: errorText, type: 'bot error', timestamp: Date.now() });
-    saveConversation(msg.slice(0, 40), currentConv.messages);
-    console.error(e);
-  } finally {
-    sendBtnEl.classList.remove('loading');
-    sendBtnEl.disabled = false;
-  }
-}
+
  
 
   function showTypingIndicator() {
@@ -712,124 +631,78 @@ async function sendMessage() {
   }
 
   async function sendMessage() {
-  const msg = input.value.trim();
-  if (!msg) return;
-  const now = Date.now();
-  
-  addMessage(msg, 'user', now);
-  
-  const convsToUse = isLoggedIn ? serverConversations : conversations;
-  let currentConv = convsToUse.find(c => c.id === currentConvId);
-  
-  if (!currentConv) {
-    currentConv = { id: currentConvId, title: msg.slice(0, 40), messages: [], date: now, updatedAt: now };
-    convsToUse.unshift(currentConv);
-  }
-  currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
-  
-  input.value = '';
-  input.style.height = 'auto';
-  updateCharCounter();
-  showTypingIndicator();
-  
-  const sendBtnEl = document.getElementById('sendBtn');
-  sendBtnEl.classList.add('loading');
-  sendBtnEl.disabled = true;
-
-  // Crée le message bot vide qu'on va streamer
-  const botTime = Date.now();
-  addMessage('', 'bot', botTime);
-  const botMsgEl = document.querySelector(`[data-timestamp="${botTime}"] .msg-text`);
-  let botText = '';
-
-  try {
-    const res = await fetch(CONFIG.ENDPOINTS.openai, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        api: 'openai', 
-        message: msg, 
-        convId: currentConvId,
-        model: CONFIG.MODELS.openai 
-      })
-    });
-
-    hideTypingIndicator();
-
-    if (!res.ok) {
-      const errorText = "Erreur serveur";
-      botMsgEl.textContent = errorText;
-      botMsgEl.parentElement.classList.add('error');
-      currentConv.messages.push({ text: errorText, type: 'bot error', timestamp: Date.now() });
-      saveConversation(msg.slice(0, 40), currentConv.messages);
-      return;
+    const msg = input.value.trim();
+    if (!msg) return;
+    const now = Date.now();
+    addMessage(msg, 'user', now);
+    
+    const currentMessages = [];
+    const convsToUse = isLoggedIn ? serverConversations : conversations;
+    const currentConv = convsToUse.find(c => c.id === currentConvId);
+    if (currentConv) {
+      currentMessages.push(...currentConv.messages);
     }
-
-    // LECTURE DU STREAM SSE
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
-          if (data === '[DONE]') {
-            // Stream fini
-            currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
-            saveConversation(msg.slice(0, 40), currentConv.messages);
-            
-            // Refresh l'history si connecté
-            if (isLoggedIn) {
-              const histRes = await fetch('https://aur-x-backend.vercel.app/api/history', {
-                credentials: 'include'
-              });
-              const histData = await histRes.json();
-              serverConversations = histData.conversations || [];
-              conversations = serverConversations;
-              renderHistory();
-            }
-            return;
-          }
-
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) {
-              botText += parsed.content;
-              botMsgEl.textContent = botText;
-              // Auto scroll
-              messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            }
-            if (parsed.error) {
-              botMsgEl.textContent = parsed.error;
-              botMsgEl.parentElement.classList.add('error');
-            }
-          } catch (e) {
-            // ignore les lignes malformées
-          }
-        }
+    currentMessages.push({text: msg, type: 'user', timestamp: now});
+    
+    input.value = '';
+    input.style.height = 'auto';
+    updateCharCounter();
+    showTypingIndicator();
+    const sendBtnEl = document.getElementById('sendBtn');
+    sendBtnEl.classList.add('loading');
+    sendBtnEl.disabled = true;
+    
+    try {
+      const res = await fetch(CONFIG.ENDPOINTS.openai, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          api: 'openai', 
+          message: msg, 
+          convId: currentConvId,
+          model: CONFIG.MODELS.openai 
+        })
+      });
+      const data = await res.json().catch(() => ({}));
+      hideTypingIndicator();
+      if (!res.ok) {
+        const errorText = data.error || "Erreur serveur";
+        const errTime = Date.now();
+        addMessage(errorText, 'bot error', errTime);
+        currentMessages.push({text: errorText, type: 'bot error', timestamp: errTime});
+        saveConversation(msg.slice(0, 40), currentMessages);
+        return;
       }
+      const botTime = Date.now();
+      const replyText = await typeMessage(data.reply || "...", 'bot', botTime);
+      currentMessages.push({text: replyText, type: 'bot', timestamp: botTime});
+      
+      if (!currentConvId) currentConvId = data.convId || Date.now().toString();
+      saveConversation(msg.slice(0, 40), currentMessages);
+      
+      if (isLoggedIn) {
+        const histRes = await fetch('https://aur-x-backend.vercel.app/api/history', {
+          credentials: 'include'
+        });
+        const histData = await histRes.json();
+        serverConversations = histData.conversations || [];
+        conversations = serverConversations;
+        renderHistory();
+      }
+    } catch (e) {
+      hideTypingIndicator();
+      const errorText = 'Erreur réseau / serveur';
+      const errTime = Date.now();
+      addMessage(errorText, 'bot error', errTime);
+      currentMessages.push({text: errorText, type: 'bot error', timestamp: errTime});
+      saveConversation(msg.slice(0, 40), currentMessages);
+      console.error(e);
+    } finally {
+      sendBtnEl.classList.remove('loading');
+      sendBtnEl.disabled = false;
     }
-
-  } catch (e) {
-    hideTypingIndicator();
-    const errorText = 'Erreur réseau / serveur';
-    botMsgEl.textContent = errorText;
-    botMsgEl.parentElement.classList.add('error');
-    currentConv.messages.push({ text: errorText, type: 'bot error', timestamp: Date.now() });
-    saveConversation(msg.slice(0, 40), currentConv.messages);
-    console.error(e);
-  } finally {
-    sendBtnEl.classList.remove('loading');
-    sendBtnEl.disabled = false;
   }
-}
 
   function typeMessage(text, type, timestamp = Date.now()) {
     return new Promise(resolve => {
