@@ -692,10 +692,10 @@ async function sendMessage() {
   let pendingText = '';
   let rafId = null;
   let cursorTimeout = null;
+  let hasNetworkError = false; // 🔥 FLAG SÉPARÉ
   
   function showPauseCursor() {
-    // 🔥 SÉCURITÉ : check si msgEl existe encore
-    if (!cursor && msgEl.isConnected) {
+    if (!cursor && msgEl.isConnected && !hasNetworkError) {
       cursor = document.createElement('span');
       cursor.className = 'streaming-cursor pulsing';
       msgEl.appendChild(cursor);
@@ -707,10 +707,21 @@ async function sendMessage() {
       cursor.remove();
       cursor = null;
     }
-    // 🔥 FIX : Clear le timeout direct
     if (cursorTimeout) {
       clearTimeout(cursorTimeout);
       cursorTimeout = null;
+    }
+  }
+  
+  function safeRenderStreaming() {
+    // 🔥 RENDER ISOLÉ : si ça crash, on fallback sans toucher au reste
+    try {
+      msgEl.innerHTML = formatMessage(autoMathify(rawText), true);
+      highlightCode();
+    } catch (err) {
+      console.warn('Render stream error, fallback:', err);
+      // Fallback : texte brut + échappe le HTML
+      msgEl.textContent = rawText;
     }
   }
   
@@ -720,30 +731,23 @@ async function sendMessage() {
       pendingText = '';
       
       hidePauseCursor();
-      
-      try {
-        msgEl.innerHTML = formatMessage(autoMathify(rawText), true);
-        highlightCode();
-      } catch (e) {
-        // 🔥 SÉCURITÉ : si formatMessage crash, fallback texte brut
-        console.error('Render error:', e);
-        msgEl.textContent = rawText;
-      }
+      safeRenderStreaming(); // 🔥 UTILISE LE SAFE RENDER
       
       const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
     }
     
-    // Point après 5s de pause
-    clearTimeout(cursorTimeout);
-    cursorTimeout = setTimeout(showPauseCursor, 5000);
+    if (!hasNetworkError) {
+      clearTimeout(cursorTimeout);
+      cursorTimeout = setTimeout(showPauseCursor, 5000);
+    }
     
     rafId = null;
   }
   
   function scheduleRender() {
     if (!rafId) {
-      hidePauseCursor(); // 🔥 Tue le point + le timeout direct
+      hidePauseCursor();
       rafId = requestAnimationFrame(flushBuffer);
     }
   }
@@ -764,6 +768,7 @@ async function sendMessage() {
     hideTypingIndicator();
     
     if (!res.ok) {
+      hasNetworkError = true; // 🔥 MARQUE LA VRAIE ERREUR RÉSEAU
       if (rafId) cancelAnimationFrame(rafId);
       hidePauseCursor();
       msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
@@ -788,12 +793,18 @@ async function sendMessage() {
           
           if (data === '[DONE]') {
             if (rafId) cancelAnimationFrame(rafId);
-            hidePauseCursor(); // 🔥 Clear tout avant flush final
+            hidePauseCursor();
             flushBuffer();
             
-            msgEl.innerHTML = formatMessage(autoMathify(rawText), false);
-            renderMathInPlace(msgEl);
-            highlightCode();
+            // RENDER FINAL - si ça crash ici c'est ton formatMessage qui déconne
+            try {
+              msgEl.innerHTML = formatMessage(autoMathify(rawText), false);
+              renderMathInPlace(msgEl);
+              highlightCode();
+            } catch (e) {
+              console.error('Final render error:', e);
+              msgEl.textContent = rawText; // Fallback texte brut
+            }
             
             currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
@@ -819,6 +830,7 @@ async function sendMessage() {
               scheduleRender();
             }
             if (parsed.error) {
+              hasNetworkError = true;
               if (rafId) cancelAnimationFrame(rafId);
               hidePauseCursor();
               msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
@@ -828,6 +840,7 @@ async function sendMessage() {
       }
     }
   } catch (e) {
+    hasNetworkError = true;
     if (rafId) cancelAnimationFrame(rafId);
     hideTypingIndicator();
     hidePauseCursor();
