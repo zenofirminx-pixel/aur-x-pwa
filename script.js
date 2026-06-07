@@ -510,36 +510,6 @@ function addMessage(text, type, timestamp = null, isNew = true) {
       typingElement = null;
     }
   }
-
- // 🔥 KATEX ROBUSTE - Sans WeakSet pour forcer le re-render
-function renderMathStrict(el) {
-  if (!window.renderMathInElement || !el) return;
-  
-  // Force le clean avant re-render sinon KaTeX duplique
-  const katexEls = el.querySelectorAll('.katex');
-  katexEls.forEach(node => {
-    const text = node.textContent;
-    node.replaceWith(document.createTextNode(text));
-  });
-  
-  try {
-    renderMathInElement(el, {
-      delimiters: [
-        {left: '$$', right: '$$', display: true},
-        {left: '\\[', right: '\\]', display: true},
-        {left: '$', right: '$', display: false},
-        {left: '\\(', right: '\\)', display: false}
-      ],
-      throwOnError: false,
-      strict: 'warn',
-      trust: false,
-      ignoredTags: ['script', 'noscript', 'style', 'textarea']
-      // NOTE: j’ai enlevé 'pre' et 'code' pour que KaTeX marche même dans les blocs code
-    });
-  } catch (e) {
-    console.warn('KaTeX error:', e);
-  }
-}
 async function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
@@ -575,6 +545,7 @@ async function sendMessage() {
   wrapper.appendChild(msgEl);
   
   let cursor = null;
+  let isDone = false; // 🔥 FLAG FIN DE STREAM
   
   if (settings.timestamp) {
     const time = document.createElement('div');
@@ -591,12 +562,12 @@ async function sendMessage() {
   let pendingText = '';
   let rafId = null;
   let cursorTimeout = null;
-  let hasNetworkError = false; // 🔥 FLAG SÉPARÉ
   
   function showPauseCursor() {
-    if (!cursor && msgEl.isConnected && !hasNetworkError) {
+    // 🔥 POINT SEULEMENT SI PAS FINI
+    if (!cursor && msgEl.isConnected && !isDone) {
       cursor = document.createElement('span');
-      cursor.className = 'streaming-cursor pulsing';
+      cursor.className = 'streaming-cursor';
       msgEl.appendChild(cursor);
     }
   }
@@ -612,31 +583,22 @@ async function sendMessage() {
     }
   }
   
-  function safeRenderStreaming() {
-    // 🔥 RENDER ISOLÉ : si ça crash, on fallback sans toucher au reste
-    try {
-      msgEl.innerHTML = formatMessage(autoMathify(rawText), true);
-      highlightCode();
-    } catch (err) {
-      console.warn('Render stream error, fallback:', err);
-      // Fallback : texte brut + échappe le HTML
-      msgEl.textContent = rawText;
-    }
-  }
-  
   function flushBuffer() {
     if (pendingText) {
       rawText += pendingText;
       pendingText = '';
       
       hidePauseCursor();
-      safeRenderStreaming(); // 🔥 UTILISE LE SAFE RENDER
+      
+      // 🔥 TEXTE BRUT - PAS DE RENDU
+      msgEl.textContent = rawText;
       
       const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
     }
     
-    if (!hasNetworkError) {
+    // 🔥 TIMEOUT SEULEMENT SI PAS FINI
+    if (!isDone) {
       clearTimeout(cursorTimeout);
       cursorTimeout = setTimeout(showPauseCursor, 5000);
     }
@@ -667,7 +629,7 @@ async function sendMessage() {
     hideTypingIndicator();
     
     if (!res.ok) {
-      hasNetworkError = true; // 🔥 MARQUE LA VRAIE ERREUR RÉSEAU
+      isDone = true;
       if (rafId) cancelAnimationFrame(rafId);
       hidePauseCursor();
       msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
@@ -691,19 +653,20 @@ async function sendMessage() {
           const data = line.slice(6).trim();
           
           if (data === '[DONE]') {
+            isDone = true; // 🔥 FINI = PLUS JAMAIS DE POINT
             if (rafId) cancelAnimationFrame(rafId);
             hidePauseCursor();
-            flushBuffer();
             
-            // RENDER FINAL - si ça crash ici c'est ton formatMessage qui déconne
-            try {
-              msgEl.innerHTML = formatMessage(autoMathify(rawText), false);
-              renderMathInPlace(msgEl);
-              highlightCode();
-            } catch (e) {
-              console.error('Final render error:', e);
-              msgEl.textContent = rawText; // Fallback texte brut
+            if (pendingText) {
+              rawText += pendingText;
+              pendingText = '';
             }
+            msgEl.textContent = rawText;
+            
+            // 🔥 TON RENDU SE FAIT ICI OU DEHORS
+            // msgEl.innerHTML = formatMessage(rawText);
+            // renderMathStrict(msgEl);
+            // highlightCode();
             
             currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
@@ -729,7 +692,7 @@ async function sendMessage() {
               scheduleRender();
             }
             if (parsed.error) {
-              hasNetworkError = true;
+              isDone = true;
               if (rafId) cancelAnimationFrame(rafId);
               hidePauseCursor();
               msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
@@ -739,7 +702,7 @@ async function sendMessage() {
       }
     }
   } catch (e) {
-    hasNetworkError = true;
+    isDone = true;
     if (rafId) cancelAnimationFrame(rafId);
     hideTypingIndicator();
     hidePauseCursor();
@@ -752,7 +715,7 @@ async function sendMessage() {
     sendBtnEl.disabled = false;
   }
 }
-
+ 
   function typeMessage(text, type, timestamp = Date.now()) {
     return new Promise(resolve => {
       const parts = parseMessage(text);
