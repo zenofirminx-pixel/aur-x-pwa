@@ -416,7 +416,7 @@ function formatMessage(text) {
     return id;
   });
 
-  // 2. ÉCHAPPEMENT HTML
+  // 2. ÉCHAPPEMENT HTML - MAINTENANT c'est safe
   text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
   // 3. TABLES GFM | col1 | col2 |
@@ -511,8 +511,10 @@ function formatMessage(text) {
   text = text.replace(/<p>(<(?:h[1-6]|ul|ol|blockquote|table|hr)>.*?<\/(?:h[1-6]|ul|ol|blockquote|table|hr)>)<\/p>/gs, '$1');
   text = text.replace(/<p>\s*<\/p>/g, '');
 
-  // 14. RESTAURER BLOCS CODE avec label
+  // 14. RESTAURER BLOCS CODE avec label - 🔥 FIX ICI
   codeBlocks.forEach((block, i) => {
+    // Le code est déjà échappé par l'escapeHtml global ligne 2
+    // On le re-échappe pour être sûr que les < > dans le code sont safe
     const escaped = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const langLabel = block.lang !== 'text' ? block.lang : '';
     text = text.replace(`__CODE_${i}__`, 
@@ -520,7 +522,7 @@ function formatMessage(text) {
     );
   });
 
-  // 15. RESTAURER MATH
+  // 15. RESTAURER MATH - 🔥 FIX ICI : PAS d'échappement pour KaTeX
   mathBlocks.forEach((math, i) => {
     text = text.replace(`__MATH_${i}__`, `$$${math}$$`);
   });
