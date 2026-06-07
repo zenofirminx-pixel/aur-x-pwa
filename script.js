@@ -722,13 +722,12 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             msgEl.innerHTML = formatMessage(autoMathify(botText));
             highlightCode();
             
-// 🔥 REMPLACE TON BLOC KATEX PAR ÇA
-// 🔥 CE BLOC MARCHE MÊME SI formatMessage A DOUBLÉ LES \
-let html = msgEl.innerHTML;
+// 🔥 RENDER KATEX SUR LE TEXTE BRUT AVANT HTML
+let processedText = botText; // On part du texte brut, pas du HTML
 
 if (window.katex) {
-  // 1. \\[ ... \\] ou \[ ... \]
-  html = html.replace(/\\\\?\[([\s\S]*?)\\\\?\]/g, (match, latex) => {
+  // \[...\] display
+  processedText = processedText.replace(/\\\[([\s\S]*?)\\\]/g, (match, latex) => {
     try {
       return katex.renderToString(latex.trim(), {
         displayMode: true,
@@ -736,13 +735,12 @@ if (window.katex) {
         strict: false
       });
     } catch (e) {
-      console.error('KaTeX error:', latex);
       return match;
     }
   });
   
-  // 2. \\( ... \\) ou \( ... \)
-  html = html.replace(/\\\\?\(([\s\S]*?)\\\\?\)/g, (match, latex) => {
+  // \(...\) inline  
+  processedText = processedText.replace(/\\\(([\s\S]*?)\\\)/g, (match, latex) => {
     try {
       return katex.renderToString(latex.trim(), {
         displayMode: false,
@@ -754,8 +752,8 @@ if (window.katex) {
     }
   });
   
-  // 3. $$ ... $$
-  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, latex) => {
+  // $$...$$ display
+  processedText = processedText.replace(/\$\$([\s\S]*?)\$\$/g, (match, latex) => {
     try {
       return katex.renderToString(latex.trim(), {
         displayMode: true,
@@ -767,8 +765,8 @@ if (window.katex) {
     }
   });
   
-  // 4. $ ... $
-  html = html.replace(/(^|[^\\])\$([^\$\n]+?)\$(?!\d)/g, (match, prefix, latex) => {
+  // $...$ inline
+  processedText = processedText.replace(/(^|[^\\])\$([^\$\n]+?)\$(?!\d)/g, (match, prefix, latex) => {
     try {
       return prefix + katex.renderToString(latex.trim(), {
         displayMode: false,
@@ -781,7 +779,9 @@ if (window.katex) {
   });
 }
 
-msgEl.innerHTML = html;
+msgEl.innerHTML = formatMessage(processedText);
+
+
      
             
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
