@@ -722,68 +722,63 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             msgEl.innerHTML = formatMessage(autoMathify(botText));
             highlightCode();
             
-// 🔥 RENDER MANUEL KATEX - 100% FIABLE
+// 🔥 REMPLACE TON BLOC KATEX PAR ÇA
 let html = msgEl.innerHTML;
 
-if (window.katex) {
-  // 1. \[...\]
-  html = html.replace(/\\\[([\s\S]*?)\\\]/g, (match, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), {
-        displayMode: true,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (e) {
-      console.error('KaTeX block error:', latex, e);
-      return match;
-    }
-  });
-  
-  // 2. \(...\)
-  html = html.replace(/\\\(([\s\S]*?)\\\)/g, (match, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), {
-        displayMode: false,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (e) {
-      console.error('KaTeX inline error:', latex, e);
-      return match;
-    }
-  });
-  
-  // 3. $$...$$
-  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), {
-        displayMode: true,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (e) {
-      console.error('KaTeX $$ error:', latex, e);
-      return match;
-    }
-  });
-  
-  // 4. $...$ inline
-  html = html.replace(/(^|[^\\])\$([^\$\n]+?)\$/g, (match, prefix, latex) => {
-    if (/^\d/.test(latex)) return match; // Ignore 5$
-    try {
-      return prefix + katex.renderToString(latex.trim(), {
-        displayMode: false,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (e) {
-      return match;
-    }
-  });
-}
+// 1. \[...\] display
+html = html.replace(/\\\[([\s\S]*?)\\\]/g, (match, latex) => {
+  try {
+    return katex.renderToString(latex.trim(), {
+      displayMode: true,
+      throwOnError: false,
+      strict: false
+    });
+  } catch (e) {
+    return match;
+  }
+});
+
+// 2. \(...\) inline
+html = html.replace(/\\\(([\s\S]*?)\\\)/g, (match, latex) => {
+  try {
+    return katex.renderToString(latex.trim(), {
+      displayMode: false,
+      throwOnError: false,
+      strict: false
+    });
+  } catch (e) {
+    return match;
+  }
+});
+
+// 3. $$...$$ display
+html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, latex) => {
+  try {
+    return katex.renderToString(latex.trim(), {
+      displayMode: true,
+      throwOnError: false,
+      strict: false
+    });
+  } catch (e) {
+    return match;
+  }
+});
+
+// 4. $...$ inline
+html = html.replace(/(^|[^\\\$])\$([^\$\n]+?)\$(?!\d)/g, (match, prefix, latex) => {
+  try {
+    return prefix + katex.renderToString(latex.trim(), {
+      displayMode: false,
+      throwOnError: false,
+      strict: false
+    });
+  } catch (e) {
+    return match;
+  }
+});
 
 msgEl.innerHTML = html;
+     
             
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
