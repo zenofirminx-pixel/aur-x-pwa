@@ -641,7 +641,6 @@ function renderMathStrict(el) {
     console.warn('KaTeX error:', e);
   }
 }
-
 async function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
@@ -674,8 +673,12 @@ async function sendMessage() {
   
   const msgEl = document.createElement('div');
   msgEl.className = 'msg bot-full-text';
-  msgEl.textContent = '';
   wrapper.appendChild(msgEl);
+  
+  // 🔥 CURSEUR STREAMING STYLE GPT
+  const cursor = document.createElement('span');
+  cursor.className = 'streaming-cursor';
+  msgEl.appendChild(cursor);
   
   if (settings.timestamp) {
     const time = document.createElement('div');
@@ -688,23 +691,49 @@ async function sendMessage() {
   chat.scrollTop = chat.scrollHeight;
   hideWelcome();
   
-  let botText = '';
+  let rawText = '';
   let pendingText = '';
   let rafId = null;
+  let lastChunkTime = Date.now();
+  let cursorTimeout = null;
   
   function flushBuffer() {
     if (pendingText) {
-      botText += pendingText;
+      rawText += pendingText;
       pendingText = '';
-      msgEl.textContent = botText; // 🔥 TEXTE BRUT PENDANT LE STREAM
-      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 100;
+      lastChunkTime = Date.now();
+      
+      // 🔥 RENDER MARKDOWN PENDANT STREAM
+      msgEl.innerHTML = formatMessage(autoMathify(rawText), true);
+      
+      // Remettre le curseur à la fin
+      const cursor = document.createElement('span');
+      cursor.className = 'streaming-cursor';
+      msgEl.appendChild(cursor);
+      
+      highlightCode();
+      
+      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
     }
+    
+    // 🔥 CURSEUR PULSÉ SI PAUSE > 300ms
+    clearTimeout(cursorTimeout);
+    cursorTimeout = setTimeout(() => {
+      const cursor = msgEl.querySelector('.streaming-cursor');
+      if (cursor) cursor.classList.add('pulsing');
+    }, 300);
+    
     rafId = null;
   }
   
   function scheduleRender() {
-    if (!rafId) rafId = requestAnimationFrame(flushBuffer);
+    if (!rafId) {
+      // Retire le pulse quand ça arrive
+      const cursor = msgEl.querySelector('.streaming-cursor');
+      if (cursor) cursor.classList.remove('pulsing');
+      rafId = requestAnimationFrame(flushBuffer);
+    }
   }
   
   try {
@@ -724,8 +753,8 @@ async function sendMessage() {
     
     if (!res.ok) {
       if (rafId) cancelAnimationFrame(rafId);
-      msgEl.textContent = 'Erreur serveur';
-      msgEl.classList.add('error');
+      clearTimeout(cursorTimeout);
+      msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
       currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
       saveConversation(msg.slice(0, 40), currentConv.messages);
       return;
@@ -747,16 +776,19 @@ async function sendMessage() {
           
           if (data === '[DONE]') {
             if (rafId) cancelAnimationFrame(rafId);
+            clearTimeout(cursorTimeout);
             flushBuffer();
             
-            // 🔥 1. Formatage final + code highlighting
-            msgEl.innerHTML = formatMessage(autoMathify(botText));
+            // 🔥 RETIRER LE CURSEUR
+            const cursor = msgEl.querySelector('.streaming-cursor');
+            if (cursor) cursor.remove();
+            
+            // 🔥 RENDER FINAL : Markdown complet + KaTeX
+            msgEl.innerHTML = formatMessage(autoMathify(rawText), false);
+            renderMathInPlace(msgEl);
             highlightCode();
             
-            // 🔥 2. RENDER KATEX ROBUSTE - UNE SEULE FOIS À LA FIN
-            renderMathStrict(msgEl);
-            
-            currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
+            currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
             
             if (isLoggedIn) {
@@ -781,8 +813,8 @@ async function sendMessage() {
             }
             if (parsed.error) {
               if (rafId) cancelAnimationFrame(rafId);
-              msgEl.textContent = parsed.error;
-              msgEl.classList.add('error');
+              clearTimeout(cursorTimeout);
+              msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
             }
           } catch (e) {}
         }
@@ -790,9 +822,9 @@ async function sendMessage() {
     }
   } catch (e) {
     if (rafId) cancelAnimationFrame(rafId);
+    clearTimeout(cursorTimeout);
     hideTypingIndicator();
-    msgEl.textContent = 'Erreur réseau / serveur';
-    msgEl.classList.add('error');
+    msgEl.innerHTML = '<span class="error">Erreur réseau / serveur</span>';
     currentConv.messages.push({ text: 'Erreur réseau / serveur', type: 'bot error', timestamp: Date.now() });
     saveConversation(msg.slice(0, 40), currentConv.messages);
     console.error(e);
@@ -801,6 +833,7 @@ async function sendMessage() {
     sendBtnEl.disabled = false;
   }
 }
+
 
   function typeMessage(text, type, timestamp = Date.now()) {
     return new Promise(resolve => {
