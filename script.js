@@ -118,14 +118,24 @@ function linkify(text) {
 function autoMathify(text) {
   if (!text) return '';
   
-  // Protège les blocs existants
+  // 🔥 Protège SEULEMENT les blocs code et les $$ déjà présents, PAS les \[ \]
   const protected = [];
-  text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|```[\s\S]*?```|`[^`\n]+?`)/g, m => {
+  text = text.replace(/(\$\$[\s\S]*?\$\$|```[\s\S]*?```|`[^`\n]+?`)/g, m => {
     protected.push(m);
     return `__PROTECT_${protected.length-1}__`;
   });
 
-  // 🔥 BLACKLIST : mots français à NE JAMAIS transformer en LaTeX
+  // Convertit \[...\] en $$...$$ MAINTENANT
+  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
+    return `$$${math.trim()}$$`;
+  });
+  
+  // Convertit \(...\) en $...$
+  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (match, math) => {
+    return `$${math.trim()}$`;
+  });
+
+  // Blacklist : mots français à NE JAMAIS transformer en LaTeX
   const blacklist = [
     'je', 'tu', 'il', 'elle', 'on', 'nous', 'vous', 'ils', 'elles',
     'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'ce', 'ça',
@@ -144,7 +154,6 @@ function autoMathify(text) {
   const mathRegex = /(\b[a-z]\s*[=+\-*/]\s*\d+|\b\d+\s*[+\-*/^]\s*[a-z]\b|[a-z]\^\{?[0-9a-z]+\}?|sqrt\([^)]+\)|\d+\/\d+|\bpi\b|\balpha\b|\bbeta\b|\bgamma\b|\btheta\b|\blambda\b|\bsigma\b|\bphi\b|\bdelta\b)/gi;
   
   text = text.replace(mathRegex, match => {
-    // Skip si c'est dans la blacklist
     if (blacklistRegex.test(match.toLowerCase())) return match;
     
     let m = match;
