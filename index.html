@@ -513,40 +513,6 @@ function toggleWelcome() {
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
 
-// === KATEX RENDER FIX ===
-function waitForKatex(callback) {
-  if (window.renderMathInElement) {
-    callback();
-  } else {
-    setTimeout(() => waitForKatex(callback), 100);
-  }
-}
-
-let renderTimeout = null;
-
-function renderMath() {
-  if (!window.renderMathInElement) return;
-  
-  // Render seulement dans les messages, pas dans tout le chat
-  document.querySelectorAll('.msg').forEach(msg => {
-    if (msg.dataset.katexRendered) return; // Évite de re-render
-    
-    renderMathInElement(msg, {
-      delimiters: [
-        {left: '$$', right: '$$', display: true},
-        {left: '$', right: '$', display: false},
-        {left: '\\[', right: '\\]', display: true},
-        {left: '\\(', right: '\\)', display: false}
-      ],
-      throwOnError: false,
-      strict: false,
-      trust: true,
-      output: 'html'
-    });
-    msg.dataset.katexRendered = 'true';
-  });
-}
-
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   toggleWelcome();
