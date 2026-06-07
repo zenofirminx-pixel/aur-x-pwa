@@ -115,12 +115,12 @@ function linkify(text) {
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
   });
 }
-function autoMathify(text) {
+function autoMathify(text) { 
   if (!text) return text;
-  // 🔥 NE TOUCHE À RIEN. Laisse l'IA envoyer du LaTeX propre.
-  return text;
+  
+  // 🔥 Protège seulement les prix genre 5$ 20$ mais laisse $x$ intact
+  return text.replace(/(\d)\$/g, '$1\\$');
 }
-
 document.addEventListener('DOMContentLoaded', initApp);
 
 function initApp() {
@@ -610,11 +610,17 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     }
   }
 
- // 🔥 KATEX ROBUSTE + STRICT - 0 double render
-const katexRendered = new WeakSet();
-
+ // 🔥 KATEX ROBUSTE - Sans WeakSet pour forcer le re-render
 function renderMathStrict(el) {
-  if (!window.renderMathInElement || !el || katexRendered.has(el)) return;
+  if (!window.renderMathInElement || !el) return;
+  
+  // Force le clean avant re-render sinon KaTeX duplique
+  const katexEls = el.querySelectorAll('.katex');
+  katexEls.forEach(node => {
+    const text = node.textContent;
+    node.replaceWith(document.createTextNode(text));
+  });
+  
   try {
     renderMathInElement(el, {
       delimiters: [
@@ -624,12 +630,11 @@ function renderMathStrict(el) {
         {left: '\\(', right: '\\)', display: false}
       ],
       throwOnError: false,
-      strict: 'warn', // mets 'true' si tu veux 100% strict mais ça peut casser l'affichage
+      strict: 'warn',
       trust: false,
-      macros: {"\\RR": "\\mathbb{R}", "\\NN": "\\mathbb{N}", "\\ZZ": "\\mathbb{Z}"},
-      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      ignoredTags: ['script', 'noscript', 'style', 'textarea']
+      // NOTE: j’ai enlevé 'pre' et 'code' pour que KaTeX marche même dans les blocs code
     });
-    katexRendered.add(el);
   } catch (e) {
     console.warn('KaTeX error:', e);
   }
