@@ -545,7 +545,7 @@ async function sendMessage() {
   wrapper.appendChild(msgEl);
   
   let cursor = null;
-  let isDone = false; // 🔥 FLAG FIN DE STREAM
+  let isDone = false;
   
   if (settings.timestamp) {
     const time = document.createElement('div');
@@ -564,7 +564,6 @@ async function sendMessage() {
   let cursorTimeout = null;
   
   function showPauseCursor() {
-    // 🔥 POINT SEULEMENT SI PAS FINI
     if (!cursor && msgEl.isConnected && !isDone) {
       cursor = document.createElement('span');
       cursor.className = 'streaming-cursor';
@@ -590,14 +589,13 @@ async function sendMessage() {
       
       hidePauseCursor();
       
-      // 🔥 TEXTE BRUT - PAS DE RENDU
+      // 🔥 TEXTE BRUT PENDANT STREAM
       msgEl.textContent = rawText;
       
       const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
     }
     
-    // 🔥 TIMEOUT SEULEMENT SI PAS FINI
     if (!isDone) {
       clearTimeout(cursorTimeout);
       cursorTimeout = setTimeout(showPauseCursor, 5000);
@@ -653,7 +651,7 @@ async function sendMessage() {
           const data = line.slice(6).trim();
           
           if (data === '[DONE]') {
-            isDone = true; // 🔥 FINI = PLUS JAMAIS DE POINT
+            isDone = true;
             if (rafId) cancelAnimationFrame(rafId);
             hidePauseCursor();
             
@@ -661,12 +659,11 @@ async function sendMessage() {
               rawText += pendingText;
               pendingText = '';
             }
-            msgEl.textContent = rawText;
             
-            // 🔥 TON RENDU SE FAIT ICI OU DEHORS
-            // msgEl.innerHTML = formatMessage(rawText);
-            // renderMathStrict(msgEl);
-            // highlightCode();
+            // 🔥 RENDU FINAL ICI
+            msgEl.innerHTML = formatMessage(rawText, false);
+            renderMathStrict(msgEl);
+            highlightCode();
             
             currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
