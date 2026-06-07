@@ -8,7 +8,7 @@ const CONFIG = {
 let isLoggedIn = false;
 let serverConversations = [];
 let conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
-let currentConvId = null;
+let currentConvId = null; // ← ça reste null
 let settings = JSON.parse(localStorage.getItem('aurx_settings') || '{"anim":true,"autosave":true,"timestamp":true,"notif":true}');
 let messageCounter = 0;
 
@@ -23,23 +23,84 @@ async function checkLogin() {
     if (!res.ok) throw new Error('No session');
 
     isLoggedIn = true;
-
     const data = await res.json();
     serverConversations = data.conversations || [];
 
-    // 🔥 priorité serveur si dispo
     conversations = serverConversations.length
-      ? serverConversations
+    ? serverConversations
       : JSON.parse(localStorage.getItem('aurx_convs') || '[]');
+
+    // 🔥 FIX 1 : SET LE CONVID SUR LA DERNIÈRE CONVO SERVEUR
+    if (serverConversations.length > 0) {
+      currentConvId = serverConversations[0].id; // la plus récente
+    } else {
+      // Aucune convo serveur : crée en une
+      currentConvId = await createNewConversation();
+    }
 
   } catch (e) {
     isLoggedIn = false;
-
     conversations = JSON.parse(localStorage.getItem('aurx_convs') || '[]');
+
+    // 🔥 FIX 2 : FALLBACK LOCALSTORAGE
+    if (conversations.length > 0) {
+      currentConvId = conversations[0].id;
+    } else {
+      currentConvId = Date.now().toString(); // seulement si pas connecté
+    }
   }
 
   renderHistory();
+  renderMessages(); // ← affiche les messages de la convo actuelle
 }
+
+// 🔥 FIX 3 : FONCTION POUR CRÉER CONVO SERVEUR
+async function createNewConversation() {
+  const res = await fetch('https://aur-x-backend.vercel.app/api/conversations', {
+    method: 'POST',
+    credentials: 'include'
+  });
+  const { convId } = await res.json();
+  return convId;
+}
+
+// 🔥 FIX 4 : QUAND TU ENVOIES UN MESSAGE
+async function sendMessage(text) {
+  if (!currentConvId) {
+    currentConvId = await createNewConversation();
+  }
+
+  const res = await fetch('https://aur-x-backend.vercel.app/api/chat', {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      message: text,
+      convId: currentConvId // ← utilise toujours l'ID serveur
+    })
+  });
+
+  //... reste de ton code
+}
+
+// 🔥 FIX 5 : RENDER LES MESSAGES DE LA CONVO ACTUELLE
+function renderMessages() {
+  const currentConv = conversations.find(c => c.id === currentConvId);
+  if (!currentConv) return;
+
+  const messages = currentConv.messages || [];
+  // ton code pour afficher messages dans le DOM
+  messages.forEach(m => {
+    // addMessageToDOM(m.text, m.type)
+  });
+}
+
+// 🔥 FIX 6 : QUAND TU SWITCH DE CONVO DANS LA SIDEBAR
+function selectConversation(id) {
+  currentConvId = id;
+  renderMessages();
+}
+
 
 function linkify(text) {
   if (!text) return '';
