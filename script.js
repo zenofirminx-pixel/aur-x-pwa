@@ -724,17 +724,21 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             
             // 🔥 2. KATEX S'APPLIQUE DIRECT APRÈS LE DERNIER MOT
             if (window.renderMathInElement) {
-              renderMathInElement(msgEl, {
-                delimiters: [
-                  {left: '\\[', right: '\\]', display: true},
-                  {left: '\\(', right: '\\)', display: false},
-                  {left: '$$', right: '$$', display: true},
-                  {left: '$', right: '$', display: false}
-                ],
-                throwOnError: false,
-                strict: false
-              });
-            }
+  renderMathInElement(msgEl, {
+    delimiters: [
+      {left: '\\[', right: '\\]', display: true},
+      {left: '\\(', right: '\\)', display: false},
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false}
+    ],
+    throwOnError: false,
+    strict: false,
+    errorCallback: (msg, err) => {
+      console.error('KaTeX ERROR:', msg, err); // 🔥 Regarde la console
+      console.log('Texte qui pète:', err.latex); 
+    }
+  });
+}
             
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
