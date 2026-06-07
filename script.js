@@ -658,9 +658,13 @@ function addMessage(text, type, timestamp = null, isNew = true) {
   const botTime = Date.now();
   addMessage('', 'bot', botTime);
   
-  // Récupère le dernier wrapper bot qu'on vient de créer
-  const botWrapper = document.querySelector(`[data-timestamp="${botTime}"]`);
+  // 🔥 FIX : Récupère le DERNIER .msg bot, pas par timestamp
+  const allBotMsgs = chat.querySelectorAll('.msg-wrapper.bot-full, .msg-wrapper.bot');
+  const botWrapper = allBotMsgs[allBotMsgs.length - 1];
   const botMsgEl = botWrapper?.querySelector('.msg, .bot-full-text');
+  
+  console.log('[STREAM] botMsgEl:', botMsgEl); // Debug
+  
   let botText = '';
 
   try {
@@ -694,15 +698,21 @@ function addMessage(text, type, timestamp = null, isNew = true) {
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        console.log('[STREAM] Done');
+        break;
+      }
 
       const chunk = decoder.decode(value);
+      console.log('[STREAM] Chunk:', chunk); // Debug
+      
       const lines = chunk.split('\n');
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6).trim();
           if (data === '[DONE]') {
+            console.log('[STREAM] [DONE] reçu');
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
             
@@ -722,10 +732,14 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             const parsed = JSON.parse(data);
             if (parsed.content) {
               botText += parsed.content;
+              console.log('[STREAM] botText:', botText); // Debug
+              
               if (botMsgEl) {
                 botMsgEl.innerHTML = formatMessage(autoMathify(botText));
                 highlightCode();
                 chat.scrollTop = chat.scrollHeight;
+              } else {
+                console.error('[STREAM] botMsgEl est null!');
               }
             }
             if (parsed.error) {
@@ -734,7 +748,9 @@ function addMessage(text, type, timestamp = null, isNew = true) {
                 botMsgEl.classList.add('error');
               }
             }
-          } catch (e) {}
+          } catch (e) {
+            console.error('[STREAM] Parse error:', e, 'Data:', data);
+          }
         }
       }
     }
