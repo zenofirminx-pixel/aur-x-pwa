@@ -115,29 +115,52 @@ function linkify(text) {
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
   });
 }
-
 function autoMathify(text) {
   if (!text) return '';
+  
+  // Protège les blocs existants
   const protected = [];
-  text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|```[\s\S]*?```)/g, m => {
+  text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|```[\s\S]*?```|`[^`\n]+?`)/g, m => {
     protected.push(m);
     return `__PROTECT_${protected.length-1}__`;
   });
+
+  // 🔥 BLACKLIST : mots français à NE JAMAIS transformer en LaTeX
+  const blacklist = [
+    'je', 'tu', 'il', 'elle', 'on', 'nous', 'vous', 'ils', 'elles',
+    'le', 'la', 'les', 'un', 'une', 'des', 'du', 'de', 'ce', 'ça',
+    'que', 'qui', 'quoi', 'où', 'comment', 'pourquoi', 'quand',
+    'puis', 'puis-je', 'peux', 'veux', 'faire', 'dire', 'aller',
+    'est', 'sont', 'être', 'avoir', 'avec', 'sans', 'pour', 'par',
+    'sur', 'dans', 'mais', 'donc', 'car', 'ni', 'or', 'et', 'à'
+  ];
+  const blacklistRegex = new RegExp(`\\b(${blacklist.join('|')})\\b`, 'gi');
+  
+  // Exposants unicode
   const superscripts = { '⁰': '^0', '¹': '^1', '²': '^2', '³': '^3', '⁴': '^4', '⁵': '^5', '⁶': '^6', '⁷': '^7', '⁸': '^8', '⁹': '^9' };
   text = text.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, match => superscripts[match] || match);
-  const mathRegex = /([a-zA-Z0-9]+\s*[=+\-*/^]\s*[a-zA-Z0-9]+(\^[0-9a-zA-Z\{\}]+)?|[a-zA-Z0-9]+\^[0-9a-zA-Z\{\}]+|sqrt\([^)]+\)|\d+\/\d+|\b(pi|alpha|beta|gamma|theta|lambda|sigma|phi|delta)\b)/g;
+  
+  // Détecte SEULEMENT les vraies expressions math
+  const mathRegex = /(\b[a-z]\s*[=+\-*/]\s*\d+|\b\d+\s*[+\-*/^]\s*[a-z]\b|[a-z]\^\{?[0-9a-z]+\}?|sqrt\([^)]+\)|\d+\/\d+|\bpi\b|\balpha\b|\bbeta\b|\bgamma\b|\btheta\b|\blambda\b|\bsigma\b|\bphi\b|\bdelta\b)/gi;
+  
   text = text.replace(mathRegex, match => {
+    // Skip si c'est dans la blacklist
+    if (blacklistRegex.test(match.toLowerCase())) return match;
+    
     let m = match;
     m = m.replace(/(\d+)\s*\/\s*(\d+)/g, '\\frac{$1}{$2}');
-    m = m.replace(/([a-zA-Z0-9])\^(\d+|[a-zA-Z]|\{[^\}]+\})/g, '$1^{$2}');
+    m = m.replace(/([a-z])\^(\d+|[a-z]|\{[^\}]+\})/gi, '$1^{$2}');
     m = m.replace(/sqrt\(([^)]+)\)/g, '\\sqrt{$1}');
     m = m.replace(/\b(pi|alpha|beta|gamma|theta|lambda|sigma|phi|delta)\b/g, '\\$1');
     m = m.replace(/(\d+)\s*x\s*(\d+)/g, '$1 \\times $2');
     return `$$${m}$$`;
   });
+  
+  // Restore
   protected.forEach((m, i) => {
     text = text.replace(`__PROTECT_${i}__`, m);
   });
+  
   return text;
 }
 
