@@ -722,64 +722,19 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             msgEl.innerHTML = formatMessage(autoMathify(botText));
             highlightCode();
             
-// 🔥 RENDER KATEX SUR LE TEXTE BRUT AVANT HTML
-let processedText = botText; // On part du texte brut, pas du HTML
-
-if (window.katex) {
-  // \[...\] display
-  processedText = processedText.replace(/\\\[([\s\S]*?)\\\]/g, (match, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), {
-        displayMode: true,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (e) {
-      return match;
-    }
-  });
-  
-  // \(...\) inline  
-  processedText = processedText.replace(/\\\(([\s\S]*?)\\\)/g, (match, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), {
-        displayMode: false,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (e) {
-      return match;
-    }
-  });
-  
-  // $$...$$ display
-  processedText = processedText.replace(/\$\$([\s\S]*?)\$\$/g, (match, latex) => {
-    try {
-      return katex.renderToString(latex.trim(), {
-        displayMode: true,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (e) {
-      return match;
-    }
-  });
-  
-  // $...$ inline
-  processedText = processedText.replace(/(^|[^\\])\$([^\$\n]+?)\$(?!\d)/g, (match, prefix, latex) => {
-    try {
-      return prefix + katex.renderToString(latex.trim(), {
-        displayMode: false,
-        throwOnError: false,
-        strict: false
-      });
-    } catch (e) {
-      return match;
-    }
-  });
-}
-
-msgEl.innerHTML = formatMessage(processedText);
+      
+            // 🔥 RENDER KATEX ICI
+            if (window.renderMathInElement) {
+              renderMathInElement(msgEl, {
+                delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '$', right: '$', display: false},
+                  {left: '\\[', right: '\\]', display: true},
+                  {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false
+              });
+            }
 
 
      
