@@ -723,59 +723,63 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             highlightCode();
             
 // 🔥 REMPLACE TON BLOC KATEX PAR ÇA
+// 🔥 CE BLOC MARCHE MÊME SI formatMessage A DOUBLÉ LES \
 let html = msgEl.innerHTML;
 
-// 1. \[...\] display
-html = html.replace(/\\\[([\s\S]*?)\\\]/g, (match, latex) => {
-  try {
-    return katex.renderToString(latex.trim(), {
-      displayMode: true,
-      throwOnError: false,
-      strict: false
-    });
-  } catch (e) {
-    return match;
-  }
-});
-
-// 2. \(...\) inline
-html = html.replace(/\\\(([\s\S]*?)\\\)/g, (match, latex) => {
-  try {
-    return katex.renderToString(latex.trim(), {
-      displayMode: false,
-      throwOnError: false,
-      strict: false
-    });
-  } catch (e) {
-    return match;
-  }
-});
-
-// 3. $$...$$ display
-html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, latex) => {
-  try {
-    return katex.renderToString(latex.trim(), {
-      displayMode: true,
-      throwOnError: false,
-      strict: false
-    });
-  } catch (e) {
-    return match;
-  }
-});
-
-// 4. $...$ inline
-html = html.replace(/(^|[^\\\$])\$([^\$\n]+?)\$(?!\d)/g, (match, prefix, latex) => {
-  try {
-    return prefix + katex.renderToString(latex.trim(), {
-      displayMode: false,
-      throwOnError: false,
-      strict: false
-    });
-  } catch (e) {
-    return match;
-  }
-});
+if (window.katex) {
+  // 1. \\[ ... \\] ou \[ ... \]
+  html = html.replace(/\\\\?\[([\s\S]*?)\\\\?\]/g, (match, latex) => {
+    try {
+      return katex.renderToString(latex.trim(), {
+        displayMode: true,
+        throwOnError: false,
+        strict: false
+      });
+    } catch (e) {
+      console.error('KaTeX error:', latex);
+      return match;
+    }
+  });
+  
+  // 2. \\( ... \\) ou \( ... \)
+  html = html.replace(/\\\\?\(([\s\S]*?)\\\\?\)/g, (match, latex) => {
+    try {
+      return katex.renderToString(latex.trim(), {
+        displayMode: false,
+        throwOnError: false,
+        strict: false
+      });
+    } catch (e) {
+      return match;
+    }
+  });
+  
+  // 3. $$ ... $$
+  html = html.replace(/\$\$([\s\S]*?)\$\$/g, (match, latex) => {
+    try {
+      return katex.renderToString(latex.trim(), {
+        displayMode: true,
+        throwOnError: false,
+        strict: false
+      });
+    } catch (e) {
+      return match;
+    }
+  });
+  
+  // 4. $ ... $
+  html = html.replace(/(^|[^\\])\$([^\$\n]+?)\$(?!\d)/g, (match, prefix, latex) => {
+    try {
+      return prefix + katex.renderToString(latex.trim(), {
+        displayMode: false,
+        throwOnError: false,
+        strict: false
+      });
+    } catch (e) {
+      return match;
+    }
+  });
+}
 
 msgEl.innerHTML = html;
      
