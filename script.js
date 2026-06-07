@@ -610,194 +610,162 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     }
   }
 
- async function sendMessage() {
+ // 🔥 KATEX ROBUSTE + STRICT - 0 double render
+const katexRendered = new WeakSet();
+
+function renderMathStrict(el) {
+  if (!window.renderMathInElement || !el || katexRendered.has(el)) return;
+  try {
+    renderMathInElement(el, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '\\[', right: '\\]', display: true},
+        {left: '$', right: '$', display: false},
+        {left: '\\(', right: '\\)', display: false}
+      ],
+      throwOnError: false,
+      strict: 'warn', // mets 'true' si tu veux 100% strict mais ça peut casser l'affichage
+      trust: false,
+      macros: {"\\RR": "\\mathbb{R}", "\\NN": "\\mathbb{N}", "\\ZZ": "\\mathbb{Z}"},
+      ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+    });
+    katexRendered.add(el);
+  } catch (e) {
+    console.warn('KaTeX error:', e);
+  }
+}
+
+async function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
+  
   const now = Date.now();
   addMessage(msg, 'user', now);
-
-  const convsToUse = isLoggedIn? serverConversations : conversations;
+  
+  const convsToUse = isLoggedIn ? serverConversations : conversations;
   let currentConv = convsToUse.find(c => c.id === currentConvId);
-
+  
   if (!currentConv) {
     currentConv = { id: currentConvId, title: msg.slice(0, 40), messages: [], date: now, updatedAt: now };
     convsToUse.unshift(currentConv);
   }
   currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
-
+  
   input.value = '';
   input.style.height = 'auto';
   updateCharCounter();
   showTypingIndicator();
-
+  
   const sendBtnEl = document.getElementById('sendBtn');
   sendBtnEl.classList.add('loading');
   sendBtnEl.disabled = true;
-
+  
   const botTime = Date.now();
   const wrapper = document.createElement('div');
   wrapper.className = 'msg-wrapper bot-full';
   wrapper.dataset.timestamp = botTime;
-
+  
   const msgEl = document.createElement('div');
   msgEl.className = 'msg bot-full-text';
+  msgEl.textContent = '';
   wrapper.appendChild(msgEl);
-
+  
   if (settings.timestamp) {
     const time = document.createElement('div');
     time.className = 'msg-time';
     time.textContent = new Date(botTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     wrapper.appendChild(time);
   }
-
+  
   chat.appendChild(wrapper);
   chat.scrollTop = chat.scrollHeight;
   hideWelcome();
-
-  let rawText = '';
+  
+  let botText = '';
   let pendingText = '';
   let rafId = null;
-  let lastRenderTime = 0;
-
-  // 🔥 RENDER PENDANT LE STREAM : Markdown oui, KaTeX non
-  function renderStreaming(text) {
-    // 1. Protéger les formules math pour pas que marked les touche
-    const mathBlocks = [];
-    let mathIndex = 0;
-
-    let protectedText = text
-     .replace(/\\\[([\s\S]*?)\\\]/g, (m, formula) => {
-        const token = `__MATH_DISPLAY_${mathIndex}__`;
-        mathBlocks[mathIndex] = { formula, display: true };
-        mathIndex++;
-        return token;
-      })
-     .replace(/\\\(([\s\S]*?)\\\)/g, (m, formula) => {
-        const token = `__MATH_INLINE_${mathIndex}__`;
-        mathBlocks[mathIndex] = { formula, display: false };
-        mathIndex++;
-        return token;
-      })
-     .replace(/\$\$([\s\S]*?)\$\$/g, (m, formula) => {
-        const token = `__MATH_DISPLAY_${mathIndex}__`;
-        mathBlocks[mathIndex] = { formula, display: true };
-        mathIndex++;
-        return token;
-      })
-     .replace(/(^|[^\\$])\$([^\$\n]+?)\$/g, (m, prefix, formula) => {
-        if (/^\d/.test(formula)) return m; // ignore 5$
-        const token = `__MATH_INLINE_${mathIndex}__`;
-        mathBlocks[mathIndex] = { formula, display: false };
-        mathIndex++;
-        return prefix + token;
-      });
-
-    // 2. Render Markdown sur le texte protégé
-    let html = marked.parse(protectedText, {
-      breaks: true,
-      gfm: true,
-      headerIds: false,
-      mangle: false
-    });
-
-    // 3. Remettre les formules en texte brut avec style
-    mathBlocks.forEach((math, i) => {
-      const placeholder = math.display
-       ? `<div class="math-pending-display">$$${escapeHtml(math.formula)}$$</div>`
-        : `<span class="math-pending-inline">$${escapeHtml(math.formula)}$</span>`;
-      html = html.replace(`__MATH_DISPLAY_${i}__`, placeholder);
-      html = html.replace(`__MATH_INLINE_${i}__`, placeholder);
-    });
-
-    return html;
-  }
-
+  
   function flushBuffer() {
     if (pendingText) {
-      rawText += pendingText;
+      botText += pendingText;
       pendingText = '';
-
-      // Render markdown en live, KaTeX reste en $...$
-      msgEl.innerHTML = renderStreaming(rawText);
-
-      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
-      if (nearBottom) {
-        chat.scrollTo({ top: chat.scrollHeight, behavior: 'auto' });
-      }
+      msgEl.textContent = botText; // 🔥 TEXTE BRUT PENDANT LE STREAM
+      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 100;
+      if (nearBottom) chat.scrollTop = chat.scrollHeight;
     }
     rafId = null;
-    lastRenderTime = performance.now();
   }
-
+  
   function scheduleRender() {
-    if (!rafId) {
-      const now = performance.now();
-      if (now - lastRenderTime >= 16) {
-        flushBuffer();
-      } else {
-        rafId = requestAnimationFrame(flushBuffer);
-      }
-    }
+    if (!rafId) rafId = requestAnimationFrame(flushBuffer);
   }
-
+  
   try {
     const res = await fetch(CONFIG.ENDPOINTS.openai, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        api: 'openai',
-        message: msg,
-        convId: currentConvId,
-        model: CONFIG.MODELS.openai
+      body: JSON.stringify({ 
+        api: 'openai', 
+        message: msg, 
+        convId: currentConvId, 
+        model: CONFIG.MODELS.openai 
       })
     });
-
+    
     hideTypingIndicator();
-
+    
     if (!res.ok) {
       if (rafId) cancelAnimationFrame(rafId);
-      msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
+      msgEl.textContent = 'Erreur serveur';
+      msgEl.classList.add('error');
       currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
       saveConversation(msg.slice(0, 40), currentConv.messages);
       return;
     }
-
+    
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-
+    
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
-
+      
       const chunk = decoder.decode(value, { stream: true });
       const lines = chunk.split('\n');
-
+      
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6).trim();
+          
           if (data === '[DONE]') {
             if (rafId) cancelAnimationFrame(rafId);
             flushBuffer();
-
-            // 🔥 STREAM FINI : Maintenant on render KaTeX
-            renderFinalKatex(msgEl, rawText);
-
-            currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
+            
+            // 🔥 1. Formatage final + code highlighting
+            msgEl.innerHTML = formatMessage(autoMathify(botText));
+            highlightCode();
+            
+            // 🔥 2. RENDER KATEX ROBUSTE - UNE SEULE FOIS À LA FIN
+            renderMathStrict(msgEl);
+            
+            currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
-
+            
             if (isLoggedIn) {
-              fetch('https://aur-x-backend.vercel.app/api/history', {
-                credentials: 'include'
-              }).then(r => r.json()).then(histData => {
+              try {
+                const histRes = await fetch('https://aur-x-backend.vercel.app/api/history', { credentials: 'include' });
+                const histData = await histRes.json();
                 serverConversations = histData.conversations || [];
                 conversations = serverConversations;
                 renderHistory();
-              });
+              } catch(e) {
+                console.warn('Erreur refresh history:', e);
+              }
             }
             return;
           }
-
+          
           try {
             const parsed = JSON.parse(data);
             if (parsed.content) {
@@ -806,17 +774,18 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             }
             if (parsed.error) {
               if (rafId) cancelAnimationFrame(rafId);
-              msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
+              msgEl.textContent = parsed.error;
+              msgEl.classList.add('error');
             }
           } catch (e) {}
         }
       }
     }
-
   } catch (e) {
     if (rafId) cancelAnimationFrame(rafId);
     hideTypingIndicator();
-    msgEl.innerHTML = '<span class="error">Erreur réseau / serveur</span>';
+    msgEl.textContent = 'Erreur réseau / serveur';
+    msgEl.classList.add('error');
     currentConv.messages.push({ text: 'Erreur réseau / serveur', type: 'bot error', timestamp: Date.now() });
     saveConversation(msg.slice(0, 40), currentConv.messages);
     console.error(e);
@@ -824,84 +793,6 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     sendBtnEl.classList.remove('loading');
     sendBtnEl.disabled = false;
   }
-}
-
-// 🔥 RENDER FINAL : Applique KaTeX sur les formules
-function renderFinalKatex(msgEl, rawText) {
-  let html = msgEl.innerHTML;
-
-  if (window.katex) {
-    // \[...\]
-    html = html.replace(/\\\[([\s\S]*?)\\\]/g, (m, formula) => {
-      try {
-        return katex.renderToString(formula.trim(), {
-          displayMode: true,
-          throwOnError: false,
-          strict: 'ignore'
-        });
-      } catch (e) {
-        return m;
-      }
-    });
-
-    // \(...\)
-    html = html.replace(/\\\(([\s\S]*?)\\\)/g, (m, formula) => {
-      try {
-        return katex.renderToString(formula.trim(), {
-          displayMode: false,
-          throwOnError: false,
-          strict: 'ignore'
-        });
-      } catch (e) {
-        return m;
-      }
-    });
-
-    // $$...$$
-    html = html.replace(/\$\$([\s\S]*?)\$\$/g, (m, formula) => {
-      try {
-        return katex.renderToString(formula.trim(), {
-          displayMode: true,
-          throwOnError: false,
-          strict: 'ignore'
-        });
-      } catch (e) {
-        return m;
-      }
-    });
-
-    // $...$
-    html = html.replace(/(^|[^\\$])\$([^\$\n]+?)\$/g, (m, prefix, formula) => {
-      if (/^\d/.test(formula)) return m;
-      try {
-        return prefix + katex.renderToString(formula.trim(), {
-          displayMode: false,
-          throwOnError: false,
-          strict: 'ignore'
-        });
-      } catch (e) {
-        return m;
-      }
-    });
-  }
-
-  msgEl.innerHTML = html;
-
-  // Highlight code
-  if (window.hljs) {
-    msgEl.querySelectorAll('pre code').forEach(block => {
-      hljs.highlightElement(block);
-    });
-  }
-}
-
-function escapeHtml(text) {
-  return text
-  .replace(/&/g, '&amp;')
-  .replace(/</g, '&lt;')
-  .replace(/>/g, '&gt;')
-  .replace(/"/g, '&quot;')
-  .replace(/'/g, '&#039;');
 }
 
   function typeMessage(text, type, timestamp = Date.now()) {
