@@ -654,17 +654,28 @@ function addMessage(text, type, timestamp = null, isNew = true) {
   sendBtnEl.classList.add('loading');
   sendBtnEl.disabled = true;
 
-  // Crée le message bot vide
+  // 🔥 CRÉE LE MESSAGE ET GARDE LA REF DIRECT
   const botTime = Date.now();
-  addMessage('', 'bot', botTime);
+  const wrapper = document.createElement('div');
+  wrapper.className = 'msg-wrapper bot-full';
+  wrapper.dataset.timestamp = botTime;
   
-  // 🔥 FIX : Récupère le DERNIER .msg bot, pas par timestamp
-  const allBotMsgs = chat.querySelectorAll('.msg-wrapper.bot-full, .msg-wrapper.bot');
-  const botWrapper = allBotMsgs[allBotMsgs.length - 1];
-  const botMsgEl = botWrapper?.querySelector('.msg, .bot-full-text');
+  const msgEl = document.createElement('div');
+  msgEl.className = 'msg bot-full-text streaming';
+  msgEl.textContent = ''; // Commence vide
+  wrapper.appendChild(msgEl);
   
-  console.log('[STREAM] botMsgEl:', botMsgEl); // Debug
+  if (settings.timestamp) {
+    const time = document.createElement('div');
+    time.className = 'msg-time';
+    time.textContent = new Date(botTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    wrapper.appendChild(time);
+  }
   
+  chat.appendChild(wrapper);
+  chat.scrollTop = chat.scrollHeight;
+  hideWelcome();
+
   let botText = '';
 
   try {
@@ -683,36 +694,32 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     hideTypingIndicator();
 
     if (!res.ok) {
-      if (botMsgEl) {
-        botMsgEl.innerHTML = 'Erreur serveur';
-        botMsgEl.classList.add('error');
-      }
+      msgEl.textContent = 'Erreur serveur';
+      msgEl.classList.add('error');
       currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
       saveConversation(msg.slice(0, 40), currentConv.messages);
       return;
     }
 
-    // LECTURE DU STREAM SSE
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
 
     while (true) {
       const { done, value } = await reader.read();
-      if (done) {
-        console.log('[STREAM] Done');
-        break;
-      }
+      if (done) break;
 
       const chunk = decoder.decode(value);
-      console.log('[STREAM] Chunk:', chunk); // Debug
-      
       const lines = chunk.split('\n');
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6).trim();
           if (data === '[DONE]') {
-            console.log('[STREAM] [DONE] reçu');
+            // 🔥 FORMAT UNE SEULE FOIS À LA FIN
+            msgEl.classList.remove('streaming');
+            msgEl.innerHTML = formatMessage(autoMathify(botText));
+            highlightCode();
+            
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
             
@@ -732,37 +739,24 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             const parsed = JSON.parse(data);
             if (parsed.content) {
               botText += parsed.content;
-              console.log('[STREAM] botText:', botText); // Debug
-              
-              if (botMsgEl) {
-                botMsgEl.innerHTML = formatMessage(autoMathify(botText));
-                highlightCode();
-                chat.scrollTop = chat.scrollHeight;
-              } else {
-                console.error('[STREAM] botMsgEl est null!');
-              }
+              // 🔥 UPDATE JUSTE LE TEXTE, PAS DE FORMAT PENDANT LE STREAM
+              msgEl.textContent = botText;
+              chat.scrollTop = chat.scrollHeight;
             }
             if (parsed.error) {
-              if (botMsgEl) {
-                botMsgEl.innerHTML = parsed.error;
-                botMsgEl.classList.add('error');
-              }
+              msgEl.textContent = parsed.error;
+              msgEl.classList.add('error');
             }
-          } catch (e) {
-            console.error('[STREAM] Parse error:', e, 'Data:', data);
-          }
+          } catch (e) {}
         }
       }
     }
 
   } catch (e) {
     hideTypingIndicator();
-    const errorText = 'Erreur réseau / serveur';
-    if (botMsgEl) {
-      botMsgEl.innerHTML = errorText;
-      botMsgEl.classList.add('error');
-    }
-    currentConv.messages.push({ text: errorText, type: 'bot error', timestamp: Date.now() });
+    msgEl.textContent = 'Erreur réseau / serveur';
+    msgEl.classList.add('error');
+    currentConv.messages.push({ text: 'Erreur réseau / serveur', type: 'bot error', timestamp: Date.now() });
     saveConversation(msg.slice(0, 40), currentConv.messages);
     console.error(e);
   } finally {
