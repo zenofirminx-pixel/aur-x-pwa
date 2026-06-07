@@ -723,21 +723,31 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             highlightCode();
             
             // 🔥 2. KATEX S'APPLIQUE DIRECT APRÈS LE DERNIER MOT
-            if (window.renderMathInElement) {
-  renderMathInElement(msgEl, {
-    delimiters: [
-      {left: '\\[', right: '\\]', display: true},
-      {left: '\\(', right: '\\)', display: false},
-      {left: '$$', right: '$$', display: true},
-      {left: '$', right: '$', display: false}
-    ],
-    throwOnError: false,
-    strict: false,
-    errorCallback: (msg, err) => {
-      console.error('KaTeX ERROR:', msg, err); // 🔥 Regarde la console
-      console.log('Texte qui pète:', err.latex); 
-    }
-  });
+            if (window.renderMathInElement && window.katex) {
+  // 🔥 1. Dé-escape les \[ \] et \( \) pour KaTeX
+  let html = msgEl.innerHTML;
+  html = html.replace(/\\\\([\[\]()])/g, '\\$1'); // \\[ devient \[
+  msgEl.innerHTML = html;
+  
+  // 🔥 2. Force le render avec strict pour voir les erreurs
+  try {
+    renderMathInElement(msgEl, {
+      delimiters: [
+        {left: '\\[', right: '\\]', display: true},
+        {left: '\\(', right: '\\)', display: false},
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ],
+      throwOnError: true, // 🔥 METS TRUE POUR DEBUG
+      strict: 'error', // 🔥 STRICT MODE
+      errorCallback: (msg, err) => {
+        console.error('KaTeX ERROR:', msg);
+        console.error('LaTeX qui pète:', err);
+      }
+    });
+  } catch (e) {
+    console.error('KaTeX CRASH:', e);
+  }
 }
             
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
