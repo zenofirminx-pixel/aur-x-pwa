@@ -694,7 +694,8 @@ async function sendMessage() {
   let cursorTimeout = null;
   
   function showPauseCursor() {
-    if (!cursor) {
+    // 🔥 SÉCURITÉ : check si msgEl existe encore
+    if (!cursor && msgEl.isConnected) {
       cursor = document.createElement('span');
       cursor.className = 'streaming-cursor pulsing';
       msgEl.appendChild(cursor);
@@ -706,6 +707,11 @@ async function sendMessage() {
       cursor.remove();
       cursor = null;
     }
+    // 🔥 FIX : Clear le timeout direct
+    if (cursorTimeout) {
+      clearTimeout(cursorTimeout);
+      cursorTimeout = null;
+    }
   }
   
   function flushBuffer() {
@@ -715,11 +721,14 @@ async function sendMessage() {
       
       hidePauseCursor();
       
-      // 🔥 MARKDOWN PROPRE PENDANT STREAM
-      msgEl.innerHTML = formatMessage(autoMathify(rawText), true);
-      
-      // 🔥 CADRE CODE STYLÉ DIRECT SI BLOC FERMÉ
-      highlightCode();
+      try {
+        msgEl.innerHTML = formatMessage(autoMathify(rawText), true);
+        highlightCode();
+      } catch (e) {
+        // 🔥 SÉCURITÉ : si formatMessage crash, fallback texte brut
+        console.error('Render error:', e);
+        msgEl.textContent = rawText;
+      }
       
       const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
@@ -734,7 +743,7 @@ async function sendMessage() {
   
   function scheduleRender() {
     if (!rafId) {
-      hidePauseCursor();
+      hidePauseCursor(); // 🔥 Tue le point + le timeout direct
       rafId = requestAnimationFrame(flushBuffer);
     }
   }
@@ -756,7 +765,6 @@ async function sendMessage() {
     
     if (!res.ok) {
       if (rafId) cancelAnimationFrame(rafId);
-      clearTimeout(cursorTimeout);
       hidePauseCursor();
       msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
       currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
@@ -780,12 +788,9 @@ async function sendMessage() {
           
           if (data === '[DONE]') {
             if (rafId) cancelAnimationFrame(rafId);
-            clearTimeout(cursorTimeout);
+            hidePauseCursor(); // 🔥 Clear tout avant flush final
             flushBuffer();
             
-            hidePauseCursor();
-            
-            // 🔥 RENDER FINAL + KATEX
             msgEl.innerHTML = formatMessage(autoMathify(rawText), false);
             renderMathInPlace(msgEl);
             highlightCode();
@@ -815,7 +820,6 @@ async function sendMessage() {
             }
             if (parsed.error) {
               if (rafId) cancelAnimationFrame(rafId);
-              clearTimeout(cursorTimeout);
               hidePauseCursor();
               msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
             }
@@ -825,7 +829,6 @@ async function sendMessage() {
     }
   } catch (e) {
     if (rafId) cancelAnimationFrame(rafId);
-    clearTimeout(cursorTimeout);
     hideTypingIndicator();
     hidePauseCursor();
     msgEl.innerHTML = '<span class="error">Erreur réseau / serveur</span>';
