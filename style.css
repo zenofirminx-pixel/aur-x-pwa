@@ -898,16 +898,17 @@ pre:hover .copy-btn {
   font-size: 0.9em;
   color: #ff79c6;
 }
-
-/* Streaming cursor */
-.msg.streaming::after {
-  content: '▋';
-  animation: blink 1s infinite;
-  color: #0A84FF;
-  margin-left: 2px;
-}
-
-@keyframes blink {
-  0%, 50% { opacity: 1; }
-  51%, 100% { opacity: 0; }
+/* Label du langage */
+.code-lang {
+  position: absolute;
+  top: 0;
+  left: 12px;
+  background: #ff9f0a; /* Orange iOS au lieu du bleu */
+  color: #000; /* Texte noir pour contraster */
+  padding: 2px 8px;
+  border-radius: 0 0 4px 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
