@@ -392,46 +392,89 @@ function initApp() {
     return parts;
   }
 function formatMessage(text) {
-    if (!text) return "";
-    const mathBlocks = [];
-    const codeBlocks = [];
-    text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g, match => {
-      const id = `__MATH_${mathBlocks.length}__`;
-      mathBlocks.push(match);
-      return id;
-    });
-    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-      const id = `__CODE_${codeBlocks.length}__`;
-      codeBlocks.push({ lang: lang || "plaintext", code });
-      return id;
-    });
-    text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
-    text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
-    text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
-    text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
-    text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
-    text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-    text = text.replace(/^\- (.*)$/gm, "<li>$1</li>");
-    text = text.replace(/^\* (.*)$/gm, "<li>$1</li>");
-    text = text.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
-    text = text.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
-    text = linkify(text);
-    text = text.replace(/\n\n+/g, "</p><p>");
-    text = text.replace(/\n/g, "<br>");
-    if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote")) {
-      text = "<p>" + text + "</p>";
-    }
-    codeBlocks.forEach((block, i) => {
-      const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      text = text.replace(`__CODE_${i}__`, `<pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="language-${block.lang}">${escapedCode}</code></pre>`);
-    });
-    mathBlocks.forEach((math, i) => {
-      text = text.replace(`__MATH_${i}__`, math);
-    });
-    return text;
+  if (!text) return "";
+  
+  // 1. Protéger math et code avant escape
+  const mathBlocks = [];
+  const codeBlocks = [];
+  
+  text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g, match => {
+    const id = `__MATH_${mathBlocks.length}__`;
+    mathBlocks.push(match);
+    return id;
+  });
+  
+  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+    const id = `__CODE_${codeBlocks.length}__`;
+    codeBlocks.push({ lang: lang || "text", code });
+    return id;
+  });
+  
+  // 2. Escape HTML
+  text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  
+  // 3. Markdown
+  text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+  text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+  text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+  text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+  text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
+  text = text.replace(/`([^`]+)`/g, '<code class="app-inline-code">$1</code>'); // <-- app-inline-code
+  text = text.replace(/^\- (.*)$/gm, "<li>$1</li>");
+  text = text.replace(/^\* (.*)$/gm, "<li>$1</li>");
+  text = text.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+  text = text.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
+  text = linkify(text);
+  
+  // 4. Paragraphes
+  text = text.replace(/\n\n+/g, "</p><p>");
+  text = text.replace(/\n/g, "<br>");
+  if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote") && !text.startsWith("<div")) {
+    text = "<p>" + text + "</p>";
   }
+  
+  // 5. Réinjecter les blocs code avec TA STRUCTURE
+  codeBlocks.forEach((block, i) => {
+    const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const codeId = `code-${Date.now()}-${i}`;
+    
+    text = text.replace(`__CODE_${i}__`, 
+      `<div class="app-code-block">
+        <div class="app-code-header">
+          <span class="app-code-lang">${block.lang}</span>
+          <button class="app-code-copy" onclick="copyCodeBlock('${codeId}')">Copier</button>
+        </div>
+        <div class="app-code-content">
+          <pre><code id="${codeId}" class="language-${block.lang}">${escapedCode}</code></pre>
+        </div>
+      </div>`
+    );
+  });
+  
+  // 6. Réinjecter math
+  mathBlocks.forEach((math, i) => {
+    text = text.replace(`__MATH_${i}__`, math);
+  });
+  
+  return text;
+}
+
+// Fonction copy globale
+window.copyCodeBlock = function(id) {
+  const codeEl = document.getElementById(id);
+  if (!codeEl) return;
+  const btn = codeEl.closest('.app-code-block').querySelector('.app-code-copy');
+  
+  navigator.clipboard.writeText(codeEl.textContent).then(() => {
+    btn.textContent = 'Copié !';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copier';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+};
   
 function addMessage(text, type, timestamp = null, isNew = true) {
     if (isNew) hideWelcome();
@@ -662,8 +705,26 @@ async function sendMessage() {
             
             // 🔥 RENDU FINAL ICI
             msgEl.innerHTML = formatMessage(rawText, false);
-            renderMathStrict(msgEl);
-            highlightCode();
+            
+            // 1. KaTeX
+            if (typeof renderMathInElement !== 'undefined') {
+              renderMathInElement(msgEl, {
+                delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '$', right: '$', display: false}
+                ],
+                throwOnError: false
+              });
+            }
+            
+            // 2. Highlight - Prism ou HLJS
+            if (typeof Prism !== 'undefined') {
+              Prism.highlightAllUnder(msgEl);
+            } else if (typeof hljs !== 'undefined') {
+              msgEl.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+              });
+            }
             
             currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
