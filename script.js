@@ -118,21 +118,11 @@ function linkify(text) {
 function autoMathify(text) {
   if (!text) return '';
   
-  // 🔥 Protège SEULEMENT les blocs code et les $$ déjà présents, PAS les \[ \]
+  // 🔥 Protège SEULEMENT $$, code blocks et inline code. PAS \[ \] ni \( \)
   const protected = [];
   text = text.replace(/(\$\$[\s\S]*?\$\$|```[\s\S]*?```|`[^`\n]+?`)/g, m => {
     protected.push(m);
     return `__PROTECT_${protected.length-1}__`;
-  });
-
-  // Convertit \[...\] en $$...$$ MAINTENANT
-  text = text.replace(/\\\[([\s\S]*?)\\\]/g, (match, math) => {
-    return `$$${math.trim()}$$`;
-  });
-  
-  // Convertit \(...\) en $...$
-  text = text.replace(/\\\(([\s\S]*?)\\\)/g, (match, math) => {
-    return `$${math.trim()}$`;
   });
 
   // Blacklist : mots français à NE JAMAIS transformer en LaTeX
@@ -150,7 +140,7 @@ function autoMathify(text) {
   const superscripts = { '⁰': '^0', '¹': '^1', '²': '^2', '³': '^3', '⁴': '^4', '⁵': '^5', '⁶': '^6', '⁷': '^7', '⁸': '^8', '⁹': '^9' };
   text = text.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, match => superscripts[match] || match);
   
-  // Détecte SEULEMENT les vraies expressions math
+  // Détecte SEULEMENT les vraies expressions math inline
   const mathRegex = /(\b[a-z]\s*[=+\-*/]\s*\d+|\b\d+\s*[+\-*/^]\s*[a-z]\b|[a-z]\^\{?[0-9a-z]+\}?|sqrt\([^)]+\)|\d+\/\d+|\bpi\b|\balpha\b|\bbeta\b|\bgamma\b|\btheta\b|\blambda\b|\bsigma\b|\bphi\b|\bdelta\b)/gi;
   
   text = text.replace(mathRegex, match => {
