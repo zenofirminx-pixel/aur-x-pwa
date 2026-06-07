@@ -724,17 +724,18 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             
       
             // 🔥 RENDER KATEX ICI
-            if (window.renderMathInElement) {
-              renderMathInElement(msgEl, {
-                delimiters: [
-                  {left: '$$', right: '$$', display: true},
-                  {left: '$', right: '$', display: false},
-                  {left: '\\[', right: '\\]', display: true},
-                  {left: '\\(', right: '\\)', display: false}
-                ],
-                throwOnError: false
-              });
-            }
+             if (!window.renderMathInElement) return;
+  renderMathInElement(document.getElementById('chat'), {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\[', right: '\\]', display: true},
+      {left: '\\(', right: '\\)', display: false}
+    ],
+    throwOnError: false,
+    strict: false
+  });
+}
 
 
      
