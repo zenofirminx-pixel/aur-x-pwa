@@ -653,7 +653,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     }
   }
 
-  async function sendMessage() {
+ async function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
   const now = Date.now();
@@ -683,7 +683,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
   wrapper.dataset.timestamp = botTime;
   
   const msgEl = document.createElement('div');
-  msgEl.className = 'msg bot-full-text'; // 🔥 vire 'streaming'
+  msgEl.className = 'msg bot-full-text';
   msgEl.textContent = '';
   wrapper.appendChild(msgEl);
   
@@ -698,7 +698,6 @@ function addMessage(text, type, timestamp = null, isNew = true) {
   chat.scrollTop = chat.scrollHeight;
   hideWelcome();
 
-  // 🔥 VARS POUR LE BUFFER
   let botText = '';
   let pendingText = '';
   let rafId = null;
@@ -748,7 +747,6 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
 
-    // 🔥 SEULE PARTIE REMPLACÉE : LE WHILE
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
@@ -765,6 +763,19 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             
             msgEl.innerHTML = formatMessage(autoMathify(botText));
             highlightCode();
+            
+            // 🔥 RENDER KATEX ICI
+            if (window.renderMathInElement) {
+              renderMathInElement(msgEl, {
+                delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '$', right: '$', display: false},
+                  {left: '\\[', right: '\\]', display: true},
+                  {left: '\\(', right: '\\)', display: false}
+                ],
+                throwOnError: false
+              });
+            }
             
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
@@ -785,7 +796,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             const parsed = JSON.parse(data);
             if (parsed.content) {
               pendingText += parsed.content;
-              scheduleRender(); // 🔥 Batch à 60fps
+              scheduleRender();
             }
             if (parsed.error) {
               if (rafId) cancelAnimationFrame(rafId);
