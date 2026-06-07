@@ -763,18 +763,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             msgEl.innerHTML = formatMessage(autoMathify(botText));
             highlightCode();
             
-            // 🔥 RENDER KATEX ICI
-            if (window.renderMathInElement) {
-              renderMathInElement(msgEl, {
-                delimiters: [
-                  {left: '$$', right: '$$', display: true},
-                  {left: '$', right: '$', display: false},
-                  {left: '\\[', right: '\\]', display: true},
-                  {left: '\\(', right: '\\)', display: false}
-                ],
-                throwOnError: false
-              });
-            }
+            // 🔥 KATEX SUPPRIMÉ - ton observer HTML s'en charge
             
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
