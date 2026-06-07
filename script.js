@@ -677,15 +677,14 @@ function addMessage(text, type, timestamp = null, isNew = true) {
   sendBtnEl.classList.add('loading');
   sendBtnEl.disabled = true;
 
-  // 🔥 CRÉE LE MESSAGE ET GARDE LA REF DIRECT
   const botTime = Date.now();
   const wrapper = document.createElement('div');
   wrapper.className = 'msg-wrapper bot-full';
   wrapper.dataset.timestamp = botTime;
   
   const msgEl = document.createElement('div');
-  msgEl.className = 'msg bot-full-text streaming';
-  msgEl.textContent = ''; // Commence vide
+  msgEl.className = 'msg bot-full-text'; // 🔥 vire 'streaming'
+  msgEl.textContent = '';
   wrapper.appendChild(msgEl);
   
   if (settings.timestamp) {
@@ -699,7 +698,28 @@ function addMessage(text, type, timestamp = null, isNew = true) {
   chat.scrollTop = chat.scrollHeight;
   hideWelcome();
 
+  // 🔥 VARS POUR LE BUFFER
   let botText = '';
+  let pendingText = '';
+  let rafId = null;
+
+  function flushBuffer() {
+    if (pendingText) {
+      botText += pendingText;
+      pendingText = '';
+      msgEl.textContent = botText;
+      
+      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 100;
+      if (nearBottom) chat.scrollTop = chat.scrollHeight;
+    }
+    rafId = null;
+  }
+
+  function scheduleRender() {
+    if (!rafId) {
+      rafId = requestAnimationFrame(flushBuffer);
+    }
+  }
 
   try {
     const res = await fetch(CONFIG.ENDPOINTS.openai, {
@@ -717,6 +737,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     hideTypingIndicator();
 
     if (!res.ok) {
+      if (rafId) cancelAnimationFrame(rafId);
       msgEl.textContent = 'Erreur serveur';
       msgEl.classList.add('error');
       currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
@@ -727,19 +748,21 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
 
+    // 🔥 SEULE PARTIE REMPLACÉE : LE WHILE
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value);
+      const chunk = decoder.decode(value, { stream: true });
       const lines = chunk.split('\n');
 
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6).trim();
           if (data === '[DONE]') {
-            // 🔥 FORMAT UNE SEULE FOIS À LA FIN
-            msgEl.classList.remove('streaming');
+            if (rafId) cancelAnimationFrame(rafId);
+            flushBuffer();
+            
             msgEl.innerHTML = formatMessage(autoMathify(botText));
             highlightCode();
             
@@ -761,12 +784,11 @@ function addMessage(text, type, timestamp = null, isNew = true) {
           try {
             const parsed = JSON.parse(data);
             if (parsed.content) {
-              botText += parsed.content;
-              // 🔥 UPDATE JUSTE LE TEXTE, PAS DE FORMAT PENDANT LE STREAM
-              msgEl.textContent = botText;
-              chat.scrollTop = chat.scrollHeight;
+              pendingText += parsed.content;
+              scheduleRender(); // 🔥 Batch à 60fps
             }
             if (parsed.error) {
+              if (rafId) cancelAnimationFrame(rafId);
               msgEl.textContent = parsed.error;
               msgEl.classList.add('error');
             }
@@ -776,6 +798,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     }
 
   } catch (e) {
+    if (rafId) cancelAnimationFrame(rafId);
     hideTypingIndicator();
     msgEl.textContent = 'Erreur réseau / serveur';
     msgEl.classList.add('error');
