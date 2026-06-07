@@ -705,7 +705,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
     if (pendingText) {
       botText += pendingText;
       pendingText = '';
-      msgEl.textContent = botText;
+      msgEl.textContent = botText; // 🔥 TEXTE BRUT PENDANT LE STREAM
       
       const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 100;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
@@ -760,10 +760,23 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             if (rafId) cancelAnimationFrame(rafId);
             flushBuffer();
             
+            // 🔥 1. L'IA A FINI D'ÉCRIRE
             msgEl.innerHTML = formatMessage(autoMathify(botText));
             highlightCode();
             
-            // 🔥 KATEX SUPPRIMÉ - ton observer HTML s'en charge
+            // 🔥 2. KATEX S'APPLIQUE DIRECT APRÈS LE DERNIER MOT
+            if (window.renderMathInElement) {
+              renderMathInElement(msgEl, {
+                delimiters: [
+                  {left: '\\[', right: '\\]', display: true},
+                  {left: '\\(', right: '\\)', display: false},
+                  {left: '$$', right: '$$', display: true},
+                  {left: '$', right: '$', display: false}
+                ],
+                throwOnError: false,
+                strict: false
+              });
+            }
             
             currentConv.messages.push({ text: botText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
@@ -784,7 +797,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
             const parsed = JSON.parse(data);
             if (parsed.content) {
               pendingText += parsed.content;
-              scheduleRender();
+              scheduleRender(); // 🔥 Affiche juste le texte, pas de KaTeX ici
             }
             if (parsed.error) {
               if (rafId) cancelAnimationFrame(rafId);
