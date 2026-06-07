@@ -675,10 +675,7 @@ async function sendMessage() {
   msgEl.className = 'msg bot-full-text';
   wrapper.appendChild(msgEl);
   
-  // 🔥 CURSEUR STREAMING STYLE GPT
-  const cursor = document.createElement('span');
-  cursor.className = 'streaming-cursor';
-  msgEl.appendChild(cursor);
+  let cursor = null;
   
   if (settings.timestamp) {
     const time = document.createElement('div');
@@ -694,44 +691,50 @@ async function sendMessage() {
   let rawText = '';
   let pendingText = '';
   let rafId = null;
-  let lastChunkTime = Date.now();
   let cursorTimeout = null;
+  
+  function showPauseCursor() {
+    if (!cursor) {
+      cursor = document.createElement('span');
+      cursor.className = 'streaming-cursor pulsing';
+      msgEl.appendChild(cursor);
+    }
+  }
+  
+  function hidePauseCursor() {
+    if (cursor) {
+      cursor.remove();
+      cursor = null;
+    }
+  }
   
   function flushBuffer() {
     if (pendingText) {
       rawText += pendingText;
       pendingText = '';
-      lastChunkTime = Date.now();
       
-      // 🔥 RENDER MARKDOWN PENDANT STREAM
+      hidePauseCursor();
+      
+      // 🔥 MARKDOWN PROPRE PENDANT STREAM
       msgEl.innerHTML = formatMessage(autoMathify(rawText), true);
       
-      // Remettre le curseur à la fin
-      const cursor = document.createElement('span');
-      cursor.className = 'streaming-cursor';
-      msgEl.appendChild(cursor);
-      
+      // 🔥 CADRE CODE STYLÉ DIRECT SI BLOC FERMÉ
       highlightCode();
       
       const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
     }
     
-    // 🔥 CURSEUR PULSÉ SI PAUSE > 300ms
+    // Point après 5s de pause
     clearTimeout(cursorTimeout);
-    cursorTimeout = setTimeout(() => {
-      const cursor = msgEl.querySelector('.streaming-cursor');
-      if (cursor) cursor.classList.add('pulsing');
-    }, 300);
+    cursorTimeout = setTimeout(showPauseCursor, 5000);
     
     rafId = null;
   }
   
   function scheduleRender() {
     if (!rafId) {
-      // Retire le pulse quand ça arrive
-      const cursor = msgEl.querySelector('.streaming-cursor');
-      if (cursor) cursor.classList.remove('pulsing');
+      hidePauseCursor();
       rafId = requestAnimationFrame(flushBuffer);
     }
   }
@@ -754,6 +757,7 @@ async function sendMessage() {
     if (!res.ok) {
       if (rafId) cancelAnimationFrame(rafId);
       clearTimeout(cursorTimeout);
+      hidePauseCursor();
       msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
       currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
       saveConversation(msg.slice(0, 40), currentConv.messages);
@@ -779,11 +783,9 @@ async function sendMessage() {
             clearTimeout(cursorTimeout);
             flushBuffer();
             
-            // 🔥 RETIRER LE CURSEUR
-            const cursor = msgEl.querySelector('.streaming-cursor');
-            if (cursor) cursor.remove();
+            hidePauseCursor();
             
-            // 🔥 RENDER FINAL : Markdown complet + KaTeX
+            // 🔥 RENDER FINAL + KATEX
             msgEl.innerHTML = formatMessage(autoMathify(rawText), false);
             renderMathInPlace(msgEl);
             highlightCode();
@@ -814,6 +816,7 @@ async function sendMessage() {
             if (parsed.error) {
               if (rafId) cancelAnimationFrame(rafId);
               clearTimeout(cursorTimeout);
+              hidePauseCursor();
               msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
             }
           } catch (e) {}
@@ -824,6 +827,7 @@ async function sendMessage() {
     if (rafId) cancelAnimationFrame(rafId);
     clearTimeout(cursorTimeout);
     hideTypingIndicator();
+    hidePauseCursor();
     msgEl.innerHTML = '<span class="error">Erreur réseau / serveur</span>';
     currentConv.messages.push({ text: 'Erreur réseau / serveur', type: 'bot error', timestamp: Date.now() });
     saveConversation(msg.slice(0, 40), currentConv.messages);
@@ -833,7 +837,6 @@ async function sendMessage() {
     sendBtnEl.disabled = false;
   }
 }
-
 
   function typeMessage(text, type, timestamp = Date.now()) {
     return new Promise(resolve => {
