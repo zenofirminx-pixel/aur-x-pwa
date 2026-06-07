@@ -1,4 +1,169 @@
-* { margin: 0; padding: 0; box-sizing: border-box; }
+/* === Code Block pour ton App === */
+.app-code-block {
+  position: relative;
+  background: #1a1b26;
+  border: 1px solid #2a2e3f;
+  border-radius: 12px;
+  margin: 20px 0;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* Header avec langage + bouton copy */
+.app-code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #16161e;
+  border-bottom: 1px solid #2a2e3f;
+}
+
+.app-code-lang {
+  font-size: 12px;
+  font-weight: 600;
+  color: #7aa2f7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.app-code-copy {
+  padding: 4px 10px;
+  background: #24283b;
+  border: 1px solid #414868;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #a9b1d6;
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+
+.app-code-copy:hover {
+  background: #414868;
+  color: #c0caf5;
+  border-color: #565f89;
+}
+
+.app-code-copy:active {
+  transform: scale(0.95);
+}
+
+.app-code-copy.copied {
+  background: #9ece6a;
+  border-color: #9ece6a;
+  color: #1a1b26;
+}
+
+/* Zone de code */
+.app-code-content {
+  padding: 16px;
+  overflow-x: auto;
+  color: #c0caf5;
+  background: #1a1b26;
+}
+
+.app-code-content pre {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: none;
+}
+
+.app-code-content code {
+  background: transparent;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Inline code dans le texte */
+.app-inline-code {
+  background: #24283b;
+  border: 1px solid #414868;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.9em;
+  color: #f7768e;
+}
+
+/* Syntax Highlighting - Tokyo Night Theme */
+.app-code-content .token.comment { color: #565f89; font-style: italic; }
+.app-code-content .token.keyword { color: #bb9af7; }
+.app-code-content .token.string { color: #9ece6a; }
+.app-code-content .token.number { color: #ff9e64; }
+.app-code-content .token.function { color: #7aa2f7; }
+.app-code-content .token.operator { color: #89ddff; }
+.app-code-content .token.class-name { color: #e0af68; }
+.app-code-content .token.property { color: #73daca; }
+.app-code-content .token.punctuation { color: #a9b1d6; }
+.app-code-content .token.boolean { color: #ff9e64; }
+.app-code-content .token.tag { color: #f7768e; }
+.app-code-content .token.attr-name { color: #bb9af7; }
+.app-code-content .token.attr-value { color: #9ece6a; }
+
+/* Scrollbar */
+.app-code-content::-webkit-scrollbar {
+  height: 8px;
+}
+.app-code-content::-webkit-scrollbar-track {
+  background: #16161e;
+  border-radius: 4px;
+}
+.app-code-content::-webkit-scrollbar-thumb {
+  background: #414868;
+  border-radius: 4px;
+}
+.app-code-content::-webkit-scrollbar-thumb:hover {
+  background: #565f89;
+}
+
+/* Light mode support */
+@media (prefers-color-scheme: light) {
+  .app-code-block {
+    background: #f6f8fa;
+    border-color: #d0d7de;
+  }
+  .app-code-header {
+    background: #ffffff;
+    border-bottom-color: #d0d7de;
+  }
+  .app-code-lang {
+    color: #0969da;
+  }
+  .app-code-copy {
+    background: #f6f8fa;
+    border-color: #d0d7de;
+    color: #24292f;
+  }
+  .app-code-copy:hover {
+    background: #e1e4e8;
+    border-color: #afb8c1;
+  }
+  .app-code-content {
+    background: #f6f8fa;
+    color: #24292f;
+  }
+  .app-inline-code {
+    background: #f6f8fa;
+    border-color: #d0d7de;
+    color: #cf222e;
+  }
+  /* Light theme tokens */
+  .app-code-content .token.comment { color: #6e7781; }
+  .app-code-content .token.keyword { color: #cf222e; }
+  .app-code-content .token.string { color: #0a3069; }
+  .app-code-content .token.number { color: #0550ae; }
+  .app-code-content .token.function { color: #8250df; }
+  .app-code-content .token.operator { color: #0550ae; }
+  .app-code-content .token.class-name { color: #953800; }
+  .app-code-content .token.property { color: #116329; }
+  .app-code-content .token.punctuation { color: #24292f; }
+}* { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; height: 100%; overflow: hidden; }
 body { display: flex; flex-direction: column; width: 100%; }
 
