@@ -115,11 +115,29 @@ function linkify(text) {
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
   });
 }
-function autoMathify(text) { 
-  if (!text) return text;
-  
-  // 🔥 Protège seulement les prix genre 5$ 20$ mais laisse $x$ intact
-  return text.replace(/(\d)\$/g, '$1\\$');
+function autoMathify(text) {
+  if (!text) return '';
+  const protected = [];
+  text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|```[\s\S]*?```)/g, m => {
+    protected.push(m);
+    return `__PROTECT_${protected.length-1}__`;
+  });
+  const superscripts = { '⁰': '^0', '¹': '^1', '²': '^2', '³': '^3', '⁴': '^4', '⁵': '^5', '⁶': '^6', '⁷': '^7', '⁸': '^8', '⁹': '^9' };
+  text = text.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, match => superscripts[match] || match);
+  const mathRegex = /([a-zA-Z0-9]+\s*[=+\-*/^]\s*[a-zA-Z0-9]+(\^[0-9a-zA-Z\{\}]+)?|[a-zA-Z0-9]+\^[0-9a-zA-Z\{\}]+|sqrt\([^)]+\)|\d+\/\d+|\b(pi|alpha|beta|gamma|theta|lambda|sigma|phi|delta)\b)/g;
+  text = text.replace(mathRegex, match => {
+    let m = match;
+    m = m.replace(/(\d+)\s*\/\s*(\d+)/g, '\\frac{$1}{$2}');
+    m = m.replace(/([a-zA-Z0-9])\^(\d+|[a-zA-Z]|\{[^\}]+\})/g, '$1^{$2}');
+    m = m.replace(/sqrt\(([^)]+)\)/g, '\\sqrt{$1}');
+    m = m.replace(/\b(pi|alpha|beta|gamma|theta|lambda|sigma|phi|delta)\b/g, '\\$1');
+    m = m.replace(/(\d+)\s*x\s*(\d+)/g, '$1 \\times $2');
+    return `$$${m}$$`;
+  });
+  protected.forEach((m, i) => {
+    text = text.replace(`__PROTECT_${i}__`, m);
+  });
+  return text;
 }
 document.addEventListener('DOMContentLoaded', initApp);
 
