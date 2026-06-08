@@ -1070,13 +1070,5 @@ pre:hover .copy-btn {
     transform: scale(0.75); /* Rétrécit sur place */
   }
 }
-/* Force l’affichage immédiat des blocs code */
-.bot-full-text pre,
-.bot pre,
-.msg pre {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  contain: layout style !important; /* Force le browser à recalculer */
-}
+
 
