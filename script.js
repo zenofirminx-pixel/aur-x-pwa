@@ -391,7 +391,7 @@ function initApp() {
     if (parts.length === 0) parts.push({ type: 'text', content: text });
     return parts;
   }
-function formatMessage(text) {
+function formatMessage(text, isStreaming = false) {
   if (!text) return "";
   
   const mathBlocks = [];
@@ -404,12 +404,21 @@ function formatMessage(text) {
     return id;
   });
   
-  // Protéger blocs code
-  text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    const id = `__CODE_${codeBlocks.length}__`;
-    codeBlocks.push({ lang: lang || "text", code: code.trim() });
-    return id;
-  });
+  // Protéger blocs code - que les complets en stream
+  if (isStreaming) {
+    const completeCodeRegex = /```(\w*)\n([\s\S]*?)```/g;
+    text = text.replace(completeCodeRegex, (match, lang, code) => {
+      const id = `__CODE_${codeBlocks.length}__`;
+      codeBlocks.push({ lang: lang || "text", code: code.trim() });
+      return id;
+    });
+  } else {
+    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const id = `__CODE_${codeBlocks.length}__`;
+      codeBlocks.push({ lang: lang || "text", code: code.trim() });
+      return id;
+    });
+  }
   
   // Escape
   text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -433,16 +442,15 @@ function formatMessage(text) {
     text = "<p>" + text + "</p>";
   }
   
-  // Réinjecter code avec TA STRUCTURE EXACTE
+  // Réinjecter code - JUSTE LABEL, PAS DE BOUTON
   codeBlocks.forEach((block, i) => {
     const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const codeId = `code-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 5)}`;
+    const codeId = `code-${Date.now()}-${i}`;
     
     text = text.replace(`__CODE_${i}__`, 
       `<div class="app-code-block">
         <div class="app-code-header">
           <span class="app-code-lang">${block.lang}</span>
-          <button class="app-code-copy" onclick="copyCodeBlock('${codeId}')">Copier</button>
         </div>
         <div class="app-code-content">
           <pre><code id="${codeId}" class="language-${block.lang}">${escapedCode}</code></pre>
@@ -458,20 +466,6 @@ function formatMessage(text) {
   
   return text;
 }
-
-window.copyCodeBlock = function(id) {
-  const codeEl = document.getElementById(id);
-  if (!codeEl) return;
-  const btn = codeEl.closest('.app-code-block').querySelector('.app-code-copy');
-  navigator.clipboard.writeText(codeEl.textContent).then(() => {
-    btn.textContent = 'Copié !';
-    btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = 'Copier';
-      btn.classList.remove('copied');
-    }, 2000);
-  });
-};
   
 function addMessage(text, type, timestamp = null, isNew = true) {
     if (isNew) hideWelcome();
