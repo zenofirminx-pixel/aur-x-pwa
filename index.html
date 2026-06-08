@@ -512,7 +512,30 @@ function toggleWelcome() {
   const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
+// === KATEX HELPERS ===
+function waitForKatex(callback) {
+  if (typeof renderMathInElement !== 'undefined') {
+    callback();
+  } else {
+    setTimeout(() => waitForKatex(callback), 100);
+  }
+}
 
+function renderMath(element = document.body) {
+  if (typeof renderMathInElement === 'undefined') return;
+  
+  renderMathInElement(element, {
+    delimiters: [
+      {left: '$$', right: '$$', display: true},
+      {left: '$', right: '$', display: false},
+      {left: '\\(', right: '\\)', display: false},
+      {left: '\\[', right: '\\]', display: true}
+    ],
+    throwOnError: false,
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+    ignoredClasses: ['app-code-content', 'app-inline-code', 'copy-btn']
+  });
+}
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   toggleWelcome();
