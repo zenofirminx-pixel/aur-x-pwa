@@ -412,145 +412,46 @@ function loadConversation(id) {
     return parts;
   }
 function formatMessage(text) {
-  if (!text) return "";
-
-  // 1. PROTECTION : Extraire blocs code/math AVANT tout
-  const codeBlocks = [];
-  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-    const id = `__CODE_${codeBlocks.length}__`;
-    codeBlocks.push({ lang: lang || 'text', code });
-    return id;
-  });
-
-  const mathBlocks = [];
-  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
-    const id = `__MATH_${mathBlocks.length}__`;
-    mathBlocks.push(math);
-    return id;
-  });
-
-  const inlineMath = [];
-  text = text.replace(/\$([^\$\n]+?)\$/g, (_, math) => {
-    const id = `__IMATH_${inlineMath.length}__`;
-    inlineMath.push(math);
-    return id;
-  });
-
-  // 2. ÉCHAPPEMENT HTML
-  text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-  // 3. TABLES GFM | col1 | col2 |
-  text = text.replace(/^\|(.+)\|\n\|[-:\s|]+\|\n((?:\|.*\|\n?)+)/gm, (match, header, rows) => {
-    const headers = header.split('|').map(h => h.trim()).filter(Boolean);
-    const bodyRows = rows.trim().split('\n').map(row => 
-      row.split('|').map(cell => cell.trim()).filter(Boolean)
-    );
-
-    let table = '<table><thead><tr>';
-    headers.forEach(h => table += `<th>${h}</th>`);
-    table += '</tr></thead><tbody>';
-    bodyRows.forEach(row => {
-      table += '<tr>';
-      row.forEach(cell => table += `<td>${cell}</td>`);
-      table += '</tr>';
+    if (!text) return "";
+    const mathBlocks = [];
+    const codeBlocks = [];
+    text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g, match => {
+      const id = `__MATH_${mathBlocks.length}__`;
+      mathBlocks.push(match);
+      return id;
     });
-    table += '</tbody></table>';
-    return table;
-  });
-
-  // 4. TITRES
-  text = text.replace(/^#{1,6} (.+)$/gm, (match, content) => {
-    const level = match.indexOf(' ');
-    return `<h${level}>${content.trim()}</h${level}>`;
-  });
-
-  // 5. HORIZONTAL RULE
-  text = text.replace(/^---+$/gm, '<hr>');
-
-  // 6. STYLES - ordre critique
-  text = text.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
-  text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  text = text.replace(/\*(.+?)\*/g, '<em>$1</em>');
-  text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
-  text = text.replace(/==(.+?)==/g, '<mark>$1</mark>');
-
-  // 7. CODE INLINE
-  text = text.replace(/`([^`\n]+?)`/g, '<code class="inline-code">$1</code>');
-
-  // 8. LIENS [text](url) + auto-link
-  text = text.replace(/\[([^\]]+?)\]\((https?:\/\/[^\s)]+?)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-  text = text.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener">$1</a>');
-
-  // 9. CITATIONS > text (multi-lignes)
-  text = text.replace(/^(&gt;|>)\s*(.+)$/gm, '<blockquote>$2</blockquote>');
-  text = text.replace(/<\/blockquote>\n<blockquote>/g, '<br>');
-
-  // 10. LISTES - gère indentation
-  text = text.replace(/^(\s*)([-*+]|\d+\.)\s+(.+)$/gm, (match, indent, bullet, content) => {
-    const level = Math.floor(indent.length / 2);
-    const tag = /^\d+\./.test(bullet) ? 'ol' : 'ul';
-    return `<li data-level="${level}" data-type="${tag}">${content}</li>`;
-  });
-
-  // Wrap listes
-  text = text.replace(/(<li data-level="0".*?<\/li>(?:\s*<li data-level="0".*?<\/li>)*)/gs, (match) => {
-    const type = match.includes('data-type="ol"') ? 'ol' : 'ul';
-    return `<${type}>${match.replace(/ data-level="\d+" data-type="(?:ul|ol)"/g, '')}</${type}>`;
-  });
-
-  // 11. ESPACEMENT INTELLIGENT - Fix le vrai problème
-  // Ajoute espace après ponctuation SEULEMENT si collé à une lettre
-  text = text.replace(/([.!?])([A-ZÀ-Ÿ])/g, '$1 $2');
-  text = text.replace(/([.!?])([a-zà-ÿ])/g, '$1 $2');
-  text = text.replace(/,([A-Za-zÀ-ÿ])/g, ', $1');
-  text = text.replace(/;([A-Za-zÀ-ÿ])/g, '; $1');
-  text = text.replace(/:([A-Za-zÀ-ÿ])/g, ': $1');
-
-  // Nettoie espaces multiples mais garde \n
-  text = text.replace(/[ \t]{2,}/g, ' ');
-
-  // 12. PARAGRAPHES - Logic GPT
-  const blocks = text.split(/\n{2,}/);
-  text = blocks.map(block => {
-    block = block.trim();
-    if (!block) return '';
-
-    // Skip si déjà un bloc HTML ou placeholder
-    if (block.match(/^<(h[1-6]|ul|ol|blockquote|table|hr|pre)/) || 
-        block.startsWith('__CODE_') || 
-        block.startsWith('__MATH_') ||
-        block.startsWith('__IMATH_')) {
-      return block;
+    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const id = `__CODE_${codeBlocks.length}__`;
+      codeBlocks.push({ lang: lang || "plaintext", code });
+      return id;
+    });
+    text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
+    text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
+    text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
+    text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+    text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
+    text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
+    text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
+    text = text.replace(/^\- (.*)$/gm, "<li>$1</li>");
+    text = text.replace(/^\* (.*)$/gm, "<li>$1</li>");
+    text = text.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+    text = text.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
+    text = linkify(text);
+    text = text.replace(/\n\n+/g, "</p><p>");
+    text = text.replace(/\n/g, "<br>");
+    if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote")) {
+      text = "<p>" + text + "</p>";
     }
-
-    // Sinon wrap en <p> + <br> pour \n simples
-    return `<p>${block.replace(/\n/g, '<br>')}</p>`;
-  }).filter(Boolean).join('\n');
-
-  // 13. NETTOYAGE
-  text = text.replace(/<p>(<(?:h[1-6]|ul|ol|blockquote|table|hr)>.*?<\/(?:h[1-6]|ul|ol|blockquote|table|hr)>)<\/p>/gs, '$1');
-  text = text.replace(/<p>\s*<\/p>/g, '');
-
-  // 14. RESTAURER BLOCS CODE avec label
-  codeBlocks.forEach((block, i) => {
-    const escaped = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const langLabel = block.lang !== 'text' ? block.lang : '';
-    text = text.replace(`__CODE_${i}__`, 
-      `<pre><div class="code-lang">${langLabel}</div><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="language-${block.lang}">${escaped}</code></pre>`
-    );
-  });
-
-  // 15. RESTAURER MATH
-  mathBlocks.forEach((math, i) => {
-    text = text.replace(`__MATH_${i}__`, `$$${math}$$`);
-  });
-
-  inlineMath.forEach((math, i) => {
-    text = text.replace(`__IMATH_${i}__`, `$${math}$`);
-  });
-
-  return text;
-}
+    codeBlocks.forEach((block, i) => {
+      const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      text = text.replace(`__CODE_${i}__`, `<pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="language-${block.lang}">${escapedCode}</code></pre>`);
+    });
+    mathBlocks.forEach((math, i) => {
+      text = text.replace(`__MATH_${i}__`, math);
+    });
+    return text;
+  }
 function addMessage(text, type, timestamp = null, isNew = true) {
     if (isNew) hideWelcome();
     try {
