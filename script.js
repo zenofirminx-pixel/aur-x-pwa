@@ -394,47 +394,46 @@ function initApp() {
 function formatMessage(text) {
   if (!text) return "";
   
-  // 1. Protéger math et code avant escape
   const mathBlocks = [];
   const codeBlocks = [];
   
+  // 1. Protéger math
   text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g, match => {
     const id = `__MATH_${mathBlocks.length}__`;
     mathBlocks.push(match);
     return id;
   });
   
+  // 2. Protéger blocs code
   text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
     const id = `__CODE_${codeBlocks.length}__`;
     codeBlocks.push({ lang: lang || "text", code });
     return id;
   });
   
-  // 2. Escape HTML
+  // 3. Escape HTML
   text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   
-  // 3. Markdown
+  // 4. Markdown
   text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
   text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
   text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
   text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
   text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
-  text = text.replace(/`([^`]+)`/g, '<code class="app-inline-code">$1</code>'); // <-- app-inline-code
+  text = text.replace(/`([^`]+)`/g, '<code class="app-inline-code">$1</code>');
   text = text.replace(/^\- (.*)$/gm, "<li>$1</li>");
   text = text.replace(/^\* (.*)$/gm, "<li>$1</li>");
   text = text.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
   text = text.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
   text = linkify(text);
-  
-  // 4. Paragraphes
   text = text.replace(/\n\n+/g, "</p><p>");
   text = text.replace(/\n/g, "<br>");
-  if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote") && !text.startsWith("<div")) {
+  if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote") && !text.startsWith("<div") && !text.startsWith("<p")) {
     text = "<p>" + text + "</p>";
   }
   
-  // 5. Réinjecter les blocs code avec TA STRUCTURE
+  // 5. Réinjecter les blocs code avec LA STRUCTURE + LABEL
   codeBlocks.forEach((block, i) => {
     const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const codeId = `code-${Date.now()}-${i}`;
@@ -460,7 +459,7 @@ function formatMessage(text) {
   return text;
 }
 
-// Fonction copy globale
+// Fonction copy globale - obligatoire
 window.copyCodeBlock = function(id) {
   const codeEl = document.getElementById(id);
   if (!codeEl) return;
