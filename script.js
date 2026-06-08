@@ -397,24 +397,24 @@ function formatMessage(text) {
   const mathBlocks = [];
   const codeBlocks = [];
   
-  // 1. Protéger math
+  // Protéger math
   text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g, match => {
     const id = `__MATH_${mathBlocks.length}__`;
     mathBlocks.push(match);
     return id;
   });
   
-  // 2. Protéger blocs code
+  // Protéger blocs code
   text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
     const id = `__CODE_${codeBlocks.length}__`;
-    codeBlocks.push({ lang: lang || "text", code });
+    codeBlocks.push({ lang: lang || "text", code: code.trim() });
     return id;
   });
   
-  // 3. Escape HTML
+  // Escape
   text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   
-  // 4. Markdown
+  // Markdown
   text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
   text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
   text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
@@ -429,14 +429,14 @@ function formatMessage(text) {
   text = linkify(text);
   text = text.replace(/\n\n+/g, "</p><p>");
   text = text.replace(/\n/g, "<br>");
-  if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote") && !text.startsWith("<div") && !text.startsWith("<p")) {
+  if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<blockquote") && !text.startsWith("<div") && !text.startsWith("<p")) {
     text = "<p>" + text + "</p>";
   }
   
-  // 5. Réinjecter les blocs code avec LA STRUCTURE + LABEL
+  // Réinjecter code avec TA STRUCTURE EXACTE
   codeBlocks.forEach((block, i) => {
     const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    const codeId = `code-${Date.now()}-${i}`;
+    const codeId = `code-${Date.now()}-${i}-${Math.random().toString(36).substr(2, 5)}`;
     
     text = text.replace(`__CODE_${i}__`, 
       `<div class="app-code-block">
@@ -451,7 +451,7 @@ function formatMessage(text) {
     );
   });
   
-  // 6. Réinjecter math
+  // Réinjecter math
   mathBlocks.forEach((math, i) => {
     text = text.replace(`__MATH_${i}__`, math);
   });
@@ -459,12 +459,10 @@ function formatMessage(text) {
   return text;
 }
 
-// Fonction copy globale - obligatoire
 window.copyCodeBlock = function(id) {
   const codeEl = document.getElementById(id);
   if (!codeEl) return;
   const btn = codeEl.closest('.app-code-block').querySelector('.app-code-copy');
-  
   navigator.clipboard.writeText(codeEl.textContent).then(() => {
     btn.textContent = 'Copié !';
     btn.classList.add('copied');
