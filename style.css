@@ -1070,24 +1070,5 @@ pre:hover .copy-btn {
     transform: scale(0.75); /* Rétrécit sur place */
   }
 }
-.bot-full-text pre,
-.bot pre,
-.msg pre {
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 8px;
-  margin: 12px 0;
-  padding: 16px;
-  overflow-x: auto;
-}
 
-.bot-full-text pre code,
-.bot pre code,
-.msg pre code {
-  background: transparent;
-  color: #e1e1e1;
-  font-family: 'SF Mono', Monaco, 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-}
 
