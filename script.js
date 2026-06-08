@@ -268,8 +268,7 @@ function initApp() {
       convList.appendChild(item);
     });
   }
-
-  function loadConversation(id) {
+function loadConversation(id) {
     currentConvId = id;
     if (!isLoggedIn) localStorage.setItem('aurx_current', id);
     
@@ -278,14 +277,17 @@ function initApp() {
     chat.innerHTML = '';
     document.getElementById('welcome')?.classList.add('hidden');
     try {
-      conv.messages.forEach(m => addMessage(m.text, m.type, m.timestamp || Date.now(), false));
+      conv.messages.forEach(m => {
+        addMessage(m.text, m.type, m.timestamp || Date.now(), false);
+      });
     } catch(e) {
       console.error('Erreur load conv:', e);
       chat.innerHTML = '<div class="msg bot">Erreur de chargement</div>';
     }
     sidebar?.classList.remove('open');
     overlay?.classList.remove('open');
-  }
+}
+  
 
   async function saveConversation(title, messages) {
     if (!settings.autosave || messages.length === 0) return;
@@ -558,6 +560,12 @@ function addMessage(text, type, timestamp = null, isNew = true) {
           const msg = document.createElement('div');
           msg.className = `msg bot-full-text`;
           msg.innerHTML = formatMessage(part.content);
+          
+          // 🔥 AJOUTE ÇA POUR KATEX SUR HISTORIQUE
+          if (typeof renderMath !== 'undefined') {
+            renderMath(msg);
+          }
+          
           msg.dataset.index = messageCounter++;
           wrapper.appendChild(msg);
         }
@@ -575,7 +583,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
       console.error('addMessage error:', e);
     }
     return text;
-  }    
+}    
 
 
  
