@@ -391,26 +391,16 @@ function initApp() {
     if (parts.length === 0) parts.push({ type: 'text', content: text });
     return parts;
   }
-function formatMessage(text, isStreaming = false) {
+function formatMessage(text) {
   if (!text) return "";
 
   // 1. PROTECTION : Extraire blocs code/math AVANT tout
   const codeBlocks = [];
-  if (isStreaming) {
-    // En stream : que les blocs complets
-    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => {
-      const id = `__CODE_${codeBlocks.length}__`;
-      codeBlocks.push({ lang: lang || 'text', code: code.trim() });
-      return id;
-    });
-  } else {
-    // Final : tous les blocs
-    text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-      const id = `__CODE_${codeBlocks.length}__`;
-      codeBlocks.push({ lang: lang || 'text', code });
-      return id;
-    });
-  }
+  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
+    const id = `__CODE_${codeBlocks.length}__`;
+    codeBlocks.push({ lang: lang || 'text', code });
+    return id;
+  });
 
   const mathBlocks = [];
   text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
