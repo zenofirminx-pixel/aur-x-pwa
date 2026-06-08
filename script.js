@@ -391,26 +391,37 @@ function initApp() {
     if (parts.length === 0) parts.push({ type: 'text', content: text });
     return parts;
   }
-function formatMessage(text) {
+function formatMessage(text, isStreaming = false) {
   if (!text) return "";
 
   // 1. PROTECTION : Extraire blocs code/math AVANT tout
   const codeBlocks = [];
-  text = text.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
-    const id = `__CODE_${codeBlocks.length}__`;
-    codeBlocks.push({ lang: lang || 'text', code });
-    return id;
-  });
+  
+  if (isStreaming) {
+    // En stream : que les blocs complets
+    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const id = `__CODE_${codeBlocks.length}__`;
+      codeBlocks.push({ lang: lang || 'text', code: code.trim() });
+      return id;
+    });
+  } else {
+    // Final : tous les blocs
+    text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
+      const id = `__CODE_${codeBlocks.length}__`;
+      codeBlocks.push({ lang: lang || 'text', code: code.trim() });
+      return id;
+    });
+  }
 
   const mathBlocks = [];
-  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (_, math) => {
+  text = text.replace(/\$\$([\s\S]*?)\$\$/g, (match, math) => {
     const id = `__MATH_${mathBlocks.length}__`;
     mathBlocks.push(math);
     return id;
   });
 
   const inlineMath = [];
-  text = text.replace(/\$([^\$\n]+?)\$/g, (_, math) => {
+  text = text.replace(/\$([^\$\n]+?)\$/g, (match, math) => {
     const id = `__IMATH_${inlineMath.length}__`;
     inlineMath.push(math);
     return id;
@@ -478,24 +489,20 @@ function formatMessage(text) {
     return `<${type}>${match.replace(/ data-level="\d+" data-type="(?:ul|ol)"/g, '')}</${type}>`;
   });
 
-  // 11. ESPACEMENT INTELLIGENT - Fix le vrai problème
-  // Ajoute espace après ponctuation SEULEMENT si collé à une lettre
+  // 11. ESPACEMENT INTELLIGENT
   text = text.replace(/([.!?])([A-ZÀ-Ÿ])/g, '$1 $2');
   text = text.replace(/([.!?])([a-zà-ÿ])/g, '$1 $2');
   text = text.replace(/,([A-Za-zÀ-ÿ])/g, ', $1');
   text = text.replace(/;([A-Za-zÀ-ÿ])/g, '; $1');
   text = text.replace(/:([A-Za-zÀ-ÿ])/g, ': $1');
-
-  // Nettoie espaces multiples mais garde \n
   text = text.replace(/[ \t]{2,}/g, ' ');
 
-  // 12. PARAGRAPHES - Logic GPT
+  // 12. PARAGRAPHES
   const blocks = text.split(/\n{2,}/);
   text = blocks.map(block => {
     block = block.trim();
     if (!block) return '';
 
-    // Skip si déjà un bloc HTML ou placeholder
     if (block.match(/^<(h[1-6]|ul|ol|blockquote|table|hr|pre)/) || 
         block.startsWith('__CODE_') || 
         block.startsWith('__MATH_') ||
@@ -503,7 +510,6 @@ function formatMessage(text) {
       return block;
     }
 
-    // Sinon wrap en <p> + <br> pour \n simples
     return `<p>${block.replace(/\n/g, '<br>')}</p>`;
   }).filter(Boolean).join('\n');
 
@@ -511,12 +517,21 @@ function formatMessage(text) {
   text = text.replace(/<p>(<(?:h[1-6]|ul|ol|blockquote|table|hr)>.*?<\/(?:h[1-6]|ul|ol|blockquote|table|hr)>)<\/p>/gs, '$1');
   text = text.replace(/<p>\s*<\/p>/g, '');
 
-  // 14. RESTAURER BLOCS CODE avec label
+  // 14. RESTAURER BLOCS CODE avec structure .app-code-block
   codeBlocks.forEach((block, i) => {
     const escaped = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     const langLabel = block.lang !== 'text' ? block.lang : '';
+    const codeId = `code-${Date.now()}-${i}`;
+    
     text = text.replace(`__CODE_${i}__`, 
-      `<pre><div class="code-lang">${langLabel}</div><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="language-${block.lang}">${escaped}</code></pre>`
+      `<div class="app-code-block">
+        <div class="app-code-header">
+          <span class="app-code-lang">${langLabel}</span>
+        </div>
+        <div class="app-code-content">
+          <pre><code id="${codeId}" class="language-${block.lang}">${escaped}</code></pre>
+        </div>
+      </div>`
     );
   });
 
