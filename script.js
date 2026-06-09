@@ -599,29 +599,21 @@ async function sendMessage() {
   sendBtnEl.classList.add('loading');
   sendBtnEl.disabled = true;
 
+  // --- LE STREAM TEMPORAIRE ---
+  // On crée un conteneur temporaire unique juste pour afficher le texte pendant qu'il tape
   const botTime = Date.now();
-  const wrapper = document.createElement('div');
-  wrapper.className = 'msg-wrapper bot-full'; 
-  wrapper.dataset.timestamp = botTime;
+  const streamWrapper = document.createElement('div');
+  streamWrapper.className = 'msg-wrapper bot-full'; 
+  streamWrapper.dataset.timestamp = botTime;
 
-  const msgEl = document.createElement('div');
-  msgEl.className = 'msg bot-full-text'; 
-  wrapper.appendChild(msgEl);
+  const streamMsgEl = document.createElement('div');
+  streamMsgEl.className = 'msg bot-full-text'; 
+  streamWrapper.appendChild(streamMsgEl);
 
   let cursor = null;
   let isDone = false;
 
-  if (settings.timestamp) {
-    const time = document.createElement('div');
-    time.className = 'msg-time';
-    time.textContent = new Date(botTime).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    wrapper.appendChild(time);
-  }
-
-  chat.appendChild(wrapper);
+  chat.appendChild(streamWrapper);
   chat.scrollTop = chat.scrollHeight;
   hideWelcome();
 
@@ -631,10 +623,10 @@ async function sendMessage() {
   let cursorTimeout = null;
 
   function showPauseCursor() {
-    if (!cursor && msgEl.isConnected && !isDone) {
+    if (!cursor && streamMsgEl.isConnected && !isDone) {
       cursor = document.createElement('span');
       cursor.className = 'streaming-cursor';
-      msgEl.appendChild(cursor);
+      streamMsgEl.appendChild(cursor);
     }
   }
 
@@ -655,8 +647,8 @@ async function sendMessage() {
       pendingText = '';
 
       hidePauseCursor();
-
-      msgEl.textContent = rawText;
+      // On affiche le texte brut pendant le stream
+      streamMsgEl.textContent = rawText;
 
       const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
@@ -666,7 +658,6 @@ async function sendMessage() {
       clearTimeout(cursorTimeout);
       cursorTimeout = setTimeout(showPauseCursor, 5000);
     }
-
     rafId = null;
   }
 
@@ -696,13 +687,12 @@ async function sendMessage() {
       isDone = true;
       if (rafId) cancelAnimationFrame(rafId);
       hidePauseCursor();
-      msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
+      streamMsgEl.innerHTML = '<span class="error">Erreur serveur</span>';
       return;
     }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    
     let streamBuffer = '';
 
     while (true) {
@@ -726,45 +716,21 @@ async function sendMessage() {
 
           if (pendingText) {
             rawText += pendingText;
-            pendingText = '';
           }
 
-          // 1. Injection immédiate du HTML final
-          msgEl.innerHTML = formatMessage(rawText, false);
+          // 🔥 LE TRUC MAGIQUE ICI :
+          // 1. On supprime le conteneur temporaire du stream
+          streamWrapper.remove();
 
-          // 2. 🔥 ASTUCE DOUBLE RAF : On force le navigateur à calculer le CSS des nouveaux éléments <pre>
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              
-              // 3. Application de Highlight.js sur les blocs de code maintenant stylisés et stables
-              msgEl.querySelectorAll('pre code').forEach((block) => {
-                if (typeof hljs !== 'undefined') {
-                  hljs.highlightElement(block);
-                }
-              });
+          // 2. On appelle ta vraie fonction addMessage avec le texte complet !
+          // Elle va s'occuper de découper le code en bulles, d'appliquer KaTeX et Prism/hljs proprement.
+          addMessage(rawText, 'bot', botTime, false);
 
-              // 4. Application de KaTeX
-              if (typeof renderMathInElement === 'function') {
-                renderMathInElement(msgEl, {
-                  delimiters: [
-                    { left: '$$', right: '$$', display: true },
-                    { left: '$', right: '$', display: false },
-                    { left: '\\(', right: '\\)', display: false },
-                    { left: '\\[', right: '\\]', display: true }
-                  ],
-                  throwOnError: false
-                });
-              }
-
-              // 5. Scroll tout en bas une fois le rendu lourd terminé
-              chat.scrollTop = chat.scrollHeight;
-            });
-          });
-
+          // 3. Sauvegarde dans l'historique
           currentConv.messages.push({
             text: rawText,
             type: 'bot',
-            timestamp: Date.now()
+            timestamp: botTime
           });
 
           saveConversation(msg.slice(0, 40), currentConv.messages);
@@ -773,33 +739,29 @@ async function sendMessage() {
 
         try {
           const parsed = JSON.parse(data);
-
           if (parsed.content) {
             pendingText += parsed.content;
             scheduleRender();
           }
-
           if (parsed.error) {
             isDone = true;
-            msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
+            streamMsgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
           }
-
-        } catch (e) {
-          console.warn("Erreur de parsing sur le chunk :", data);
-        }
+        } catch (e) {}
       }
     }
   } catch (e) {
     isDone = true;
     hideTypingIndicator();
     hidePauseCursor();
-    msgEl.innerHTML = 'Erreur réseau / serveur';
+    streamMsgEl.innerHTML = 'Erreur réseau / serveur';
     console.error(e);
   } finally {
     sendBtnEl.classList.remove('loading');
     sendBtnEl.disabled = false;
   }
 }
+
 
 
 
