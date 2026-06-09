@@ -1,169 +1,4 @@
-/* === Code Block pour ton App === */
-.app-code-block {
-  position: relative;
-  background: #1a1b26;
-  border: 1px solid #2a2e3f;
-  border-radius: 12px;
-  margin: 20px 0;
-  overflow: hidden;
-  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-  font-size: 14px;
-  line-height: 1.7;
-}
-
-/* Header avec langage + bouton copy */
-.app-code-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px;
-  background: #16161e;
-  border-bottom: 1px solid #2a2e3f;
-}
-
-.app-code-lang {
-  font-size: 12px;
-  font-weight: 600;
-  color: #7aa2f7;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.app-code-copy {
-  padding: 4px 10px;
-  background: #24283b;
-  border: 1px solid #414868;
-  border-radius: 6px;
-  font-size: 12px;
-  color: #a9b1d6;
-  cursor: pointer;
-  transition: all 0.15s;
-  font-family: inherit;
-}
-
-.app-code-copy:hover {
-  background: #414868;
-  color: #c0caf5;
-  border-color: #565f89;
-}
-
-.app-code-copy:active {
-  transform: scale(0.95);
-}
-
-.app-code-copy.copied {
-  background: #9ece6a;
-  border-color: #9ece6a;
-  color: #1a1b26;
-}
-
-/* Zone de code */
-.app-code-content {
-  padding: 16px;
-  overflow-x: auto;
-  color: #c0caf5;
-  background: #1a1b26;
-}
-
-.app-code-content pre {
-  margin: 0;
-  padding: 0;
-  background: transparent;
-  border: none;
-}
-
-.app-code-content code {
-  background: transparent;
-  padding: 0;
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-}
-
-/* Inline code dans le texte */
-.app-inline-code {
-  background: #24283b;
-  border: 1px solid #414868;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-family: 'JetBrains Mono', 'Fira Code', monospace;
-  font-size: 0.9em;
-  color: #f7768e;
-}
-
-/* Syntax Highlighting - Tokyo Night Theme */
-.app-code-content .token.comment { color: #565f89; font-style: italic; }
-.app-code-content .token.keyword { color: #bb9af7; }
-.app-code-content .token.string { color: #9ece6a; }
-.app-code-content .token.number { color: #ff9e64; }
-.app-code-content .token.function { color: #7aa2f7; }
-.app-code-content .token.operator { color: #89ddff; }
-.app-code-content .token.class-name { color: #e0af68; }
-.app-code-content .token.property { color: #73daca; }
-.app-code-content .token.punctuation { color: #a9b1d6; }
-.app-code-content .token.boolean { color: #ff9e64; }
-.app-code-content .token.tag { color: #f7768e; }
-.app-code-content .token.attr-name { color: #bb9af7; }
-.app-code-content .token.attr-value { color: #9ece6a; }
-
-/* Scrollbar */
-.app-code-content::-webkit-scrollbar {
-  height: 8px;
-}
-.app-code-content::-webkit-scrollbar-track {
-  background: #16161e;
-  border-radius: 4px;
-}
-.app-code-content::-webkit-scrollbar-thumb {
-  background: #414868;
-  border-radius: 4px;
-}
-.app-code-content::-webkit-scrollbar-thumb:hover {
-  background: #565f89;
-}
-
-/* Light mode support */
-@media (prefers-color-scheme: light) {
-  .app-code-block {
-    background: #f6f8fa;
-    border-color: #d0d7de;
-  }
-  .app-code-header {
-    background: #ffffff;
-    border-bottom-color: #d0d7de;
-  }
-  .app-code-lang {
-    color: #0969da;
-  }
-  .app-code-copy {
-    background: #f6f8fa;
-    border-color: #d0d7de;
-    color: #24292f;
-  }
-  .app-code-copy:hover {
-    background: #e1e4e8;
-    border-color: #afb8c1;
-  }
-  .app-code-content {
-    background: #f6f8fa;
-    color: #24292f;
-  }
-  .app-inline-code {
-    background: #f6f8fa;
-    border-color: #d0d7de;
-    color: #cf222e;
-  }
-  /* Light theme tokens */
-  .app-code-content .token.comment { color: #6e7781; }
-  .app-code-content .token.keyword { color: #cf222e; }
-  .app-code-content .token.string { color: #0a3069; }
-  .app-code-content .token.number { color: #0550ae; }
-  .app-code-content .token.function { color: #8250df; }
-  .app-code-content .token.operator { color: #0550ae; }
-  .app-code-content .token.class-name { color: #953800; }
-  .app-code-content .token.property { color: #116329; }
-  .app-code-content .token.punctuation { color: #24292f; }
-}* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { background: #000; color: #fff; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; height: 100%; overflow: hidden; }
 body { display: flex; flex-direction: column; width: 100%; }
 
@@ -707,366 +542,78 @@ header {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+/* ===== CODE LABEL STYLE GPT ===== */
 
-.msg.bot pre code.language-javascript::before { content: 'JavaScript'; }
-.msg.bot pre code.language-js::before { content: 'JavaScript'; }
-.msg.bot pre code.language-python::before { content: 'Python'; }
-.msg.bot pre code.language-html::before { content: 'HTML'; }
-.msg.bot pre code.language-css::before { content: 'CSS'; }
-.msg.bot pre code.language-json::before { content: 'JSON'; }
-.msg.bot pre code.language-bash::before { content: 'Bash'; }
-.msg.bot pre code.language-plaintext::before { content: 'Text'; }
-.msg.bot pre code:not([class*="language-"])::before { content: 'Code'; }
-/* ===== WRAPPER BOT ===== */
-.msg-wrapper.bot,
-.msg-wrapper.bot-full {
-  width: 100%;
-  display: flex;
-  justify-content: flex-start;
-}
-
-/* IMPORTANT: empêche flex de shrink */
-.msg-wrapper.bot .msg,
-.msg-wrapper.bot-full .msg,
-.msg.bot,
-.msg.bot-full-text {
-  flex: 1 1 auto;
-  width: 100%;
-  max-width: 100%;
-  box-sizing: border-box;
-}
-p {
-  margin: 0 0 10px 0;
-}
-.bot-full-text p {
-    margin: 0 0 12px 0;
-    line-height: 1.7;
-}
-.bot-full-text {
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
-}
-#chat {
-  font-size: 16px;
-  line-height: 1.75;
-  color: #ececf1;
-}
-
-#chat p {
-  margin: 1rem 0;
-  line-height: 1.75;
-}
-
-#chat p:first-child { margin-top: 0; }
-#chat p:last-child { margin-bottom: 0; }
-
-#chat h1, #chat h2, #chat h3, #chat h4, #chat h5, #chat h6 {
-  margin: 1.5rem 0 1rem;
-  font-weight: 600;
-  line-height: 1.3;
-}
-#chat h1 { font-size: 2rem; }
-#chat h2 { font-size: 1.5rem; }
-#chat h3 { font-size: 1.25rem; }
-
-#chat ul, #chat ol {
-  margin: 1rem 0;
-  padding-left: 1.5rem;
-}
-
-#chat li {
-  margin: 0.5rem 0;
-  line-height: 1.75;
-}
-
-#chat li > p {
-  margin: 0.25rem 0;
-}
-
-#chat blockquote {
-  border-left: 4px solid #10a37f;
-  padding: 0.75rem 1rem;
-  margin: 1rem 0;
-  background: rgba(16, 163, 127, 0.05);
-  border-radius: 0 4px 4px 0;
-}
-
-#chat blockquote p {
-  margin: 0.5rem 0;
-}
-
-#chat pre {
+.msg.bot pre {
   position: relative;
+  margin-top: 28px;
+}
+
+/* Label principal */
+.msg.bot pre code::before {
+  position: absolute;
+  top: -26px;
+  left: 10px;
   background: #1e1e1e;
   border: 1px solid #333;
-  border-radius: 8px;
-  margin: 1rem 0;
-  overflow: hidden;
-}
-
-#chat .code-lang {
-  position: absolute;
-  top: 0.5rem;
-  left: 1rem;
-  font-size: 0.75rem;
-  color: #888;
-  text-transform: lowercase;
-  font-family: monospace;
-}
-
-#chat .copy-btn {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background: #2d2d2d;
-  border: 1px solid #444;
-  color: #ddd;
-  padding: 0.25rem 0.75rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.8rem;
-  transition: all 0.2s;
-}
-
-#chat .copy-btn:hover {
-  background: #3e3e3e;
-  border-color: #555;
-}
-
-#chat pre code {
-  display: block;
-  padding: 2.5rem 1rem 1rem;
-  overflow-x: auto;
-  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
-  font-size: 0.875rem;
-  line-height: 1.6;
-}
-
-#chat code.inline-code {
-  background: rgba(255,255,255,0.08);
-  padding: 0.125rem 0.375rem;
-  border-radius: 4px;
-  font-size: 0.875em;
-  font-family: 'SF Mono', 'Consolas', monospace;
-  border: 1px solid rgba(255,255,255,0.1);
-}
-
-#chat table {
-  border-collapse: collapse;
-  margin: 1rem 0;
-  width: 100%;
-  font-size: 0.9rem;
-}
-
-#chat th, #chat td {
-  border: 1px solid #333;
-  padding: 0.5rem 0.75rem;
-  text-align: left;
-}
-
-#chat th {
-  background: #2d2d2d;
-  font-weight: 600;
-}
-
-#chat a {
-  color: #10a37f;
-  text-decoration: none;
-}
-
-#chat a:hover {
-  text-decoration: underline;
-}
-
-#chat hr {
-  border: none;
-  border-top: 1px solid #333;
-  margin: 2rem 0;
-}
-
-#chat strong {
-  font-weight: 600;
-}
-
-#chat mark {
-  background: rgba(255, 212, 0, 0.2);
-  padding: 0.125rem 0.25rem;
-  border-radius: 2px;
-}
-/* === SYNTAX HIGHLIGHTING - THÈME AURX === */
-
-/* Base */
-#chat pre code.hljs {
-  background: #0d1117 !important;
-  color: #e6edf3;
-  padding: 2.5rem 1rem 1rem;
-}
-
-/* HTML/XML Tags */
-#chat pre code .hljs-tag {
-  color: #7ee787; /* < > */
-}
-
-#chat pre code .hljs-name {
-  color: #ff7b72; /* div, span, p */
-}
-
-#chat pre code .hljs-attr {
-  color: #79c0ff; /* class, id, href */
-}
-
-/* Strings - "valeurs" */
-#chat pre code .hljs-string {
-  color: #a5d6ff; /* "hello" */
-}
-
-/* JavaScript */
-#chat pre code .hljs-keyword {
-  color: #ff7b72; /* const, function, return, if */
-}
-
-#chat pre code .hljs-built_in {
-  color: #ffa657; /* console, document */
-}
-
-#chat pre code .hljs-function .hljs-title,
-#chat pre code .hljs-title.function_ {
-  color: #d2a8ff; /* nomDeFonction() */
-}
-
-#chat pre code .hljs-variable,
-#chat pre code .hljs-params {
-  color: #ffa657; /* variables */
-}
-
-#chat pre code .hljs-property {
-  color: #79c0ff; /* object.property */
-}
-
-/* Numbers & Booleans */
-#chat pre code .hljs-number {
-  color: #79c0ff; /* 123 */
-}
-
-#chat pre code .hljs-literal {
-  color: #79c0ff; /* true, false, null */
-}
-
-/* Comments */
-#chat pre code .hljs-comment {
-  color: #8b949e; /* // comment */
-  font-style: italic;
-}
-
-/* CSS */
-#chat pre code .hljs-selector-tag {
-  color: #7ee787; /* body, div */
-}
-
-#chat pre code .hljs-selector-class {
-  color: #d2a8ff; /* .class */
-}
-
-#chat pre code .hljs-selector-id {
-  color: #d2a8ff; /* #id */
-}
-
-#chat pre code .hljs-attribute {
-  color: #79c0ff; /* color: */
-}
-
-/* Operators & Punctuation */
-#chat pre code .hljs-operator,
-#chat pre code .hljs-punctuation {
-  color: #e6edf3; /* = + - { } ; */
-}
-
-/* Python */
-#chat pre code .hljs-decorator {
-  color: #d2a8ff; /* @decorator */
-}
-
-#chat pre code .hljs-meta {
-  color: #8b949e; /* import, from */
-}
-/* Blocs code */
-pre {
-  position: relative;
-  background: #1e1e1e;
-  border: 1px solid #333;
-  border-radius: 8px;
-  padding: 16px 12px 12px;
-  margin: 12px 0;
-  overflow-x: auto;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-pre code {
-  background: none;
-  padding: 0;
-  color: #d4d4d4;
-  font-family: inherit;
-}
-/* Bouton copier */
-.copy-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: #2a2a2a;
-  border: 1px solid #444;
-  color: #fff;
-  padding: 4px 10px;
-  border-radius: 4px;
+  color: #cfcfcf;
+  padding: 3px 10px;
   font-size: 11px;
-  cursor: pointer;
-  opacity: 0;
-  transition: opacity 0.2s;
+  border-radius: 6px;
+  font-family: Consolas, monospace;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: lowercase;
 }
 
-pre:hover .copy-btn {
-  opacity: 1;
-}
+/* ===== LANGAGES SUPPORTÉS ===== */
 
-.copy-btn:hover {
-  background: #0A84FF;
-  border-color: #0A84FF;
-}
+.msg.bot pre code.language-javascript::before { content: "javascript"; }
+.msg.bot pre code.language-js::before { content: "javascript"; }
 
-.copy-btn.copied {
-  background: #30D158;
-  border-color: #30D158;
-}
+.msg.bot pre code.language-typescript::before { content: "typescript"; }
+.msg.bot pre code.language-ts::before { content: "typescript"; }
 
-/* Code inline */
-.inline-code {
-  background: #2a2a2a;
-  padding: 2px 6px;
-  border-radius: 3px;
-  font-family: 'Consolas', monospace;
-  font-size: 0.9em;
-  color: #ff79c6;
-}
-.streaming-cursor {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: #ffffff;
-  border-radius: 50%;
-  margin-left: 4px;
-  vertical-align: baseline;
-  animation: gpt-pulse 1.2s ease-in-out infinite;
-  transform-origin: center; /* 🔥 Scale depuis le centre */
-}
+.msg.bot pre code.language-python::before { content: "python"; }
 
-@keyframes gpt-pulse {
-  0%, 100% { 
-    opacity: 1; 
-    transform: scale(1); /* Taille normale */
-  }
-  50% { 
-    opacity: 0.25; 
-    transform: scale(0.75); /* Rétrécit sur place */
-  }
+.msg.bot pre code.language-html::before { content: "html"; }
+
+.msg.bot pre code.language-css::before { content: "css"; }
+
+.msg.bot pre code.language-json::before { content: "json"; }
+
+.msg.bot pre code.language-bash::before { content: "bash"; }
+.msg.bot pre code.language-shell::before { content: "bash"; }
+
+.msg.bot pre code.language-php::before { content: "php"; }
+
+.msg.bot pre code.language-java::before { content: "java"; }
+
+.msg.bot pre code.language-c::before { content: "c"; }
+
+.msg.bot pre code.language-cpp::before { content: "c++"; }
+
+.msg.bot pre code.language-csharp::before { content: "csharp"; }
+
+.msg.bot pre code.language-go::before { content: "go"; }
+
+.msg.bot pre code.language-rust::before { content: "rust"; }
+
+.msg.bot pre code.language-swift::before { content: "swift"; }
+
+.msg.bot pre code.language-kotlin::before { content: "kotlin"; }
+
+.msg.bot pre code.language-sql::before { content: "sql"; }
+
+.msg.bot pre code.language-markdown::before { content: "markdown"; }
+
+.msg.bot pre code.language-yaml::before { content: "yaml"; }
+
+.msg.bot pre code.language-xml::before { content: "xml"; }
+
+.msg.bot pre code.language-dart::before { content: "dart"; }
+
+/* fallback si aucun langage détecté */
+.msg.bot pre code:not([class*="language-"])::before {
+  content: "code";
 }
