@@ -576,9 +576,16 @@ async function sendMessage() {
   let currentConv = convsToUse.find(c => c.id === currentConvId);
 
   if (!currentConv) {
-    currentConv = { id: currentConvId, title: msg.slice(0, 40), messages: [], date: now, updatedAt: now };
+    currentConv = {
+      id: currentConvId,
+      title: msg.slice(0, 40),
+      messages: [],
+      date: now,
+      updatedAt: now
+    };
     convsToUse.unshift(currentConv);
   }
+
   currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
 
   input.value = '';
@@ -605,7 +612,10 @@ async function sendMessage() {
   if (settings.timestamp) {
     const time = document.createElement('div');
     time.className = 'msg-time';
-    time.textContent = new Date(botTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    time.textContent = new Date(botTime).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
     wrapper.appendChild(time);
   }
 
@@ -644,10 +654,12 @@ async function sendMessage() {
 
       hidePauseCursor();
 
-      // 🔥 TEXTE BRUT PENDANT STREAM
+      // TEXTE PENDANT STREAM
       msgEl.textContent = rawText;
 
-      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
+      const nearBottom =
+        chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
+
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
     }
 
@@ -671,11 +683,11 @@ async function sendMessage() {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        api: 'openai', 
-        message: msg, 
-        convId: currentConvId, 
-        model: CONFIG.MODELS.openai 
+      body: JSON.stringify({
+        api: 'openai',
+        message: msg,
+        convId: currentConvId,
+        model: CONFIG.MODELS.openai
       })
     });
 
@@ -686,8 +698,6 @@ async function sendMessage() {
       if (rafId) cancelAnimationFrame(rafId);
       hidePauseCursor();
       msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
-      currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
-      saveConversation(msg.slice(0, 40), currentConv.messages);
       return;
     }
 
@@ -702,92 +712,80 @@ async function sendMessage() {
       const lines = chunk.split('\n');
 
       for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
+        if (!line.startsWith('data: ')) continue;
 
-          if (data === '[DONE]') {
-            isDone = true;
-            if (rafId) cancelAnimationFrame(rafId);
-            hidePauseCursor();
+        const data = line.slice(6).trim();
 
-            if (pendingText) {
-              rawText += pendingText;
-              pendingText = '';
-            }
+        if (data === '[DONE]') {
+          isDone = true;
+          if (rafId) cancelAnimationFrame(rafId);
+          hidePauseCursor();
 
-            // 1. HTML final
-            msgEl.innerHTML = formatMessage(rawText, false);
-
-            // 2. 🔥 FIX : Double rAF pour attendre peinture CSS
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                // KaTeX
-                if (typeof renderMathInElement === 'function') {
-                  try {
-                    renderMathInElement(msgEl, {
-                      delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false}
-                      ],
-                      throwOnError: false
-                    });
-                  } catch(e) {
-                    console.error('KaTeX error:', e);
-                  }
-                }
-
-                // Highlight - Prism ou HLJS
-                if (typeof Prism !== 'undefined') {
-                  Prism.highlightAllUnder(msgEl);
-                } else if (typeof hljs !== 'undefined') {
-                  msgEl.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                  });
-                }
-              });
-            });
-
-            currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
-            saveConversation(msg.slice(0, 40), currentConv.messages);
-
-            if (isLoggedIn) {
-              try {
-                const histRes = await fetch('https://aur-x-backend.vercel.app/api/history', { credentials: 'include' });
-                const histData = await histRes.json();
-                serverConversations = histData.conversations || [];
-                conversations = serverConversations;
-                renderHistory();
-              } catch(e) {
-                console.warn('Erreur refresh history:', e);
-              }
-            }
-            return;
+          if (pendingText) {
+            rawText += pendingText;
+            pendingText = '';
           }
 
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) {
-              pendingText += parsed.content;
-              scheduleRender();
+          // 🔥 STEP 1 : RENDER FINAL HTML
+          msgEl.innerHTML = formatMessage(rawText, false);
+
+          // 🔥 STEP 2 : STABILISATION DOM
+          requestAnimationFrame(() => {
+
+            // 🔥 CODE HIGHLIGHT FIRST
+            msgEl.querySelectorAll('pre code').forEach((block) => {
+              if (typeof hljs !== 'undefined') {
+                hljs.highlightElement(block);
+              }
+            });
+
+            // 🔥 KATEX AFTER
+            if (typeof renderMathInElement === 'function') {
+              renderMathInElement(msgEl, {
+                delimiters: [
+                  { left: '$$', right: '$$', display: true },
+                  { left: '$', right: '$', display: false },
+                  { left: '\\(', right: '\\)', display: false },
+                  { left: '\\[', right: '\\]', display: true }
+                ],
+                throwOnError: false
+              });
             }
-            if (parsed.error) {
-              isDone = true;
-              if (rafId) cancelAnimationFrame(rafId);
-              hidePauseCursor();
-              msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
-            }
-          } catch (e) {}
+
+          });
+
+          currentConv.messages.push({
+            text: rawText,
+            type: 'bot',
+            timestamp: Date.now()
+          });
+
+          saveConversation(msg.slice(0, 40), currentConv.messages);
+
+          return;
         }
+
+        try {
+          const parsed = JSON.parse(data);
+
+          if (parsed.content) {
+            pendingText += parsed.content;
+            scheduleRender();
+          }
+
+          if (parsed.error) {
+            isDone = true;
+            msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
+          }
+
+        } catch (e) {}
       }
     }
   } catch (e) {
     isDone = true;
-    if (rafId) cancelAnimationFrame(rafId);
     hideTypingIndicator();
     hidePauseCursor();
-    msgEl.innerHTML = '<span class="error">Erreur réseau / serveur</span>';
-    currentConv.messages.push({ text: 'Erreur réseau / serveur', type: 'bot error', timestamp: Date.now() });
-    saveConversation(msg.slice(0, 40), currentConv.messages);
+    msgEl.innerHTML = 'Erreur réseau / serveur';
     console.error(e);
   } finally {
     sendBtnEl.classList.remove('loading');
