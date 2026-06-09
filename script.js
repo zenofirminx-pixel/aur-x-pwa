@@ -729,36 +729,36 @@ async function sendMessage() {
             pendingText = '';
           }
 
-          // 1. On génère le HTML final (le texte normal reste en plein écran)
+          // 1. Injection immédiate du HTML final
           msgEl.innerHTML = formatMessage(rawText, false);
 
-          // 🔥 MODIFICATION ICI : On supprime le bloc qui modifiait wrapper.className et msgEl.className.
-          // Le message garde sa structure 'bot-full' et 'bot-full-text'.
-
-          // 2. On lance le highlight et le rendu KaTeX
+          // 2. 🔥 ASTUCE DOUBLE RAF : On force le navigateur à calculer le CSS des nouveaux éléments <pre>
           requestAnimationFrame(() => {
-            msgEl.querySelectorAll('pre code').forEach((block) => {
-              if (typeof hljs !== 'undefined') {
-                hljs.highlightElement(block);
-              }
-            });
-
-            if (typeof renderMathInElement === 'function') {
-              renderMathInElement(msgEl, {
-                delimiters: [
-                  { left: '$$', right: '$$', display: true },
-                  { left: '$', right: '$', display: false },
-                  { left: '\\(', right: '\\)', display: false },
-                  { left: '\\[', right: '\\]', display: true }
-                ],
-                throwOnError: false
+            requestAnimationFrame(() => {
+              
+              // 3. Application de Highlight.js sur les blocs de code maintenant stylisés et stables
+              msgEl.querySelectorAll('pre code').forEach((block) => {
+                if (typeof hljs !== 'undefined') {
+                  hljs.highlightElement(block);
+                }
               });
-            }
 
-            // 3. Ajustement du scroll pour s'adapter aux changements de taille du code/maths
-            setTimeout(() => {
+              // 4. Application de KaTeX
+              if (typeof renderMathInElement === 'function') {
+                renderMathInElement(msgEl, {
+                  delimiters: [
+                    { left: '$$', right: '$$', display: true },
+                    { left: '$', right: '$', display: false },
+                    { left: '\\(', right: '\\)', display: false },
+                    { left: '\\[', right: '\\]', display: true }
+                  ],
+                  throwOnError: false
+                });
+              }
+
+              // 5. Scroll tout en bas une fois le rendu lourd terminé
               chat.scrollTop = chat.scrollHeight;
-            }, 50);
+            });
           });
 
           currentConv.messages.push({
