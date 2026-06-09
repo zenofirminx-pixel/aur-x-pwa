@@ -601,11 +601,11 @@ async function sendMessage() {
 
   const botTime = Date.now();
   const wrapper = document.createElement('div');
-  wrapper.className = 'msg-wrapper bot-full'; // ← CORRIGÉ
+  wrapper.className = 'msg-wrapper bot-full'; 
   wrapper.dataset.timestamp = botTime;
 
   const msgEl = document.createElement('div');
-  msgEl.className = 'msg bot-full-text'; // ← CORRIGÉ
+  msgEl.className = 'msg bot-full-text'; 
   wrapper.appendChild(msgEl);
 
   let cursor = null;
@@ -656,12 +656,9 @@ async function sendMessage() {
 
       hidePauseCursor();
 
-      // TEXTE PENDANT STREAM
       msgEl.textContent = rawText;
 
-      const nearBottom =
-        chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
-
+      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
       if (nearBottom) chat.scrollTop = chat.scrollHeight;
     }
 
@@ -705,18 +702,22 @@ async function sendMessage() {
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
+    
+    let streamBuffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
+      streamBuffer += decoder.decode(value, { stream: true });
+      const lines = streamBuffer.split('\n');
+      streamBuffer = lines.pop();
 
       for (const line of lines) {
-        if (!line.startsWith('data: ')) continue;
+        const trimmedLine = line.trim();
+        if (!trimmedLine.startsWith('data:')) continue;
 
-        const data = line.slice(6).trim();
+        const data = trimmedLine.replace(/^data:\s*/, '');
 
         if (data === '[DONE]') {
           isDone = true;
@@ -728,26 +729,20 @@ async function sendMessage() {
             pendingText = '';
           }
 
-          // 🔥 STEP 1 : RENDER FINAL HTML
+          // 1. On génère le HTML final (le texte normal reste en plein écran)
           msgEl.innerHTML = formatMessage(rawText, false);
 
-          // 🔥 SI Y'A DU CODE, PASSE EN MODE BULLE
-          if (msgEl.querySelector('pre')) {
-            wrapper.className = 'msg-wrapper bot';
-            msgEl.className = 'msg bot';
-          }
+          // 🔥 MODIFICATION ICI : On supprime le bloc qui modifiait wrapper.className et msgEl.className.
+          // Le message garde sa structure 'bot-full' et 'bot-full-text'.
 
-          // 🔥 STEP 2 : STABILISATION DOM
+          // 2. On lance le highlight et le rendu KaTeX
           requestAnimationFrame(() => {
-
-            // 🔥 CODE HIGHLIGHT FIRST
             msgEl.querySelectorAll('pre code').forEach((block) => {
               if (typeof hljs !== 'undefined') {
                 hljs.highlightElement(block);
               }
             });
 
-            // 🔥 KATEX AFTER
             if (typeof renderMathInElement === 'function') {
               renderMathInElement(msgEl, {
                 delimiters: [
@@ -760,6 +755,10 @@ async function sendMessage() {
               });
             }
 
+            // 3. Ajustement du scroll pour s'adapter aux changements de taille du code/maths
+            setTimeout(() => {
+              chat.scrollTop = chat.scrollHeight;
+            }, 50);
           });
 
           currentConv.messages.push({
@@ -769,7 +768,6 @@ async function sendMessage() {
           });
 
           saveConversation(msg.slice(0, 40), currentConv.messages);
-
           return;
         }
 
@@ -786,7 +784,9 @@ async function sendMessage() {
             msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
           }
 
-        } catch (e) {}
+        } catch (e) {
+          console.warn("Erreur de parsing sur le chunk :", data);
+        }
       }
     }
   } catch (e) {
@@ -800,6 +800,7 @@ async function sendMessage() {
     sendBtnEl.disabled = false;
   }
 }
+
 
 
   function typeMessage(text, type, timestamp = Date.now()) {
