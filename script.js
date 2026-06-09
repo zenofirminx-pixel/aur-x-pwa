@@ -535,230 +535,152 @@ async function sendMessage() {
   if (!msg) return;
 
   const now = Date.now();
-  addMessage(msg, 'user', now);
+  addMessage(msg, "user", now);
 
-  const convsToUse = isLoggedIn ? serverConversations : conversations;
-  let currentConv = convsToUse.find(c => c.id === currentConvId);
+  const currentMessages = [
+    { text: msg, type: "user", timestamp: now }
+  ];
 
-  if (!currentConv) {
-    currentConv = { id: currentConvId, title: msg.slice(0, 40), messages: [], date: now, updatedAt: now };
-    convsToUse.unshift(currentConv);
-  }
-  currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
-
-  input.value = '';
-  input.style.height = 'auto';
+  input.value = "";
+  input.style.height = "auto";
   updateCharCounter();
+
   showTypingIndicator();
 
-  const sendBtnEl = document.getElementById('sendBtn');
-  sendBtnEl.classList.add('loading');
+  const sendBtnEl = document.getElementById("sendBtn");
+  sendBtnEl.classList.add("loading");
   sendBtnEl.disabled = true;
-
-  const botTime = Date.now();
-  const wrapper = document.createElement('div');
-  wrapper.className = 'msg-wrapper bot-full';
-  wrapper.dataset.timestamp = botTime;
-
-  const msgEl = document.createElement('div');
-  msgEl.className = 'msg bot-full-text';
-  wrapper.appendChild(msgEl);
-
-  let cursor = null;
-  let isDone = false;
-
-  if (settings.timestamp) {
-    const time = document.createElement('div');
-    time.className = 'msg-time';
-    time.textContent = new Date(botTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    wrapper.appendChild(time);
-  }
-
-  chat.appendChild(wrapper);
-  chat.scrollTop = chat.scrollHeight;
-  hideWelcome();
-
-  let rawText = '';
-  let pendingText = '';
-  let rafId = null;
-  let cursorTimeout = null;
-
-  function showPauseCursor() {
-    if (!cursor && msgEl.isConnected && !isDone) {
-      cursor = document.createElement('span');
-      cursor.className = 'streaming-cursor';
-      msgEl.appendChild(cursor);
-    }
-  }
-
-  function hidePauseCursor() {
-    if (cursor) {
-      cursor.remove();
-      cursor = null;
-    }
-    if (cursorTimeout) {
-      clearTimeout(cursorTimeout);
-      cursorTimeout = null;
-    }
-  }
-
-  function flushBuffer() {
-    if (pendingText) {
-      rawText += pendingText;
-      pendingText = '';
-
-      hidePauseCursor();
-
-      // 🔥 TEXTE BRUT PENDANT STREAM
-      msgEl.textContent = rawText;
-
-      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
-      if (nearBottom) chat.scrollTop = chat.scrollHeight;
-    }
-
-    if (!isDone) {
-      clearTimeout(cursorTimeout);
-      cursorTimeout = setTimeout(showPauseCursor, 5000);
-    }
-
-    rafId = null;
-  }
-
-  function scheduleRender() {
-    if (!rafId) {
-      hidePauseCursor();
-      rafId = requestAnimationFrame(flushBuffer);
-    }
-  }
 
   try {
     const res = await fetch(CONFIG.ENDPOINTS.openai, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        api: 'openai', 
-        message: msg, 
-        convId: currentConvId, 
-        model: CONFIG.MODELS.openai 
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        api: "openai",
+        message: msg,
+        userId: userId,
+        model: CONFIG.MODELS.openai
       })
     });
 
     hideTypingIndicator();
 
-    if (!res.ok) {
-      isDone = true;
-      if (rafId) cancelAnimationFrame(rafId);
-      hidePauseCursor();
-      msgEl.innerHTML = '<span class="error">Erreur serveur</span>';
-      currentConv.messages.push({ text: 'Erreur serveur', type: 'bot error', timestamp: Date.now() });
-      saveConversation(msg.slice(0, 40), currentConv.messages);
+    if (!res.ok || !res.body) {
+      const errorText = "Erreur serveur";
+      const errTime = Date.now();
+
+      addMessage(errorText, "bot error", errTime);
+
+      currentMessages.push({
+        text: errorText,
+        type: "bot error",
+        timestamp: errTime
+      });
+
+      saveConversation(msg.slice(0, 40), currentMessages);
       return;
     }
+
+    // ======================
+    // 🔥 STREAMING START
+    // ======================
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
 
+    const botTime = Date.now();
+    addMessage("", "bot", botTime);
+
+    let botText = "";
+    let buffer = "";
+
     while (true) {
-      const { done, value } = await reader.read();
+      const { value, done } = await reader.read();
       if (done) break;
 
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split("\n");
+      buffer = lines.pop();
 
       for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6).trim();
+        const cleanedLine = line.trim();
+        if (!cleanedLine.startsWith("data: ")) continue;
 
-          if (data === '[DONE]') {
-            isDone = true;
-            if (rafId) cancelAnimationFrame(rafId);
-            hidePauseCursor();
+        const jsonStr = cleanedLine.replace("data: ", "");
+        if (jsonStr === "[DONE]") continue;
 
-            if (pendingText) {
-              rawText += pendingText;
-              pendingText = '';
-            }
+        try {
+          const parsed = JSON.parse(jsonStr);
 
-            // 1. HTML final
-            msgEl.innerHTML = formatMessage(rawText, false);
+          const token =
+            parsed?.choices?.[0]?.delta?.content ||
+            parsed?.choices?.[0]?.message?.content ||
+            parsed?.choices?.[0]?.text ||
+            parsed?.response;
 
-            // 2. 🔥 FIX : Double rAF pour attendre peinture CSS
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                // KaTeX
-                if (typeof renderMathInElement === 'function') {
-                  try {
-                    renderMathInElement(msgEl, {
-                      delimiters: [
-                        {left: '$$', right: '$$', display: true},
-                        {left: '$', right: '$', display: false}
-                      ],
-                      throwOnError: false
-                    });
-                  } catch(e) {
-                    console.error('KaTeX error:', e);
-                  }
-                }
-
-                // Highlight - Prism ou HLJS
-                if (typeof Prism !== 'undefined') {
-                  Prism.highlightAllUnder(msgEl);
-                } else if (typeof hljs !== 'undefined') {
-                  msgEl.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                  });
-                }
-              });
-            });
-
-            currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
-            saveConversation(msg.slice(0, 40), currentConv.messages);
-
-            if (isLoggedIn) {
-              try {
-                const histRes = await fetch('https://aur-x-backend.vercel.app/api/history', { credentials: 'include' });
-                const histData = await histRes.json();
-                serverConversations = histData.conversations || [];
-                conversations = serverConversations;
-                renderHistory();
-              } catch(e) {
-                console.warn('Erreur refresh history:', e);
-              }
-            }
-            return;
+          if (token) {
+            botText += token;
+            updateLastBotMessage(botText);
           }
-
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.content) {
-              pendingText += parsed.content;
-              scheduleRender();
-            }
-            if (parsed.error) {
-              isDone = true;
-              if (rafId) cancelAnimationFrame(rafId);
-              hidePauseCursor();
-              msgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
-            }
-          } catch (e) {}
-        }
+        } catch (e) {}
       }
     }
+
+    // flush buffer final
+    if (buffer && buffer.startsWith("data: ")) {
+      try {
+        const jsonStr = buffer.replace("data: ", "").trim();
+        if (jsonStr !== "[DONE]") {
+          const parsed = JSON.parse(jsonStr);
+
+          const token =
+            parsed?.choices?.[0]?.delta?.content ||
+            parsed?.response;
+
+          if (token) {
+            botText += token;
+            updateLastBotMessage(botText);
+          }
+        }
+      } catch (e) {}
+    }
+
+    // ======================
+    // SAVE
+    // ======================
+
+    currentMessages.push({
+      text: botText,
+      type: "bot",
+      timestamp: botTime
+    });
+
+    saveConversation(msg.slice(0, 40), currentMessages);
+
   } catch (e) {
-    isDone = true;
-    if (rafId) cancelAnimationFrame(rafId);
     hideTypingIndicator();
-    hidePauseCursor();
-    msgEl.innerHTML = '<span class="error">Erreur réseau / serveur</span>';
-    currentConv.messages.push({ text: 'Erreur réseau / serveur', type: 'bot error', timestamp: Date.now() });
-    saveConversation(msg.slice(0, 40), currentConv.messages);
+
+    const errorText = "Erreur réseau / serveur";
+    const errTime = Date.now();
+
+    addMessage(errorText, "bot error", errTime);
+
+    currentMessages.push({
+      text: errorText,
+      type: "bot error",
+      timestamp: errTime
+    });
+
+    saveConversation(msg.slice(0, 40), currentMessages);
+
     console.error(e);
   } finally {
-    sendBtnEl.classList.remove('loading');
+    sendBtnEl.classList.remove("loading");
     sendBtnEl.disabled = false;
   }
 }
+
 
   function typeMessage(text, type, timestamp = Date.now()) {
     return new Promise(resolve => {
