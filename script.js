@@ -331,95 +331,87 @@ function initApp() {
     });
     return text;
   }
-
-  function addMessage(text, type, timestamp = null, isNew = true) {
-    if (isNew) hideWelcome();
-    try {
-      const parts = parseMessage(text);
-      parts.forEach(part => {
-        const wrapper = document.createElement('div');
-        wrapper.dataset.timestamp = timestamp || Date.now();
-        if (type === 'user') {
-          wrapper.className = `msg-wrapper user`;
-          const msg = document.createElement('div');
-          msg.className = `msg user`;
-          const processedText = autoMathify(part.content);
-          msg.innerHTML = formatMessage(processedText);
-          msg.dataset.index = messageCounter++;
-          wrapper.appendChild(msg);
-        } else if (part.type === 'code') {
-          wrapper.className = `msg-wrapper bot`;
-          const msg = document.createElement('div');
-          msg.className = `msg bot`;
-          msg.innerHTML = formatMessage('```' + part.lang + '\n' + part.content + '```');
-          msg.dataset.index = messageCounter++;
-          wrapper.appendChild(msg);
-        } else {
-          wrapper.className = `msg-wrapper bot-full`;
-          const msg = document.createElement('div');
-          msg.className = `msg bot-full-text`;
-          msg.innerHTML = formatMessage(part.content);
-          msg.dataset.index = messageCounter++;
-          wrapper.appendChild(msg);
-        }
-        if (settings.timestamp) {
-          const time = document.createElement('div');
-          time.className = 'msg-time';
-          time.textContent = new Date(Number(wrapper.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-          wrapper.appendChild(time);
-        }
-        chat.appendChild(wrapper);
-      });
-      chat.scrollTop = chat.scrollHeight;
-      highlightCode();
-    } catch(e) {
-      console.error('addMessage error:', e);
-    }
-    return text;
-  }
-
-  function showTypingIndicator() {
-    hideTypingIndicator();
-    typingElement = document.createElement('div');
-    typingElement.className = 'typing-wrapper';
-    typingElement.innerHTML = `
-      <div class="typing-bubble">
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-        <div class="typing-dot"></div>
-      </div>
-      <span class="typing-text" id="typingText">AurX réfléchit</span>
-    `;
-    chat.appendChild(typingElement);
+function addMessage(text, type, timestamp = null, isNew = true) {
+  if (isNew) hideWelcome();
+  try {
+    const parts = parseMessage(text);
+    parts.forEach(part => {
+      const wrapper = document.createElement('div');
+      wrapper.dataset.timestamp = timestamp || Date.now();
+      let msg = null;
+      
+      if (type === 'user') {
+        wrapper.className = `msg-wrapper user`;
+        msg = document.createElement('div');
+        msg.className = `msg user`;
+        const processedText = autoMathify(part.content);
+        msg.innerHTML = formatMessage(processedText);
+        msg.dataset.index = messageCounter++;
+        wrapper.appendChild(msg);
+      } else if (part.type === 'code') {
+        wrapper.className = `msg-wrapper bot`;
+        msg = document.createElement('div');
+        msg.className = `msg bot`;
+        msg.innerHTML = formatMessage('```' + part.lang + '\n' + part.content + '```');
+        msg.dataset.index = messageCounter++;
+        wrapper.appendChild(msg);
+      } else {
+        wrapper.className = `msg-wrapper bot-full`;
+        msg = document.createElement('div');
+        msg.className = `msg bot-full-text`;
+        msg.innerHTML = formatMessage(part.content);
+        msg.dataset.index = messageCounter++;
+        wrapper.appendChild(msg);
+      }
+      
+      if (settings.timestamp) {
+        const time = document.createElement('div');
+        time.className = 'msg-time';
+        time.textContent = new Date(Number(wrapper.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        wrapper.appendChild(time);
+      }
+      
+      chat.appendChild(wrapper);
+      
+      // 🔥 FIX : Double rAF pour KaTeX + Highlight après peinture CSS
+      if (type !== 'user' && msg) {
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            // KaTeX
+            if (typeof renderMathInElement === 'function') {
+              try {
+                renderMathInElement(msg, {
+                  delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                  ],
+                  throwOnError: false
+                });
+              } catch(e) {
+                console.error('KaTeX addMessage:', e);
+              }
+            }
+            
+            // Highlight
+            if (typeof Prism !== 'undefined') {
+              Prism.highlightAllUnder(msg);
+            } else if (typeof hljs !== 'undefined') {
+              msg.querySelectorAll('pre code').forEach((block) => {
+                hljs.highlightElement(block);
+              });
+            }
+          });
+        });
+      }
+    });
+    
     chat.scrollTop = chat.scrollHeight;
-    thinkingTimeout = setTimeout(() => {
-      document.getElementById('typingText')?.classList.add('show');
-    }, 1500);
+  } catch(e) {
+    console.error('addMessage error:', e);
   }
-
-  function hideTypingIndicator() {
-    clearTimeout(thinkingTimeout);
-    if (typingElement) {
-      typingElement.remove();
-      typingElement = null;
-    }
-  }
-  function updateLastBotMessage(token) {
-  const wrappers = document.querySelectorAll(".msg-wrapper");
-
-  if (!wrappers.length) return;
-
-  const lastWrapper = wrappers[wrappers.length - 1];
-
-  const el =
-    lastWrapper.querySelector(".msg.bot") ||
-    lastWrapper.querySelector(".msg.bot-full-text");
-
-  if (!el) return;
-
-  el.dataset.streamingText = (el.dataset.streamingText || "") + token;
-  el.textContent = el.dataset.streamingText;
+  return text;
 }
+
   
 async function sendMessage() {
   const msg = input.value.trim();
