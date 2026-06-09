@@ -411,7 +411,8 @@ function loadConversation(id) {
     if (parts.length === 0) parts.push({ type: 'text', content: text });
     return parts;
   }
-function formatMessage(text) {
+
+  function formatMessage(text) {
     if (!text) return "";
     const mathBlocks = [];
     const codeBlocks = [];
@@ -443,7 +444,7 @@ function formatMessage(text) {
     if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote")) {
       text = "<p>" + text + "</p>";
     }
-    codeBlocks.forEach((block, i) => {
+ codeBlocks.forEach((block, i) => {
       const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
       const langLabel = block.lang !== "plaintext" ? `<div class="code-lang">${block.lang}</div>` : '';
       text = text.replace(`__CODE_${i}__`, `<div class="code-block-wrapper">${langLabel}<button class="copy-btn" onclick="copyCode(this)">Copier</button><pre><code class="language-${block.lang}">${escapedCode}</code></pre></div>`);
@@ -453,6 +454,7 @@ function formatMessage(text) {
     });
     return text;
   }
+    
   function addMessage(text, type, timestamp = null, isNew = true) {
   if (isNew) hideWelcome();
   try {
