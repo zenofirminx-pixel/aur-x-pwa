@@ -601,11 +601,11 @@ async function sendMessage() {
 
   const botTime = Date.now();
   const wrapper = document.createElement('div');
-  wrapper.className = 'msg-wrapper bot'; // ← CHANGÉ ICI
+  wrapper.className = 'msg-wrapper bot-full'; // ← CORRIGÉ
   wrapper.dataset.timestamp = botTime;
 
   const msgEl = document.createElement('div');
-  msgEl.className = 'msg bot'; // ← CHANGÉ ICI
+  msgEl.className = 'msg bot-full-text'; // ← CORRIGÉ
   wrapper.appendChild(msgEl);
 
   let cursor = null;
@@ -730,6 +730,12 @@ async function sendMessage() {
 
           // 🔥 STEP 1 : RENDER FINAL HTML
           msgEl.innerHTML = formatMessage(rawText, false);
+
+          // 🔥 SI Y'A DU CODE, PASSE EN MODE BULLE
+          if (msgEl.querySelector('pre')) {
+            wrapper.className = 'msg-wrapper bot';
+            msgEl.className = 'msg bot';
+          }
 
           // 🔥 STEP 2 : STABILISATION DOM
           requestAnimationFrame(() => {
