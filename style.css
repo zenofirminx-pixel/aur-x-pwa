@@ -542,28 +542,25 @@ header {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
-/* ===== CODE LABEL STYLE GPT ===== */
-
-.msg.bot pre {
-  position: relative;
-  margin-top: 28px;
-}
-
-/* Label principal */
+/* ===== CODE LABEL STYLE GPT - JUSTE LE LABEL ===== */
 .msg.bot pre code::before {
+  content: attr(data-lang);
   position: absolute;
-  top: -26px;
-  left: 10px;
+  top: -18px; /* ← Remonte plus haut */
+  left: 8px;
   background: #1e1e1e;
   border: 1px solid #333;
   color: #cfcfcf;
-  padding: 3px 10px;
-  font-size: 11px;
-  border-radius: 6px;
+  padding: 1px 6px; /* ← Padding mini */
+  font-size: 9px; /* ← Plus petit */
+  border-radius: 4px;
   font-family: Consolas, monospace;
   font-weight: 600;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.2px;
   text-transform: lowercase;
+  line-height: 1; /* ← Hauteur = font-size */
+  height: auto;
+}
 }
 /* ===== LANGAGES SUPPORTÉS ===== */
 
