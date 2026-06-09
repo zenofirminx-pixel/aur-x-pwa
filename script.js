@@ -452,7 +452,8 @@ function formatMessage(text) {
     });
     return text;
   }
-function addMessage(text, type, timestamp = null, isNew = true) {
+
+  function addMessage(text, type, timestamp = null, isNew = true) {
     if (isNew) hideWelcome();
     try {
       const parts = parseMessage(text);
@@ -479,12 +480,6 @@ function addMessage(text, type, timestamp = null, isNew = true) {
           const msg = document.createElement('div');
           msg.className = `msg bot-full-text`;
           msg.innerHTML = formatMessage(part.content);
-
-          // 🔥 AJOUTE ÇA POUR KATEX SUR HISTORIQUE
-          if (typeof renderMath !== 'undefined') {
-            renderMath(msg);
-          }
-
           msg.dataset.index = messageCounter++;
           wrapper.appendChild(msg);
         }
@@ -502,7 +497,7 @@ function addMessage(text, type, timestamp = null, isNew = true) {
       console.error('addMessage error:', e);
     }
     return text;
-}    
+  }    
 
 
 
