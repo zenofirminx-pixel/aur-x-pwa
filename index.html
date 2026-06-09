@@ -9,6 +9,7 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="msapplication-navbutton-color" content="#000">
@@ -442,6 +443,10 @@ AurX AI
 <script src="config.js"></script>
 <script src="script.js"></script>
 
+<!-- KATEX JS -->
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+
 <script>
 // === CONFIG BACKEND ===
 const BACKEND_URL = 'https://aur-x-backend.vercel.app';
@@ -507,33 +512,28 @@ function toggleWelcome() {
   const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
-<!-- KATEX JS SANS DEFER -->
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
-
-<script>
-// ATTENDRE QUE KATEX SOIT CHARGÉ
+// === KATEX HELPERS ===
 function waitForKatex(callback) {
-  if (window.renderMathInElement) {
+  if (typeof renderMathInElement !== 'undefined') {
     callback();
   } else {
     setTimeout(() => waitForKatex(callback), 100);
   }
 }
 
-let renderTimeout = null;
-
-function renderMath() {
-  if (!window.renderMathInElement) return;
-  renderMathInElement(document.getElementById('chat'), {
+function renderMath(element = document.body) {
+  if (typeof renderMathInElement === 'undefined') return;
+  
+  renderMathInElement(element, {
     delimiters: [
       {left: '$$', right: '$$', display: true},
       {left: '$', right: '$', display: false},
-      {left: '\\[', right: '\\]', display: true},
-      {left: '\\(', right: '\\)', display: false}
+      {left: '\\(', right: '\\)', display: false},
+      {left: '\\[', right: '\\]', display: true}
     ],
     throwOnError: false,
-    strict: false
+    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+    ignoredClasses: ['app-code-content', 'app-inline-code', 'copy-btn']
   });
 }
 document.addEventListener('DOMContentLoaded', () => {
