@@ -512,45 +512,55 @@ function toggleWelcome() {
   const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
-// === KATEX HELPERS ===
+// === ATTENDRE QUE KATEX SOIT CHARGÉ ===
 function waitForKatex(callback) {
-  if (typeof renderMathInElement !== 'undefined') {
+  if (window.renderMathInElement) {
     callback();
   } else {
     setTimeout(() => waitForKatex(callback), 100);
   }
 }
 
-function renderMath(element = document.body) {
+// === RENDER MATH KATEX ===
+function renderMath(element = document.getElementById('chat')) {
   if (typeof renderMathInElement === 'undefined') return;
-  
+
   renderMathInElement(element, {
     delimiters: [
-      {left: '$$', right: '$$', display: true},
-      {left: '$', right: '$', display: false},
-      {left: '\\(', right: '\\)', display: false},
-      {left: '\\[', right: '\\]', display: true}
+      { left: '$$', right: '$$', display: true },
+      { left: '$', right: '$', display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
     ],
-    throwOnError: false,
-    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-    ignoredClasses: ['app-code-content', 'app-inline-code', 'copy-btn']
+    throwOnError: false
   });
 }
+
+let renderTimeout = null;
+
+// === INIT DOM ===
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   toggleWelcome();
-  
+
   waitForKatex(() => {
-    setTimeout(renderMath, 300);
+    setTimeout(() => renderMath(), 300);
+
     const chat = document.getElementById('chat');
+
     const observer = new MutationObserver(() => {
       clearTimeout(renderTimeout);
+
       renderTimeout = setTimeout(() => {
-        renderMath();
+        renderMath(chat);
         toggleWelcome();
       }, 200);
     });
-    observer.observe(chat, { childList: true, subtree: true });
+
+    observer.observe(chat, {
+      childList: true,
+      subtree: true
+    });
   });
 });
 </script>
