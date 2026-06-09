@@ -445,7 +445,8 @@ function formatMessage(text) {
     }
     codeBlocks.forEach((block, i) => {
       const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      text = text.replace(`__CODE_${i}__`, `<pre><button class="copy-btn" onclick="copyCode(this)">Copier</button><code class="language-${block.lang}">${escapedCode}</code></pre>`);
+      const langLabel = block.lang !== "plaintext" ? `<div class="code-lang">${block.lang}</div>` : '';
+      text = text.replace(`__CODE_${i}__`, `<div class="code-block-wrapper">${langLabel}<button class="copy-btn" onclick="copyCode(this)">Copier</button><pre><code class="language-${block.lang}">${escapedCode}</code></pre></div>`);
     });
     mathBlocks.forEach((math, i) => {
       text = text.replace(`__MATH_${i}__`, math);
