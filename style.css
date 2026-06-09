@@ -29,7 +29,16 @@ header .btn:active { opacity: 0.7; }
 /* WRAPPER BULLE CLASSIQUE */
 .msg-wrapper { display: flex; padding: 4px 10px; width: 100%; }
 .msg-wrapper.user { justify-content: flex-end; }
-.msg-wrapper.bot { justify-content: flex-start; padding: 20px 24px; width: 100%; max-width: 900px; margin: 0 auto; }
+.msg-wrapper.bot { justify-content: flex-start; }
+
+/* WRAPPER FULL WIDTH POUR BOT SANS CODE */
+.msg-wrapper.bot-full {
+  padding: 20px 24px;
+  width: 100%;
+  justify-content: flex-start;
+  max-width: 900px;
+  margin: 0 auto;
+}
 
 /* MESSAGE BULLE */
 .msg { padding: 10px 14px; border-radius: 18px; word-break: break-word; overflow-wrap: break-word; white-space: pre-wrap; line-height: 1.7; letter-spacing: 0.2px; display: inline-block; font-size: 16px; }
@@ -37,29 +46,22 @@ header .btn:active { opacity: 0.7; }
 /* USER BULLE */
 .msg.user { background: #2a2a2a; margin-left: auto; max-width: 78%; box-shadow: 0 1px 2px rgba(0,0,0,0.25); }
 
-/* BOT UNIFIÉ - BULLE OU FULL WIDTH */
-.msg.bot { 
+/* BOT BULLE POUR CODE */
+.msg.bot { background: #1a1a1a; border: 1px solid #2a2a2a; color: #fff; max-width: 92%; box-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+
+/* BOT TEXTE FULL WIDTH SANS BULLE */
+.msg.bot-full-text {
   background: transparent;
   border: none;
   box-shadow: none;
-  color: #e5e5e5;
   max-width: 100%;
   padding: 0;
   border-radius: 0;
+  color: #e5e5e5;
+  font-size: 16px;
   line-height: 1.8;
   width: 100%;
 }
-
-/* Si y'a du code dans le message, on remet une bulle */
-.msg.bot:has(pre) {
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
-  max-width: 92%;
-  padding: 14px;
-  border-radius: 18px;
-}
-
 /* WELCOME - FLOTTANT OPTIMISÉ */
 #welcome {
   position: absolute;
@@ -234,6 +236,7 @@ textarea {
 .msg a:hover { color: #5aa9ff; text-decoration: underline; }
 .msg.user a { color: #fff; text-decoration: underline; }
 .msg.user a:hover { color: #0A84FF; }
+.msg.bot-full-text a { color: #0A84FF; }
 
 /* TEXTE FORMAT */
 .msg strong { font-weight: 700; color: #fff; }
@@ -310,9 +313,20 @@ textarea {
   color: white;
 }
 
+/* Bulle bot pour code */
+.msg.bot {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  color: #fff;
+  max-width: 92%;
+  padding: 14px;
+  border-radius: 18px;
+  position: relative;
+}
+
 /* Pour mobile : éviter débordement */
 @media (max-width: 768px) {
-  .msg.bot:has(pre) {
+  .msg.bot {
     max-width: 95%;
   }
   .msg.bot pre {
@@ -353,7 +367,8 @@ a.code-frame {
 
 /* Pour éviter que ça casse l'UI sur mobile */
 .msg.user a.code-frame,
-.msg.bot a.code-frame {
+.msg.bot a.code-frame,
+.msg.bot-full-text a.code-frame {
   max-width: calc(100% - 8px);
 }
 
@@ -496,7 +511,8 @@ header {
 .msg-wrapper.bot .msg-time { text-align: left; }
 .msg-wrapper,
 .msg-wrapper.user,
-.msg-wrapper.bot {
+.msg-wrapper.bot,
+.msg-wrapper.bot-full {
   display: flex;
   flex-direction: column;
 }
@@ -607,3 +623,8 @@ header {
 .msg.bot pre code.language-xml::before { content: "xml"; }
 
 .msg.bot pre code.language-dart::before { content: "dart"; }
+
+/* fallback si aucun langage détecté */
+.msg.bot pre code:not([class*="language-"])::before {
+  content: "code";
+}
