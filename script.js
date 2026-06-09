@@ -680,28 +680,37 @@ async function sendMessage() {
               pendingText = '';
             }
 
-            // 🔥 RENDU FINAL ICI
+            // 1. HTML final
             msgEl.innerHTML = formatMessage(rawText, false);
 
-            // 1. KaTeX
-            if (typeof renderMathInElement !== 'undefined') {
-              renderMathInElement(msgEl, {
-                delimiters: [
-                  {left: '$$', right: '$$', display: true},
-                  {left: '$', right: '$', display: false}
-                ],
-                throwOnError: false
-              });
-            }
+            // 2. 🔥 FIX : Double rAF pour attendre peinture CSS
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                // KaTeX
+                if (typeof renderMathInElement === 'function') {
+                  try {
+                    renderMathInElement(msgEl, {
+                      delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                      ],
+                      throwOnError: false
+                    });
+                  } catch(e) {
+                    console.error('KaTeX error:', e);
+                  }
+                }
 
-            // 2. Highlight - Prism ou HLJS
-            if (typeof Prism !== 'undefined') {
-              Prism.highlightAllUnder(msgEl);
-            } else if (typeof hljs !== 'undefined') {
-              msgEl.querySelectorAll('pre code').forEach((block) => {
-                hljs.highlightElement(block);
+                // Highlight - Prism ou HLJS
+                if (typeof Prism !== 'undefined') {
+                  Prism.highlightAllUnder(msgEl);
+                } else if (typeof hljs !== 'undefined') {
+                  msgEl.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                  });
+                }
               });
-            }
+            });
 
             currentConv.messages.push({ text: rawText, type: 'bot', timestamp: Date.now() });
             saveConversation(msg.slice(0, 40), currentConv.messages);
