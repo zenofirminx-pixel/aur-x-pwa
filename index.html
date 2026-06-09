@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -6,10 +6,6 @@
 <title>AurX AI</title>
 <link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
-
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="msapplication-navbutton-color" content="#000">
@@ -121,96 +117,12 @@ header .btn:active { opacity: 0.7; }
 .sidebar-header-left { display: flex; align-items: center; gap: 10px; }
 .new-chat-btn { position: static !important; transform: none; padding: 4px 8px; font-size: 13px; border-radius: 8px; }
 .list { padding: 8px; overflow-y: auto; flex: 1; }
-.sidebar-footer { 
-  padding: 12px; 
-  border-top: 1px solid #2a2a2a; 
-  flex-shrink: 0; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 10px; 
-}
-.google-btn {
-  width: 100%;
-  padding: 10px;
-  background: #fff;
-  border: 1px solid #333;
-  color: #000;
-  border-radius: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.google-btn:active { opacity: 0.8; }
-.google-btn.connected {
-  background: transparent;
-  border: 1px solid #ff3b30;
-  color: #ff3b30;
-}
-.google-btn.connected:active {
-  background: #ff3b30;
-  color: #fff;
-}
-.google-user-info {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  background: #1a1a1a;
-  border-radius: 8px;
-  font-size: 13px;
-  color: #fff;
-  margin-bottom: 8px;
-}
-.google-user-info img {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-}
-.google-user-info span {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.sidebar-footer { padding: 12px; border-top: 1px solid #2a2a2a; flex-shrink: 0; }
 .danger-btn-small { width: 100%; padding: 10px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .danger-btn-small:active { background: #ff3b30; color: #fff; }
 .conv-item { padding: 12px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; color: #ccc; font-size: 14px; }
 .conv-item:hover { background: #1a1a1a; color: #fff; }
 .empty { padding: 20px; text-align: center; color: #666; font-size: 14px; }
-
-/* FIX CHAT + WELCOME CENTRÉ */
-#chat {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-}
-
-#welcome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  flex: 1;
-  color: #fff;
-  font-size: 32px;
-  font-weight: 700;
-  gap: 8px;
-  user-select: none;
-  pointer-events: none;
-}
-
-#welcome span {
-  font-size: 16px;
-  font-weight: 400;
-  color: #666;
-}
 
 /* TYPING INDICATOR FIXÉ - PLUS DE CROP */
 .typing-wrapper { 
@@ -258,51 +170,10 @@ header .btn:active { opacity: 0.7; }
 }
 .typing-text.show { opacity: 1; }
 
-/* KATEX THEME SOMBRE + NO FRAME FIX */
-.katex { 
-  color: #fff !important; 
-  font-size: 1.1em;
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-}
-.katex-display { 
-  margin: 1.2em 0; 
-  overflow-x: auto;
-  border: none !important;
-  background: transparent !important;
-}
-.katex-display > .katex { 
-  display: block; 
-  text-align: center;
-  border: none !important;
-}
-.katex-html {
-  border: none !important;
-  background: transparent !important;
-}
-
-/* VIRE LES FRAMES SUR LES LIENS ET CODE */
-a, a:has(.katex), a .katex {
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-.code-frame {
-  border: none !important;
-  padding: 0 !important;
-  background: transparent !important;
-}
-.inline-code {
-  background: #1a1a1a;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: monospace;
-}
+/* KATEX THEME SOMBRE + LISIBILITÉ */
+.katex { color: #fff; font-size: 1.1em; }
+.katex-display { margin: 1.2em 0; overflow-x: auto; }
+.katex-display > .katex { display: block; text-align: center; }
 </style>
 </head>
 <body>
@@ -384,19 +255,6 @@ AurX AI
 </header>
 <div class="list" id="convList"></div>
 <div class="sidebar-footer">
-<div id="googleUserInfo" class="google-user-info" style="display:none;">
-<img id="googleUserPic" src="" alt="">
-<span id="googleUserName"></span>
-</div>
-<button class="google-btn" id="googleAuthBtn">
-<svg width="18" height="18" viewBox="0 0 18 18" style="vertical-align: -3px; margin-right: 8px;">
-<path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
-<path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
-<path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9c0 1.45.347 2.825.957 4.04l3.007-2.328z"/>
-<path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.96L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
-</svg>
-<span id="googleAuthText">Se connecter avec Google</span>
-</button>
 <button class="danger-btn-small" id="deleteAllBtn">WIPE CONVS</button>
 </div>
 </div>
@@ -443,112 +301,43 @@ AurX AI
 <script src="config.js"></script>
 <script src="script.js"></script>
 
-<!-- KATEX JS -->
+<!-- KATEX JS SANS DEFER -->
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
 <script>
-// === CONFIG BACKEND ===
-const BACKEND_URL = 'https://aur-x-backend.vercel.app';
-
-// === GOOGLE AUTH VIA BACKEND VERCEL ===
-let googleUser = null;
-
-async function checkAuth() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/auth/me`, { credentials: 'include' });
-    if (res.ok) {
-      googleUser = await res.json();
-      updateGoogleUI(true);
-    }
-  } catch (e) {
-    console.log('Pas encore connecté');
-  }
-}
-
-function updateGoogleUI(isConnected) {
-  const googleBtn = document.getElementById('googleAuthBtn');
-  const googleText = document.getElementById('googleAuthText');
-  const userInfo = document.getElementById('googleUserInfo');
-  const userPic = document.getElementById('googleUserPic');
-  const userName = document.getElementById('googleUserName');
-
-  if (isConnected && googleUser) {
-    googleBtn.classList.add('connected');
-    googleText.textContent = 'Se déconnecter';
-    userInfo.style.display = 'flex';
-    userPic.src = googleUser.picture || '';
-    userName.textContent = googleUser.name || googleUser.email;
-  } else {
-    googleBtn.classList.remove('connected');
-    googleText.textContent = 'Se connecter avec Google';
-    userInfo.style.display = 'none';
-  }
-}
-
-document.getElementById('googleAuthBtn')?.addEventListener('click', async () => {
-  if (googleUser) {
-    try {
-      await fetch(`${BACKEND_URL}/api/auth/logout`, { 
-        method: 'POST',
-        credentials: 'include' 
-      });
-      googleUser = null;
-      updateGoogleUI(false);
-    } catch (e) {
-      console.error('Erreur déconnexion:', e);
-    }
-  } else {
-    window.location.href = `${BACKEND_URL}/api/auth/google`;
-  }
-});
-
-// === WELCOME TOGGLE ===
-function toggleWelcome() {
-  const chat = document.getElementById('chat');
-  const welcome = document.getElementById('welcome');
-  if (!welcome) return;
-  
-  const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
-  welcome.style.display = hasMessages ? 'none' : 'flex';
-}
-// === KATEX HELPERS ===
+// ATTENDRE QUE KATEX SOIT CHARGÉ
 function waitForKatex(callback) {
-  if (typeof renderMathInElement !== 'undefined') {
+  if (window.renderMathInElement) {
     callback();
   } else {
     setTimeout(() => waitForKatex(callback), 100);
   }
 }
 
-function renderMath(element = document.body) {
-  if (typeof renderMathInElement === 'undefined') return;
-  
-  renderMathInElement(element, {
+let renderTimeout = null;
+
+function renderMath() {
+  if (!window.renderMathInElement) return;
+  renderMathInElement(document.getElementById('chat'), {
     delimiters: [
       {left: '$$', right: '$$', display: true},
       {left: '$', right: '$', display: false},
-      {left: '\\(', right: '\\)', display: false},
-      {left: '\\[', right: '\\]', display: true}
+      {left: '\\[', right: '\\]', display: true},
+      {left: '\\(', right: '\\)', display: false}
     ],
     throwOnError: false,
-    ignoredTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
-    ignoredClasses: ['app-code-content', 'app-inline-code', 'copy-btn']
+    strict: false
   });
 }
+
 document.addEventListener('DOMContentLoaded', () => {
-  checkAuth();
-  toggleWelcome();
-  
   waitForKatex(() => {
     setTimeout(renderMath, 300);
     const chat = document.getElementById('chat');
     const observer = new MutationObserver(() => {
       clearTimeout(renderTimeout);
-      renderTimeout = setTimeout(() => {
-        renderMath();
-        toggleWelcome();
-      }, 200);
+      renderTimeout = setTimeout(renderMath, 400);
     });
     observer.observe(chat, { childList: true, subtree: true });
   });
