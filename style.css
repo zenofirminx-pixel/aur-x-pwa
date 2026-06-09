@@ -542,13 +542,54 @@ header {
   font-weight: 600;
   letter-spacing: 0.5px;
 }
+/* ===== LANGAGES SUPPORTÉS ===== */
 
-.msg.bot pre code.language-javascript::before { content: 'JavaScript'; }
-.msg.bot pre code.language-js::before { content: 'JavaScript'; }
-.msg.bot pre code.language-python::before { content: 'Python'; }
-.msg.bot pre code.language-html::before { content: 'HTML'; }
-.msg.bot pre code.language-css::before { content: 'CSS'; }
-.msg.bot pre code.language-json::before { content: 'JSON'; }
-.msg.bot pre code.language-bash::before { content: 'Bash'; }
-.msg.bot pre code.language-plaintext::before { content: 'Text'; }
-.msg.bot pre code:not([class*="language-"])::before { content: 'Code'; }
+.msg.bot pre code.language-javascript::before { content: "javascript"; }
+.msg.bot pre code.language-js::before { content: "javascript"; }
+
+.msg.bot pre code.language-typescript::before { content: "typescript"; }
+.msg.bot pre code.language-ts::before { content: "typescript"; }
+
+.msg.bot pre code.language-python::before { content: "python"; }
+
+.msg.bot pre code.language-html::before { content: "html"; }
+
+.msg.bot pre code.language-css::before { content: "css"; }
+
+.msg.bot pre code.language-json::before { content: "json"; }
+
+.msg.bot pre code.language-bash::before { content: "bash"; }
+.msg.bot pre code.language-shell::before { content: "bash"; }
+
+.msg.bot pre code.language-php::before { content: "php"; }
+
+.msg.bot pre code.language-java::before { content: "java"; }
+
+.msg.bot pre code.language-c::before { content: "c"; }
+
+.msg.bot pre code.language-cpp::before { content: "c++"; }
+
+.msg.bot pre code.language-csharp::before { content: "csharp"; }
+
+.msg.bot pre code.language-go::before { content: "go"; }
+
+.msg.bot pre code.language-rust::before { content: "rust"; }
+
+.msg.bot pre code.language-swift::before { content: "swift"; }
+
+.msg.bot pre code.language-kotlin::before { content: "kotlin"; }
+
+.msg.bot pre code.language-sql::before { content: "sql"; }
+
+.msg.bot pre code.language-markdown::before { content: "markdown"; }
+
+.msg.bot pre code.language-yaml::before { content: "yaml"; }
+
+.msg.bot pre code.language-xml::before { content: "xml"; }
+
+.msg.bot pre code.language-dart::before { content: "dart"; }
+
+/* fallback si aucun langage détecté */
+.msg.bot pre code:not([class*="language-"])::before {
+  content: "code";
+}
