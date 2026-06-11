@@ -574,8 +574,7 @@ async function sendMessage() {
   const now = Date.now();
   addMessage(msg, 'user', now);
 
-  const convsToUse = isLoggedIn ? serverConversations : conversations;
-  let currentConv = convsToUse.find(c => c.id === currentConvId);
+  let currentConv = conversations.find(c => c.id === currentConvId);
 
   if (!currentConv) {
     currentConv = {
@@ -585,7 +584,7 @@ async function sendMessage() {
       date: now,
       updatedAt: now
     };
-    convsToUse.unshift(currentConv);
+    conversations.unshift(currentConv);
   }
 
   currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
@@ -599,74 +598,20 @@ async function sendMessage() {
   sendBtnEl.classList.add('loading');
   sendBtnEl.disabled = true;
 
-  // --- LE STREAM TEMPORAIRE ---
-  // On crée un conteneur temporaire unique juste pour afficher le texte pendant qu'il tape
   const botTime = Date.now();
+
   const streamWrapper = document.createElement('div');
-  streamWrapper.className = 'msg-wrapper bot-full'; 
-  streamWrapper.dataset.timestamp = botTime;
+  streamWrapper.className = 'msg-wrapper bot-full';
 
   const streamMsgEl = document.createElement('div');
-  streamMsgEl.className = 'msg bot-full-text'; 
+  streamMsgEl.className = 'msg bot-full-text';
   streamWrapper.appendChild(streamMsgEl);
 
-  let cursor = null;
-  let isDone = false;
-
   chat.appendChild(streamWrapper);
-  chat.scrollTop = chat.scrollHeight;
-  hideWelcome();
 
   let rawText = '';
-  let pendingText = '';
-  let rafId = null;
-  let cursorTimeout = null;
-
-  function showPauseCursor() {
-    if (!cursor && streamMsgEl.isConnected && !isDone) {
-      cursor = document.createElement('span');
-      cursor.className = 'streaming-cursor';
-      streamMsgEl.appendChild(cursor);
-    }
-  }
-
-  function hidePauseCursor() {
-    if (cursor) {
-      cursor.remove();
-      cursor = null;
-    }
-    if (cursorTimeout) {
-      clearTimeout(cursorTimeout);
-      cursorTimeout = null;
-    }
-  }
-
-  function flushBuffer() {
-    if (pendingText) {
-      rawText += pendingText;
-      pendingText = '';
-
-      hidePauseCursor();
-      // On affiche le texte brut pendant le stream
-      streamMsgEl.textContent = rawText;
-
-      const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;
-      if (nearBottom) chat.scrollTop = chat.scrollHeight;
-    }
-
-    if (!isDone) {
-      clearTimeout(cursorTimeout);
-      cursorTimeout = setTimeout(showPauseCursor, 5000);
-    }
-    rafId = null;
-  }
-
-  function scheduleRender() {
-    if (!rafId) {
-      hidePauseCursor();
-      rafId = requestAnimationFrame(flushBuffer);
-    }
-  }
+  let buffer = '';
+  let isDone = false;
 
   try {
     const res = await fetch(CONFIG.ENDPOINTS.openai, {
@@ -674,59 +619,50 @@ async function sendMessage() {
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        api: 'openai',
         message: msg,
-        convId: currentConvId,
-        model: CONFIG.MODELS.openai
+        convId: currentConvId
       })
     });
 
     hideTypingIndicator();
 
-    if (!res.ok) {
+    // ❌ erreur HTTP
+    if (!res.ok || !res.body) {
       isDone = true;
-      if (rafId) cancelAnimationFrame(rafId);
-      hidePauseCursor();
-      streamMsgEl.innerHTML = '<span class="error">Erreur serveur</span>';
+
+      streamMsgEl.innerHTML = `
+        <span class="error">
+          ⚠️ AurX n’arrive pas à se connecter au serveur.<br>
+          <small>Réessaie dans quelques secondes.</small>
+        </span>
+      `;
       return;
     }
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
-    let streamBuffer = '';
 
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;
 
-      streamBuffer += decoder.decode(value, { stream: true });
-      const lines = streamBuffer.split('\n');
-      streamBuffer = lines.pop();
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split('\n');
+      buffer = lines.pop();
 
       for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (!trimmedLine.startsWith('data:')) continue;
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
 
-        const data = trimmedLine.replace(/^data:\s*/, '');
+        const data = trimmed.replace('data: ', '');
 
         if (data === '[DONE]') {
           isDone = true;
-          if (rafId) cancelAnimationFrame(rafId);
-          hidePauseCursor();
-
-          if (pendingText) {
-            rawText += pendingText;
-          }
-
-          // 🔥 LE TRUC MAGIQUE ICI :
-          // 1. On supprime le conteneur temporaire du stream
           streamWrapper.remove();
 
-          // 2. On appelle ta vraie fonction addMessage avec le texte complet !
-          // Elle va s'occuper de découper le code en bulles, d'appliquer KaTeX et Prism/hljs proprement.
           addMessage(rawText, 'bot', botTime, false);
 
-          // 3. Sauvegarde dans l'historique
           currentConv.messages.push({
             text: rawText,
             type: 'bot',
@@ -739,26 +675,53 @@ async function sendMessage() {
 
         try {
           const parsed = JSON.parse(data);
-          if (parsed.content) {
-            pendingText += parsed.content;
-            scheduleRender();
+
+          const content =
+            parsed.content ||
+            parsed?.choices?.[0]?.delta?.content;
+
+          if (content) {
+            rawText += content;
+            streamMsgEl.textContent = rawText;
+            chat.scrollTop = chat.scrollHeight;
           }
+
           if (parsed.error) {
-            isDone = true;
-            streamMsgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;
+            streamMsgEl.innerHTML = `
+              <span class="error">
+                ⚠️ ${parsed.error}
+              </span>
+            `;
           }
-        } catch (e) {}
+
+        } catch (e) {
+          // ignore chunk cassé
+        }
       }
     }
+
+    // fallback si pas de [DONE]
+    if (!rawText) {
+      streamMsgEl.innerHTML = `
+        <span class="error">
+          🤖 AurX a reçu une réponse vide.
+        </span>
+      `;
+    }
+
   } catch (e) {
-    isDone = true;
-    hideTypingIndicator();
-    hidePauseCursor();
-    streamMsgEl.innerHTML = 'Erreur réseau / serveur';
+    streamMsgEl.innerHTML = `
+      <span class="error">
+        ❌ Connexion perdue avec AurX<br>
+        <small>Vérifie ton réseau ou réessaie</small>
+      </span>
+    `;
+
     console.error(e);
   } finally {
     sendBtnEl.classList.remove('loading');
     sendBtnEl.disabled = false;
+    hideTypingIndicator();
   }
 }
 
