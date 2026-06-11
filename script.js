@@ -626,16 +626,11 @@ async function sendMessage() {
 
     hideTypingIndicator();
 
-    // ❌ erreur HTTP
-    if (!res.ok || !res.body) {
+    // erreur HTTP
+    if (!res.ok ||!res.body) {
       isDone = true;
-
-      streamMsgEl.innerHTML = `
-        <span class="error">
-          ⚠️ AurX n’arrive pas à se connecter au serveur.<br>
-          <small>Réessaie dans quelques secondes.</small>
-        </span>
-      `;
+      streamWrapper.remove();
+      addMessage("⚠️ AurX n’arrive pas à se connecter au serveur.\nRéessaie dans quelques secondes.", 'bot', botTime, true);
       return;
     }
 
@@ -649,74 +644,81 @@ async function sendMessage() {
       buffer += decoder.decode(value, { stream: true });
 
       const lines = buffer.split('\n');
-      buffer = lines.pop();
+      buffer = lines.pop() || '';
 
       for (const line of lines) {
         const trimmed = line.trim();
         if (!trimmed.startsWith('data:')) continue;
 
-        const data = trimmed.replace('data: ', '');
+        const data = trimmed.slice(5).trim();
 
+        // FIX 1: [DONE] arrive en string brute
         if (data === '[DONE]') {
           isDone = true;
           streamWrapper.remove();
 
-          addMessage(rawText, 'bot', botTime, false);
-
-          currentConv.messages.push({
-            text: rawText,
-            type: 'bot',
-            timestamp: botTime
-          });
+          // FIX 2: si rawText vide, affiche erreur au lieu de message vide
+          if (!rawText.trim()) {
+            addMessage("🤖 AurX a répondu vide. Réessaie.", 'bot', botTime, true);
+          } else {
+            addMessage(rawText, 'bot', botTime, false);
+            currentConv.messages.push({
+              text: rawText,
+              type: 'bot',
+              timestamp: botTime
+            });
+          }
 
           saveConversation(msg.slice(0, 40), currentConv.messages);
           return;
         }
 
+        // FIX 3: parse JSON seulement si ça commence par {
+        if (!data.startsWith('{')) continue;
+
         try {
           const parsed = JSON.parse(data);
 
-          const content =
-            parsed.content ||
-            parsed?.choices?.[0]?.delta?.content;
+          // FIX 4: check error en premier
+          if (parsed.error) {
+            isDone = true;
+            streamWrapper.remove();
+            addMessage(`⚠️ ${parsed.error}`, 'bot', botTime, true);
+            return;
+          }
 
-          if (content) {
+          const content = parsed.content;
+          if (content && typeof content === 'string') {
             rawText += content;
             streamMsgEl.textContent = rawText;
             chat.scrollTop = chat.scrollHeight;
           }
 
-          if (parsed.error) {
-            streamMsgEl.innerHTML = `
-              <span class="error">
-                ⚠️ ${parsed.error}
-              </span>
-            `;
-          }
-
         } catch (e) {
-          // ignore chunk cassé
+          console.error("JSON parse error:", data, e);
         }
       }
     }
 
     // fallback si pas de [DONE]
-    if (!rawText) {
-      streamMsgEl.innerHTML = `
-        <span class="error">
-          🤖 AurX a reçu une réponse vide.
-        </span>
-      `;
+    if (!isDone) {
+      streamWrapper.remove();
+      if (!rawText.trim()) {
+        addMessage("🤖 AurX a reçu une réponse vide.", 'bot', botTime, true);
+      } else {
+        addMessage(rawText, 'bot', botTime, false);
+        currentConv.messages.push({
+          text: rawText,
+          type: 'bot',
+          timestamp: botTime
+        });
+        saveConversation(msg.slice(0, 40), currentConv.messages);
+      }
     }
 
   } catch (e) {
-    streamMsgEl.innerHTML = `
-      <span class="error">
-        ❌ Connexion perdue avec AurX<br>
-        <small>Vérifie ton réseau ou réessaie</small>
-      </span>
-    `;
-
+    streamWrapper.remove();
+    addMessage("❌ Connexion perdue avec AurX\nVérifie ton réseau ou réessaie", 'bot', botTime, true);
     console.error(e);
   } finally {
     sendBtnEl.classList.remove('loading');
