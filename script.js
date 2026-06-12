@@ -104,7 +104,13 @@ function selectConversation(id) {
 
 function linkify(text) {
   if (!text) return '';
-  const urlPattern = /(https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  
+  // 1. On attrape le format Markdown [Texte](Lien) et on le convertit proprement
+  const markdownLinkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  text = text.replace(markdownLinkPattern, '<a href="$2" class="code-frame" target="_blank" rel="noopener">$1</a>');
+
+  // 2. Ta logique d'origine pour les liens bruts restants (sans casser ce qu'on vient de faire)
+  const urlPattern = /(?<!href=")(https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
   return text.replace(urlPattern, (url) => {
     if (url.includes('@')) {
       return `<a href="mailto:${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
@@ -115,6 +121,7 @@ function linkify(text) {
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
   });
 }
+
 function autoMathify(text) {
   if (!text) return '';
   const protected = [];
@@ -139,6 +146,7 @@ function autoMathify(text) {
   });
   return text;
 }
+
 document.addEventListener('DOMContentLoaded', initApp);
 
 function initApp() {
