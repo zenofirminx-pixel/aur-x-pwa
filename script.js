@@ -461,9 +461,15 @@ function formatMessage(text) {
   if (isNew) hideWelcome();
   try {
     const parts = parseMessage(text);
+    
+    // 🔥 GROS FIX : On crée un conteneur global unique pour CE message
+    // pour éviter de fragmenter le chat et de perturber les éléments frères (comme l'user)
+    const messageGroupContainer = document.createElement('div');
+    messageGroupContainer.className = `message-group ${type}`;
+    messageGroupContainer.dataset.timestamp = timestamp || Date.now();
+
     parts.forEach(part => {
       const wrapper = document.createElement('div');
-      wrapper.dataset.timestamp = timestamp || Date.now();
       let msg = null;
       
       if (type === 'user') {
@@ -490,20 +496,13 @@ function formatMessage(text) {
         wrapper.appendChild(msg);
       }
       
-      if (settings.timestamp) {
-        const time = document.createElement('div');
-        time.className = 'msg-time';
-        time.textContent = new Date(Number(wrapper.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        wrapper.appendChild(time);
-      }
+      // On ajoute le bloc au conteneur du groupe
+      messageGroupContainer.appendChild(wrapper);
       
-      chat.appendChild(wrapper);
-      
-      // 🔥 FIX : Double rAF pour KaTeX + Highlight après peinture CSS
+      // 🔥 Déplacement de la logique KaTeX / Highlight par bloc inséré
       if (type !== 'user' && msg) {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
-            // KaTeX
             if (typeof renderMathInElement === 'function') {
               try {
                 renderMathInElement(msg, {
@@ -517,8 +516,6 @@ function formatMessage(text) {
                 console.error('KaTeX addMessage:', e);
               }
             }
-            
-            // Highlight
             if (typeof Prism !== 'undefined') {
               Prism.highlightAllUnder(msg);
             } else if (typeof hljs !== 'undefined') {
@@ -530,13 +527,29 @@ function formatMessage(text) {
         });
       }
     });
+
+    // Optionnel : Ajout du timestamp une seule fois par groupe de messages
+    if (settings.timestamp) {
+      const time = document.createElement('div');
+      time.className = 'msg-time';
+      time.textContent = new Date(Number(messageGroupContainer.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      messageGroupContainer.appendChild(time);
+    }
     
-    chat.scrollTop = chat.scrollHeight;
+    // On l'ajoute proprement au chat en une seule opération DOM
+    chat.appendChild(messageGroupContainer);
+    
+    // Forcer le scroll tout en bas après l'ajout complet
+    setTimeout(() => {
+      chat.scrollTop = chat.scrollHeight;
+    }, 50);
+
   } catch(e) {
     console.error('addMessage error:', e);
   }
   return text;
 }
+
 
 
 
@@ -573,202 +586,164 @@ function formatMessage(text) {
 
  
 async function sendMessage() {
-const msg = input.value.trim();
-if (!msg) return;
+  const msg = input.value.trim();
+  if (!msg) return;
 
-const now = Date.now();
-addMessage(msg, 'user', now);
+  const now = Date.now();
+  addMessage(msg, 'user', now);
 
-const convsToUse = isLoggedIn ? serverConversations : conversations;
-let currentConv = convsToUse.find(c => c.id === currentConvId);
+  let currentConv = conversations.find(c => c.id === currentConvId);
 
-if (!currentConv) {
-currentConv = {
-id: currentConvId,
-title: msg.slice(0, 40),
-messages: [],
-date: now,
-updatedAt: now
-};
-convsToUse.unshift(currentConv);
-}
+  if (!currentConv) {
+    currentConv = {
+      id: currentConvId,
+      title: msg.slice(0, 40),
+      messages: [],
+      date: now,
+      updatedAt: now
+    };
+    conversations.unshift(currentConv);
+  }
 
-currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
+  currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
 
-input.value = '';
-input.style.height = 'auto';
-updateCharCounter();
-showTypingIndicator();
+  input.value = '';
+  input.style.height = 'auto';
+  updateCharCounter();
+  showTypingIndicator();
 
-const sendBtnEl = document.getElementById('sendBtn');
-sendBtnEl.classList.add('loading');
-sendBtnEl.disabled = true;
+  const sendBtnEl = document.getElementById('sendBtn');
+  sendBtnEl.classList.add('loading');
+  sendBtnEl.disabled = true;
 
-// --- LE STREAM TEMPORAIRE ---
-// On crée un conteneur temporaire unique juste pour afficher le texte pendant qu'il tape
-const botTime = Date.now();
-const streamWrapper = document.createElement('div');
-streamWrapper.className = 'msg-wrapper bot-full';
-streamWrapper.dataset.timestamp = botTime;
+  const botTime = Date.now();
 
-const streamMsgEl = document.createElement('div');
-streamMsgEl.className = 'msg bot-full-text';
-streamWrapper.appendChild(streamMsgEl);
+  const streamWrapper = document.createElement('div');
+  streamWrapper.className = 'msg-wrapper bot-full';
 
-let cursor = null;
-let isDone = false;
+  const streamMsgEl = document.createElement('div');
+  streamMsgEl.className = 'msg bot-full-text';
+  streamWrapper.appendChild(streamMsgEl);
 
-chat.appendChild(streamWrapper);
-chat.scrollTop = chat.scrollHeight;
-hideWelcome();
+  chat.appendChild(streamWrapper);
 
-let rawText = '';
-let pendingText = '';
-let rafId = null;
-let cursorTimeout = null;
+  let rawText = '';
+  let buffer = '';
+  let isDone = false;
 
-function showPauseCursor() {
-if (!cursor && streamMsgEl.isConnected && !isDone) {
-cursor = document.createElement('span');
-cursor.className = 'streaming-cursor';
-streamMsgEl.appendChild(cursor);
-}
-}
+  try {
+    const res = await fetch(CONFIG.ENDPOINTS.openai, {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: msg,
+        convId: currentConvId
+      })
+    });
 
-function hidePauseCursor() {
-if (cursor) {
-cursor.remove();
-cursor = null;
-}
-if (cursorTimeout) {
-clearTimeout(cursorTimeout);
-cursorTimeout = null;
-}
-}
+    hideTypingIndicator();
 
-function flushBuffer() {
-if (pendingText) {
-rawText += pendingText;
-pendingText = '';
+    // erreur HTTP
+    if (!res.ok ||!res.body) {
+      isDone = true;
+      streamWrapper.remove();
+      addMessage("⚠️ AurX n’arrive pas à se connecter au serveur.\nRéessaie dans quelques secondes.", 'bot', botTime, true);
+      return;
+    }
 
-hidePauseCursor();  
-  // On affiche le texte brut pendant le stream  
-  streamMsgEl.textContent = rawText;  
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
 
-  const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;  
-  if (nearBottom) chat.scrollTop = chat.scrollHeight;  
-}  
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
 
-if (!isDone) {  
-  clearTimeout(cursorTimeout);  
-  cursorTimeout = setTimeout(showPauseCursor, 5000);  
-}  
-rafId = null;
+      buffer += decoder.decode(value, { stream: true });
 
-}
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
 
-function scheduleRender() {
-if (!rafId) {
-hidePauseCursor();
-rafId = requestAnimationFrame(flushBuffer);
-}
-}
+      for (const line of lines) {
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
 
-try {
-const res = await fetch(CONFIG.ENDPOINTS.openai, {
-method: 'POST',
-credentials: 'include',
-headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({
-api: 'openai',
-message: msg,
-convId: currentConvId,
-model: CONFIG.MODELS.openai
-})
-});
+        const data = trimmed.slice(5).trim();
 
-hideTypingIndicator();  
+        // FIX 1: [DONE] arrive en string brute
+        if (data === '[DONE]') {
+          isDone = true;
+          streamWrapper.remove();
 
-if (!res.ok) {  
-  isDone = true;  
-  if (rafId) cancelAnimationFrame(rafId);  
-  hidePauseCursor();  
-  streamMsgEl.innerHTML = '<span class="error">Erreur serveur</span>';  
-  return;  
-}  
+          // FIX 2: si rawText vide, affiche erreur au lieu de message vide
+          if (!rawText.trim()) {
+            addMessage("🤖 AurX a répondu vide. Réessaie.", 'bot', botTime, true);
+          } else {
+            addMessage(rawText, 'bot', botTime, false);
+            currentConv.messages.push({
+              text: rawText,
+              type: 'bot',
+              timestamp: botTime
+            });
+          }
 
-const reader = res.body.getReader();  
-const decoder = new TextDecoder();  
-let streamBuffer = '';  
+          saveConversation(msg.slice(0, 40), currentConv.messages);
+          return;
+        }
 
-while (true) {  
-  const { done, value } = await reader.read();  
-  if (done) break;  
+        // FIX 3: parse JSON seulement si ça commence par {
+        if (!data.startsWith('{')) continue;
 
-  streamBuffer += decoder.decode(value, { stream: true });  
-  const lines = streamBuffer.split('\n');  
-  streamBuffer = lines.pop();  
+        try {
+          const parsed = JSON.parse(data);
 
-  for (const line of lines) {  
-    const trimmedLine = line.trim();  
-    if (!trimmedLine.startsWith('data:')) continue;  
+          // FIX 4: check error en premier
+          if (parsed.error) {
+            isDone = true;
+            streamWrapper.remove();
+            addMessage(`⚠️ ${parsed.error}`, 'bot', botTime, true);
+            return;
+          }
 
-    const data = trimmedLine.replace(/^data:\s*/, '');  
+          const content = parsed.content;
+          if (content && typeof content === 'string') {
+            rawText += content;
+            streamMsgEl.textContent = rawText;
+            chat.scrollTop = chat.scrollHeight;
+          }
 
-    if (data === '[DONE]') {  
-      isDone = true;  
-      if (rafId) cancelAnimationFrame(rafId);  
-      hidePauseCursor();  
+        } catch (e) {
+          console.error("JSON parse error:", data, e);
+        }
+      }
+    }
 
-      if (pendingText) {  
-        rawText += pendingText;  
-      }  
+    // fallback si pas de [DONE]
+    if (!isDone) {
+      streamWrapper.remove();
+      if (!rawText.trim()) {
+        addMessage("🤖 AurX a reçu une réponse vide.", 'bot', botTime, true);
+      } else {
+        addMessage(rawText, 'bot', botTime, false);
+        currentConv.messages.push({
+          text: rawText,
+          type: 'bot',
+          timestamp: botTime
+        });
+        saveConversation(msg.slice(0, 40), currentConv.messages);
+      }
+    }
 
-      // 🔥 LE TRUC MAGIQUE ICI :  
-      // 1. On supprime le conteneur temporaire du stream  
-      streamWrapper.remove();  
-
-      // 2. On appelle ta vraie fonction addMessage avec le texte complet !  
-      // Elle va s'occuper de découper le code en bulles, d'appliquer KaTeX et Prism/hljs proprement.  
-      addMessage(rawText, 'bot', botTime, false);  
-
-      // 3. Sauvegarde dans l'historique  
-      currentConv.messages.push({  
-        text: rawText,  
-        type: 'bot',  
-        timestamp: botTime  
-      });  
-
-      saveConversation(msg.slice(0, 40), currentConv.messages);  
-      return;  
-    }  
-
-    try {  
-      const parsed = JSON.parse(data);  
-      if (parsed.content) {  
-        pendingText += parsed.content;  
-        scheduleRender();  
-      }  
-      if (parsed.error) {  
-        isDone = true;  
-        streamMsgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;  
-      }  
-    } catch (e) {}  
-  }  
-}
-
-} catch (e) {
-isDone = true;
-hideTypingIndicator();
-hidePauseCursor();
-streamMsgEl.innerHTML = 'Erreur réseau / serveur';
-console.error(e);
-} finally {
-sendBtnEl.classList.remove('loading');
-sendBtnEl.disabled = false;
+  } catch (e) {
+    streamWrapper.remove();
+    addMessage("❌ Connexion perdue avec AurX\nVérifie ton réseau ou réessaie", 'bot', botTime, true);
+    console.error(e);
+  } finally {
+    sendBtnEl.classList.remove('loading');
+    sendBtnEl.disabled = false;
+    hideTypingIndicator();
   }
 }
-
 
 
 
