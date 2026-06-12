@@ -104,40 +104,41 @@ function selectConversation(id) {
 
 function linkify(text) {
   if (!text) return '';
-  
-  // 1. On extrait et on remplace d'abord les formats Markdown [Texte](Lien)
-  // On utilise un jeton temporaire unique pour chaque lien pour ne pas qu'ils se fassent écraser après
-  const placeholders = [];
-  const markdownLinkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-  
-  text = text.replace(markdownLinkPattern, (match, texteLien, urlLien) => {
-    placeholders.push(`<a href="${urlLien}" class="code-frame" target="_blank" rel="noopener">${texteLien}</a>`);
-    return `___LINK_PLACEHOLDER_${placeholders.length - 1}___`;
-  });
-
-  // 2. Maintenant que le Markdown est à l'abri, on traite les liens bruts (ex: www. ou https://)
-  const urlPattern = /(https?:\/\/[^\s<"'\)]+)|(www\.[^\s<"'\)]+)/g;
-  text = text.replace(urlPattern, (url) => {
+  const urlPattern = /(https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  return text.replace(urlPattern, (url) => {
+    if (url.includes('@')) {
+      return `<a href="mailto:${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
+    }
     if (url.startsWith('www.')) {
       return `<a href="http://${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
     }
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
   });
-
-  // 3. On traite les e-mails
-  const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
-  text = text.replace(emailPattern, '<a href="mailto:$1" class="code-frame" target="_blank" rel="noopener">$1</a>');
-
-  // 4. Pour finir, on remet les vrais liens Markdown à la place de leurs jetons
-  placeholders.forEach((htmlClean, index) => {
-    text = text.replace(`___LINK_PLACEHOLDER_${index}___`, htmlClean);
+}
+function autoMathify(text) {
+  if (!text) return '';
+  const protected = [];
+  text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|```[\s\S]*?```)/g, m => {
+    protected.push(m);
+    return `__PROTECT_${protected.length-1}__`;
   });
-
+  const superscripts = { '⁰': '^0', '¹': '^1', '²': '^2', '³': '^3', '⁴': '^4', '⁵': '^5', '⁶': '^6', '⁷': '^7', '⁸': '^8', '⁹': '^9' };
+  text = text.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, match => superscripts[match] || match);
+  const mathRegex = /([a-zA-Z0-9]+\s*[=+\-*/^]\s*[a-zA-Z0-9]+(\^[0-9a-zA-Z\{\}]+)?|[a-zA-Z0-9]+\^[0-9a-zA-Z\{\}]+|sqrt\([^)]+\)|\d+\/\d+|\b(pi|alpha|beta|gamma|theta|lambda|sigma|phi|delta)\b)/g;
+  text = text.replace(mathRegex, match => {
+    let m = match;
+    m = m.replace(/(\d+)\s*\/\s*(\d+)/g, '\\frac{$1}{$2}');
+    m = m.replace(/([a-zA-Z0-9])\^(\d+|[a-zA-Z]|\{[^\}]+\})/g, '$1^{$2}');
+    m = m.replace(/sqrt\(([^)]+)\)/g, '\\sqrt{$1}');
+    m = m.replace(/\b(pi|alpha|beta|gamma|theta|lambda|sigma|phi|delta)\b/g, '\\$1');
+    m = m.replace(/(\d+)\s*x\s*(\d+)/g, '$1 \\times $2');
+    return `$$${m}$$`;
+  });
+  protected.forEach((m, i) => {
+    text = text.replace(`__PROTECT_${i}__`, m);
+  });
   return text;
 }
-
-
-
 document.addEventListener('DOMContentLoaded', initApp);
 
 function initApp() {
@@ -453,23 +454,14 @@ function formatMessage(text) {
     return text;
   }
   
-
-
-  
     
   function addMessage(text, type, timestamp = null, isNew = true) {
   if (isNew) hideWelcome();
   try {
     const parts = parseMessage(text);
-    
-    // 🔥 GROS FIX : On crée un conteneur global unique pour CE message
-    // pour éviter de fragmenter le chat et de perturber les éléments frères (comme l'user)
-    const messageGroupContainer = document.createElement('div');
-    messageGroupContainer.className = `message-group ${type}`;
-    messageGroupContainer.dataset.timestamp = timestamp || Date.now();
-
     parts.forEach(part => {
       const wrapper = document.createElement('div');
+      wrapper.dataset.timestamp = timestamp || Date.now();
       let msg = null;
       
       if (type === 'user') {
@@ -496,13 +488,20 @@ function formatMessage(text) {
         wrapper.appendChild(msg);
       }
       
-      // On ajoute le bloc au conteneur du groupe
-      messageGroupContainer.appendChild(wrapper);
+      if (settings.timestamp) {
+        const time = document.createElement('div');
+        time.className = 'msg-time';
+        time.textContent = new Date(Number(wrapper.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        wrapper.appendChild(time);
+      }
       
-      // 🔥 Déplacement de la logique KaTeX / Highlight par bloc inséré
+      chat.appendChild(wrapper);
+      
+      // 🔥 FIX : Double rAF pour KaTeX + Highlight après peinture CSS
       if (type !== 'user' && msg) {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
+            // KaTeX
             if (typeof renderMathInElement === 'function') {
               try {
                 renderMathInElement(msg, {
@@ -516,6 +515,8 @@ function formatMessage(text) {
                 console.error('KaTeX addMessage:', e);
               }
             }
+            
+            // Highlight
             if (typeof Prism !== 'undefined') {
               Prism.highlightAllUnder(msg);
             } else if (typeof hljs !== 'undefined') {
@@ -527,29 +528,13 @@ function formatMessage(text) {
         });
       }
     });
-
-    // Optionnel : Ajout du timestamp une seule fois par groupe de messages
-    if (settings.timestamp) {
-      const time = document.createElement('div');
-      time.className = 'msg-time';
-      time.textContent = new Date(Number(messageGroupContainer.dataset.timestamp)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      messageGroupContainer.appendChild(time);
-    }
     
-    // On l'ajoute proprement au chat en une seule opération DOM
-    chat.appendChild(messageGroupContainer);
-    
-    // Forcer le scroll tout en bas après l'ajout complet
-    setTimeout(() => {
-      chat.scrollTop = chat.scrollHeight;
-    }, 50);
-
+    chat.scrollTop = chat.scrollHeight;
   } catch(e) {
     console.error('addMessage error:', e);
   }
   return text;
 }
-
 
 
 
@@ -582,9 +567,6 @@ function formatMessage(text) {
       typingElement = null;
     }
   }
-
-
- 
 async function sendMessage() {
   const msg = input.value.trim();
   if (!msg) return;
@@ -744,10 +726,6 @@ async function sendMessage() {
     hideTypingIndicator();
   }
 }
-
-
-
-
 
 
 
