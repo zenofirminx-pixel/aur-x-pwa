@@ -105,12 +105,18 @@ function selectConversation(id) {
 function linkify(text) {
   if (!text) return '';
   
-  // 1. On protège et convertit d'abord les formats Markdown [Texte](Lien)
+  // 1. On extrait et on remplace d'abord les formats Markdown [Texte](Lien)
+  // On utilise un jeton temporaire unique pour chaque lien pour ne pas qu'ils se fassent écraser après
+  const placeholders = [];
   const markdownLinkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
-  text = text.replace(markdownLinkPattern, '<a href="$2" class="code-frame" target="_blank" rel="noopener">$1</a>');
+  
+  text = text.replace(markdownLinkPattern, (match, texteLien, urlLien) => {
+    placeholders.push(`<a href="${urlLien}" class="code-frame" target="_blank" rel="noopener">${texteLien}</a>`);
+    return `___LINK_PLACEHOLDER_${placeholders.length - 1}___`;
+  });
 
-  // 2. On convertit les liens bruts standards (ex: https://...) mais SEULEMENT s'ils ne sont pas déjà dans une balise HTML
-  const urlPattern = /(?<!href=")(https?:\/\/[^\s<"'\)]+)|(www\.[^\s<"'\)]+)/g;
+  // 2. Maintenant que le Markdown est à l'abri, on traite les liens bruts (ex: www. ou https://)
+  const urlPattern = /(https?:\/\/[^\s<"'\)]+)|(www\.[^\s<"'\)]+)/g;
   text = text.replace(urlPattern, (url) => {
     if (url.startsWith('www.')) {
       return `<a href="http://${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
@@ -118,12 +124,18 @@ function linkify(text) {
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
   });
 
-  // 3. On convertit les e-mails s'il y en a
+  // 3. On traite les e-mails
   const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
   text = text.replace(emailPattern, '<a href="mailto:$1" class="code-frame" target="_blank" rel="noopener">$1</a>');
 
+  // 4. Pour finir, on remet les vrais liens Markdown à la place de leurs jetons
+  placeholders.forEach((htmlClean, index) => {
+    text = text.replace(`___LINK_PLACEHOLDER_${index}___`, htmlClean);
+  });
+
   return text;
 }
+
 
 
 document.addEventListener('DOMContentLoaded', initApp);
