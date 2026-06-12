@@ -628,41 +628,49 @@ header {
 .msg.bot pre code:not([class*="language-"])::before {
   content: "code";
 }
-/* Style du bouton "Copier" */
+/* Style ultra-précis pour forcer le bouton à apparaître */
 .code-block-wrapper .btn-copy {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: inline-flex;
-  align-items: center;
+  position: absolute !important;
+  top: 10px !important;
+  right: 10px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  z-index: 999 !important; /* Le passe devant le code pour qu'il soit visible et cliquable */
   
-  /* Espace à gauche réservé pour l'icône SVG */
-  padding: 6px 12px 6px 30px; 
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a3a3a3' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: 8px center;
-  background-size: 14px 14px;
+  /* Dimensions et espacements */
+  padding: 6px 12px 6px 30px !important; 
+  min-width: 75px !important;
+  min-height: 28px !important;
+  
+  /* Icône SVG intégrée */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23a3a3a3' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M15.666 3.888A2.25 2.25 0 0013.5 2.25h-3c-1.03 0-1.9.693-2.166 1.638m7.332 0c.055.194.084.4.084.612v0a.75.75 0 01-.75.75H9a.75.75 0 01-.75-.75v0c0-.212.03-.418.084-.612m7.332 0c.646.049 1.288.11 1.927.184 1.1.128 1.907 1.077 1.907 2.185V19.5a2.25 2.25 0 01-2.25 2.25H6.75A2.25 2.25 0 014.5 19.5V6.257c0-1.108.806-2.057 1.907-2.185a48.208 48.208 0 011.927-.184'/%3E%3C/svg%3E") !important;
+  background-repeat: no-repeat !important;
+  background-position: 8px center !important;
+  background-size: 14px 14px !important;
 
-  background-color: rgba(255, 255, 255, 0.08);
-  color: #a3a3a3;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  font-size: 12px;
-  font-weight: 500;
-  font-family: system-ui, -apple-system, sans-serif;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 10;
+  /* Couleurs pour fond sombre (Ajuste si ton thème est clair) */
+  background-color: rgba(255, 255, 255, 0.15) !important; /* Légèrement plus opaque pour le voir */
+  color: #ffffff !important; /* Texte blanc forcé */
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  
+  /* Police et pointeur */
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  font-family: system-ui, -apple-system, sans-serif !important;
+  border-radius: 6px !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  visibility: visible !important;
   transition: all 0.2s ease;
 }
 
 /* Effet au survol */
 .code-block-wrapper .btn-copy:hover {
-  background-color: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
-  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.5) !important;
 }
 
 /* Effet au clic */
 .code-block-wrapper .btn-copy:active {
-  transform: scale(0.95);
+  transform: scale(0.95) !important;
 }
