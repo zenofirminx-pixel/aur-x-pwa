@@ -576,150 +576,177 @@ async function sendMessage() {
   if (!msg) return;
 
   const now = Date.now();
-  addMessage(msg, "user", now);
+  const chat = document.getElementById('chat');
+  
+  // 1. Affiche le message user et GARDE une référence
+  const userMsgEl = addMessage(msg, 'user', now);
+  
+  let currentConv = conversations.find(c => c.id === currentConvId);
 
-  const currentMessages = [
-    { text: msg, type: "user", timestamp: now }
-  ];
+  if (!currentConv) {
+    currentConv = {
+      id: currentConvId,
+      title: msg.slice(0, 40),
+      messages: [],
+      date: now,
+      updatedAt: now
+    };
+    conversations.unshift(currentConv);
+  }
 
-  input.value = "";
-  input.style.height = "auto";
+  currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
+
+  input.value = '';
+  input.style.height = 'auto';
   updateCharCounter();
-
   showTypingIndicator();
 
-  const sendBtnEl = document.getElementById("sendBtn");
-  sendBtnEl.classList.add("loading");
+  const sendBtnEl = document.getElementById('sendBtn');
+  sendBtnEl.classList.add('loading');
   sendBtnEl.disabled = true;
+
+  const botTime = Date.now();
+
+  const streamWrapper = document.createElement('div');
+  streamWrapper.className = 'msg-wrapper bot-full';
+
+  const streamMsgEl = document.createElement('div');
+  streamMsgEl.className = 'msg bot-full-text';
+  streamWrapper.appendChild(streamMsgEl);
+
+  chat.appendChild(streamWrapper);
+
+  let rawText = '';
+  let buffer = '';
+  let isDone = false;
 
   try {
     const res = await fetch(CONFIG.ENDPOINTS.openai, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        api: "openai",
         message: msg,
-        userId: userId,
-        model: CONFIG.MODELS.openai
+        convId: currentConvId
       })
     });
 
     hideTypingIndicator();
 
     if (!res.ok || !res.body) {
-      const errorText = "Erreur serveur";
-      const errTime = Date.now();
-
-      addMessage(errorText, "bot error", errTime);
-
-      currentMessages.push({
-        text: errorText,
-        type: "bot error",
-        timestamp: errTime
-      });
-
-      saveConversation(msg.slice(0, 40), currentMessages);
+      isDone = true;
+      streamWrapper.remove();
+      addMessage("⚠️ AurX n’arrive pas à se connecter au serveur.\nRéessaie dans quelques secondes.", 'bot', botTime, true);
       return;
     }
-
-    // ======================
-    // 🔥 STREAMING START
-    // ======================
 
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
 
-    const botTime = Date.now();
-    addMessage("", "bot", botTime);
-
-    let botText = "";
-    let buffer = "";
-
     while (true) {
-      const { value, done } = await reader.read();
+      const { done, value } = await reader.read();
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
 
-      const lines = buffer.split("\n");
-      buffer = lines.pop();
+      const lines = buffer.split('\n');
+      buffer = lines.pop() || '';
 
       for (const line of lines) {
-        const cleanedLine = line.trim();
-        if (!cleanedLine.startsWith("data: ")) continue;
+        const trimmed = line.trim();
+        if (!trimmed.startsWith('data:')) continue;
 
-        const jsonStr = cleanedLine.replace("data: ", "");
-        if (jsonStr === "[DONE]") continue;
+        const data = trimmed.slice(5).trim();
+
+        if (data === '[DONE]') {
+          isDone = true;
+          streamWrapper.remove();
+
+          if (!rawText.trim()) {
+            addMessage("🤖 AurX a répondu vide. Réessaie.", 'bot', botTime, true);
+          } else {
+            addMessage(rawText, 'bot', botTime, false);
+            currentConv.messages.push({
+              text: rawText,
+              type: 'bot',
+              timestamp: botTime
+            });
+          }
+
+          saveConversation(msg.slice(0, 40), currentConv.messages);
+          return;
+        }
+
+        if (!data.startsWith('{')) continue;
 
         try {
-          const parsed = JSON.parse(jsonStr);
+          const parsed = JSON.parse(data);
 
-          const token =
-            parsed?.choices?.[0]?.delta?.content ||
-            parsed?.choices?.[0]?.message?.content ||
-            parsed?.choices?.[0]?.text ||
-            parsed?.response;
-
-          if (token) {
-            botText += token;
-            updateLastBotMessage(botText);
+          if (parsed.error) {
+            isDone = true;
+            streamWrapper.remove();
+            addMessage(`⚠️ ${parsed.error}`, 'bot', botTime, true);
+            return;
           }
-        } catch (e) {}
+
+          const content = parsed.content;
+          if (content && typeof content === 'string') {
+            rawText += content;
+            streamMsgEl.textContent = rawText;
+            chat.scrollTop = chat.scrollHeight;
+          }
+
+        } catch (e) {
+          console.error("JSON parse error:", data, e);
+        }
       }
     }
 
-    // flush buffer final
-    if (buffer && buffer.startsWith("data: ")) {
-      try {
-        const jsonStr = buffer.replace("data: ", "").trim();
-        if (jsonStr !== "[DONE]") {
-          const parsed = JSON.parse(jsonStr);
-
-          const token =
-            parsed?.choices?.[0]?.delta?.content ||
-            parsed?.response;
-
-          if (token) {
-            botText += token;
-            updateLastBotMessage(botText);
-          }
-        }
-      } catch (e) {}
+    if (!isDone) {
+      streamWrapper.remove();
+      if (!rawText.trim()) {
+        addMessage("🤖 AurX a reçu une réponse vide.", 'bot', botTime, true);
+      } else {
+        addMessage(rawText, 'bot', botTime, false);
+        currentConv.messages.push({
+          text: rawText,
+          type: 'bot',
+          timestamp: botTime
+        });
+        saveConversation(msg.slice(0, 40), currentConv.messages);
+      }
     }
 
-    // ======================
-    // SAVE
-    // ======================
-
-    currentMessages.push({
-      text: botText,
-      type: "bot",
-      timestamp: botTime
-    });
-
-    saveConversation(msg.slice(0, 40), currentMessages);
-
   } catch (e) {
-    hideTypingIndicator();
-
-    const errorText = "Erreur réseau / serveur";
-    const errTime = Date.now();
-
-    addMessage(errorText, "bot error", errTime);
-
-    currentMessages.push({
-      text: errorText,
-      type: "bot error",
-      timestamp: errTime
-    });
-
-    saveConversation(msg.slice(0, 40), currentMessages);
-
+    streamWrapper.remove();
+    addMessage("❌ Connexion perdue avec AurX\nVérifie ton réseau ou réessaie", 'bot', botTime, true);
     console.error(e);
   } finally {
-    sendBtnEl.classList.remove("loading");
+    sendBtnEl.classList.remove('loading');
     sendBtnEl.disabled = false;
+    hideTypingIndicator();
   }
+}
+
+// Modifie aussi addMessage pour retourner l'élément
+function addMessage(text, type, timestamp, isError = false) {
+  const chat = document.getElementById('chat');
+  if (!chat) return null;
+
+  const wrapper = document.createElement('div');
+  wrapper.className = `msg-wrapper ${type}-full`;
+  wrapper.dataset.timestamp = timestamp;
+
+  const msgEl = document.createElement('div');
+  msgEl.className = `msg ${type}-full-text`;
+  if (isError) msgEl.classList.add('error');
+  msgEl.textContent = text;
+  
+  wrapper.appendChild(msgEl);
+  chat.appendChild(wrapper);
+  chat.scrollTop = chat.scrollHeight;
+  
+  return wrapper; // ← Important
 }
 
 
