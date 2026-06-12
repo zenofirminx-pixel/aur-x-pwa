@@ -692,16 +692,4 @@ header {
   flex-shrink: 0;
 }
 
-/* 7. Style optionnel du label de langage (ex: "javascript") s'il existe */
-.code-lang {
-  position: absolute;
-  top: 12px;
-  left: 14px;
-  font-size: 11px;
-  color: #666;
-  text-transform: uppercase;
-  font-family: monospace;
-  font-weight: 600;
-  user-select: none;
-}
 
