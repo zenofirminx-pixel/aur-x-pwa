@@ -739,7 +739,6 @@ async function sendMessage() {
 
 
 
-
   function typeMessage(text, type, timestamp = Date.now()) {
     return new Promise(resolve => {
       const parts = parseMessage(text);
