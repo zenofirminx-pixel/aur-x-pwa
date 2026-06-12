@@ -105,47 +105,26 @@ function selectConversation(id) {
 function linkify(text) {
   if (!text) return '';
   
-  // 1. On attrape le format Markdown [Texte](Lien) et on le convertit proprement
+  // 1. On protège et convertit d'abord les formats Markdown [Texte](Lien)
   const markdownLinkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
   text = text.replace(markdownLinkPattern, '<a href="$2" class="code-frame" target="_blank" rel="noopener">$1</a>');
 
-  // 2. Ta logique d'origine pour les liens bruts restants (sans casser ce qu'on vient de faire)
-  const urlPattern = /(?<!href=")(https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
-  return text.replace(urlPattern, (url) => {
-    if (url.includes('@')) {
-      return `<a href="mailto:${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
-    }
+  // 2. On convertit les liens bruts standards (ex: https://...) mais SEULEMENT s'ils ne sont pas déjà dans une balise HTML
+  const urlPattern = /(?<!href=")(https?:\/\/[^\s<"'\)]+)|(www\.[^\s<"'\)]+)/g;
+  text = text.replace(urlPattern, (url) => {
     if (url.startsWith('www.')) {
       return `<a href="http://${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
     }
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
   });
-}
 
-function autoMathify(text) {
-  if (!text) return '';
-  const protected = [];
-  text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]|```[\s\S]*?```)/g, m => {
-    protected.push(m);
-    return `__PROTECT_${protected.length-1}__`;
-  });
-  const superscripts = { '⁰': '^0', '¹': '^1', '²': '^2', '³': '^3', '⁴': '^4', '⁵': '^5', '⁶': '^6', '⁷': '^7', '⁸': '^8', '⁹': '^9' };
-  text = text.replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, match => superscripts[match] || match);
-  const mathRegex = /([a-zA-Z0-9]+\s*[=+\-*/^]\s*[a-zA-Z0-9]+(\^[0-9a-zA-Z\{\}]+)?|[a-zA-Z0-9]+\^[0-9a-zA-Z\{\}]+|sqrt\([^)]+\)|\d+\/\d+|\b(pi|alpha|beta|gamma|theta|lambda|sigma|phi|delta)\b)/g;
-  text = text.replace(mathRegex, match => {
-    let m = match;
-    m = m.replace(/(\d+)\s*\/\s*(\d+)/g, '\\frac{$1}{$2}');
-    m = m.replace(/([a-zA-Z0-9])\^(\d+|[a-zA-Z]|\{[^\}]+\})/g, '$1^{$2}');
-    m = m.replace(/sqrt\(([^)]+)\)/g, '\\sqrt{$1}');
-    m = m.replace(/\b(pi|alpha|beta|gamma|theta|lambda|sigma|phi|delta)\b/g, '\\$1');
-    m = m.replace(/(\d+)\s*x\s*(\d+)/g, '$1 \\times $2');
-    return `$$${m}$$`;
-  });
-  protected.forEach((m, i) => {
-    text = text.replace(`__PROTECT_${i}__`, m);
-  });
+  // 3. On convertit les e-mails s'il y en a
+  const emailPattern = /([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  text = text.replace(emailPattern, '<a href="mailto:$1" class="code-frame" target="_blank" rel="noopener">$1</a>');
+
   return text;
 }
+
 
 document.addEventListener('DOMContentLoaded', initApp);
 
