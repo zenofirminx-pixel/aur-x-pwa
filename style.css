@@ -628,4 +628,80 @@ header {
 .msg.bot pre code:not([class*="language-"])::before {
   content: "code";
 }
+/* ==========================================================================
+   STYLE DU BOUTON DE COPIE (BLOCS DE CODE)
+   ========================================================================== */
+
+/* 1. Conteneur global du bloc de code */
+.code-block-wrapper {
+  position: relative;
+  margin: 16px 0;
+  border-radius: 8px;
+  overflow: hidden; /* Évite que les éléments internes dépassent */
+}
+
+/* 2. Ajustement du bloc de code pour laisser de la place au bouton */
+.code-block-wrapper pre {
+  margin: 0 !important;
+  padding-top: 45px !important; /* Crucial : empêche le bouton de cacher la 1ère ligne de code */
+}
+
+/* 3. Style du bouton "Copier" */
+.code-block-wrapper .btn-copy {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  
+  /* Alignement icône + texte */
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  
+  /* Design discret et moderne (semi-transparent) */
+  background-color: rgba(255, 255, 255, 0.08);
+  color: #a3a3a3;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: system-ui, -apple-system, sans-serif;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 10;
+  
+  /* Transitions fluides */
+  transition: background-color 0.2s ease, color 0.2s ease, transform 0.1s ease;
+}
+
+/* 4. Effet au survol (Hover) */
+.code-block-wrapper .btn-copy:hover {
+  background-color: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* 5. Effet au clic (Active) */
+.code-block-wrapper .btn-copy:active {
+  transform: scale(0.95); /* Effet d'enfoncement */
+}
+
+/* 6. Dimensionnement de l'icône SVG */
+.code-block-wrapper .btn-copy svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* 7. Style optionnel du label de langage (ex: "javascript") s'il existe */
+.code-lang {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  font-size: 11px;
+  color: #666;
+  text-transform: uppercase;
+  font-family: monospace;
+  font-weight: 600;
+  user-select: none;
+}
 
