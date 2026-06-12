@@ -572,165 +572,199 @@ function formatMessage(text) {
 
 
 async function sendMessage() {
-  const msg = input.value.trim();
-  if (!msg) return;
+const msg = input.value.trim();
+if (!msg) return;
 
-  const now = Date.now();
-  const chat = document.getElementById('chat'); // ← AJOUTE JUSTE ÇA
-  
-  addMessage(msg, 'user', now);
+const now = Date.now();
+addMessage(msg, 'user', now);
 
-  let currentConv = conversations.find(c => c.id === currentConvId);
+const convsToUse = isLoggedIn ? serverConversations : conversations;
+let currentConv = convsToUse.find(c => c.id === currentConvId);
 
-  if (!currentConv) {
-    currentConv = {
-      id: currentConvId,
-      title: msg.slice(0, 40),
-      messages: [],
-      date: now,
-      updatedAt: now
-    };
-    conversations.unshift(currentConv);
-  }
+if (!currentConv) {
+currentConv = {
+id: currentConvId,
+title: msg.slice(0, 40),
+messages: [],
+date: now,
+updatedAt: now
+};
+convsToUse.unshift(currentConv);
+}
 
-  currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
+currentConv.messages.push({ text: msg, type: 'user', timestamp: now });
 
-  input.value = '';
-  input.style.height = 'auto';
-  updateCharCounter();
-  showTypingIndicator();
+input.value = '';
+input.style.height = 'auto';
+updateCharCounter();
+showTypingIndicator();
 
-  const sendBtnEl = document.getElementById('sendBtn');
-  sendBtnEl.classList.add('loading');
-  sendBtnEl.disabled = true;
+const sendBtnEl = document.getElementById('sendBtn');
+sendBtnEl.classList.add('loading');
+sendBtnEl.disabled = true;
 
-  const botTime = Date.now();
+// --- LE STREAM TEMPORAIRE ---
+// On crée un conteneur temporaire unique juste pour afficher le texte pendant qu'il tape
+const botTime = Date.now();
+const streamWrapper = document.createElement('div');
+streamWrapper.className = 'msg-wrapper bot-full';
+streamWrapper.dataset.timestamp = botTime;
 
-  const streamWrapper = document.createElement('div');
-  streamWrapper.className = 'msg-wrapper bot-full';
+const streamMsgEl = document.createElement('div');
+streamMsgEl.className = 'msg bot-full-text';
+streamWrapper.appendChild(streamMsgEl);
 
-  const streamMsgEl = document.createElement('div');
-  streamMsgEl.className = 'msg bot-full-text';
-  streamWrapper.appendChild(streamMsgEl);
+let cursor = null;
+let isDone = false;
 
-  chat.appendChild(streamWrapper);
+chat.appendChild(streamWrapper);
+chat.scrollTop = chat.scrollHeight;
+hideWelcome();
 
-  let rawText = '';
-  let buffer = '';
-  let isDone = false;
+let rawText = '';
+let pendingText = '';
+let rafId = null;
+let cursorTimeout = null;
 
-  try {
-    const res = await fetch(CONFIG.ENDPOINTS.openai, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: msg,
-        convId: currentConvId
-      })
-    });
+function showPauseCursor() {
+if (!cursor && streamMsgEl.isConnected && !isDone) {
+cursor = document.createElement('span');
+cursor.className = 'streaming-cursor';
+streamMsgEl.appendChild(cursor);
+}
+}
 
-    hideTypingIndicator();
+function hidePauseCursor() {
+if (cursor) {
+cursor.remove();
+cursor = null;
+}
+if (cursorTimeout) {
+clearTimeout(cursorTimeout);
+cursorTimeout = null;
+}
+}
 
-    // erreur HTTP
-    if (!res.ok ||!res.body) {
-      isDone = true;
-      streamWrapper.remove();
-      addMessage("⚠️ AurX n’arrive pas à se connecter au serveur.\nRéessaie dans quelques secondes.", 'bot', botTime, true);
-      return;
-    }
+function flushBuffer() {
+if (pendingText) {
+rawText += pendingText;
+pendingText = '';
 
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder();
+hidePauseCursor();  
+  // On affiche le texte brut pendant le stream  
+  streamMsgEl.textContent = rawText;  
 
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
+  const nearBottom = chat.scrollHeight - chat.clientHeight - chat.scrollTop < 150;  
+  if (nearBottom) chat.scrollTop = chat.scrollHeight;  
+}  
 
-      buffer += decoder.decode(value, { stream: true });
+if (!isDone) {  
+  clearTimeout(cursorTimeout);  
+  cursorTimeout = setTimeout(showPauseCursor, 5000);  
+}  
+rafId = null;
 
-      const lines = buffer.split('\n');
-      buffer = lines.pop() || '';
+}
 
-      for (const line of lines) {
-        const trimmed = line.trim();
-        if (!trimmed.startsWith('data:')) continue;
+function scheduleRender() {
+if (!rafId) {
+hidePauseCursor();
+rafId = requestAnimationFrame(flushBuffer);
+}
+}
 
-        const data = trimmed.slice(5).trim();
+try {
+const res = await fetch(CONFIG.ENDPOINTS.openai, {
+method: 'POST',
+credentials: 'include',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({
+api: 'openai',
+message: msg,
+convId: currentConvId,
+model: CONFIG.MODELS.openai
+})
+});
 
-        // FIX 1: [DONE] arrive en string brute
-        if (data === '[DONE]') {
-          isDone = true;
-          streamWrapper.remove();
+hideTypingIndicator();  
 
-          // FIX 2: si rawText vide, affiche erreur au lieu de message vide
-          if (!rawText.trim()) {
-            addMessage("🤖 AurX a répondu vide. Réessaie.", 'bot', botTime, true);
-          } else {
-            addMessage(rawText, 'bot', botTime, false);
-            currentConv.messages.push({
-              text: rawText,
-              type: 'bot',
-              timestamp: botTime
-            });
-          }
+if (!res.ok) {  
+  isDone = true;  
+  if (rafId) cancelAnimationFrame(rafId);  
+  hidePauseCursor();  
+  streamMsgEl.innerHTML = '<span class="error">Erreur serveur</span>';  
+  return;  
+}  
 
-          saveConversation(msg.slice(0, 40), currentConv.messages);
-          return;
-        }
+const reader = res.body.getReader();  
+const decoder = new TextDecoder();  
+let streamBuffer = '';  
 
-        // FIX 3: parse JSON seulement si ça commence par {
-        if (!data.startsWith('{')) continue;
+while (true) {  
+  const { done, value } = await reader.read();  
+  if (done) break;  
 
-        try {
-          const parsed = JSON.parse(data);
+  streamBuffer += decoder.decode(value, { stream: true });  
+  const lines = streamBuffer.split('\n');  
+  streamBuffer = lines.pop();  
 
-          // FIX 4: check error en premier
-          if (parsed.error) {
-            isDone = true;
-            streamWrapper.remove();
-            addMessage(`⚠️ ${parsed.error}`, 'bot', botTime, true);
-            return;
-          }
+  for (const line of lines) {  
+    const trimmedLine = line.trim();  
+    if (!trimmedLine.startsWith('data:')) continue;  
 
-          const content = parsed.content;
-          if (content && typeof content === 'string') {
-            rawText += content;
-            streamMsgEl.textContent = rawText;
-            chat.scrollTop = chat.scrollHeight;
-          }
+    const data = trimmedLine.replace(/^data:\s*/, '');  
 
-        } catch (e) {
-          console.error("JSON parse error:", data, e);
-        }
-      }
-    }
+    if (data === '[DONE]') {  
+      isDone = true;  
+      if (rafId) cancelAnimationFrame(rafId);  
+      hidePauseCursor();  
 
-    // fallback si pas de [DONE]
-    if (!isDone) {
-      streamWrapper.remove();
-      if (!rawText.trim()) {
-        addMessage("🤖 AurX a reçu une réponse vide.", 'bot', botTime, true);
-      } else {
-        addMessage(rawText, 'bot', botTime, false);
-        currentConv.messages.push({
-          text: rawText,
-          type: 'bot',
-          timestamp: botTime
-        });
-        saveConversation(msg.slice(0, 40), currentConv.messages);
-      }
-    }
+      if (pendingText) {  
+        rawText += pendingText;  
+      }  
 
-  } catch (e) {
-    streamWrapper.remove();
-    addMessage("❌ Connexion perdue avec AurX\nVérifie ton réseau ou réessaie", 'bot', botTime, true);
-    console.error(e);
-  } finally {
-    sendBtnEl.classList.remove('loading');
-    sendBtnEl.disabled = false;
-    hideTypingIndicator();
-  }
+      // 🔥 LE TRUC MAGIQUE ICI :  
+      // 1. On supprime le conteneur temporaire du stream  
+      streamWrapper.remove();  
+
+      // 2. On appelle ta vraie fonction addMessage avec le texte complet !  
+      // Elle va s'occuper de découper le code en bulles, d'appliquer KaTeX et Prism/hljs proprement.  
+      addMessage(rawText, 'bot', botTime, false);  
+
+      // 3. Sauvegarde dans l'historique  
+      currentConv.messages.push({  
+        text: rawText,  
+        type: 'bot',  
+        timestamp: botTime  
+      });  
+
+      saveConversation(msg.slice(0, 40), currentConv.messages);  
+      return;  
+    }  
+
+    try {  
+      const parsed = JSON.parse(data);  
+      if (parsed.content) {  
+        pendingText += parsed.content;  
+        scheduleRender();  
+      }  
+      if (parsed.error) {  
+        isDone = true;  
+        streamMsgEl.innerHTML = `<span class="error">${escapeHtml(parsed.error)}</span>`;  
+      }  
+    } catch (e) {}  
+  }  
+}
+
+} catch (e) {
+isDone = true;
+hideTypingIndicator();
+hidePauseCursor();
+streamMsgEl.innerHTML = 'Erreur réseau / serveur';
+console.error(e);
+} finally {
+sendBtnEl.classList.remove('loading');
+sendBtnEl.disabled = false;
 }
 
 
