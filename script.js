@@ -571,6 +571,7 @@ function formatMessage(text) {
   }
 
 
+ 
 async function sendMessage() {
 const msg = input.value.trim();
 if (!msg) return;
@@ -765,7 +766,9 @@ console.error(e);
 } finally {
 sendBtnEl.classList.remove('loading');
 sendBtnEl.disabled = false;
+  }
 }
+
 
 
 
