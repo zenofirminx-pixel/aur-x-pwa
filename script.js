@@ -576,11 +576,10 @@ async function sendMessage() {
   if (!msg) return;
 
   const now = Date.now();
-  const chat = document.getElementById('chat');
+  const chat = document.getElementById('chat'); // ← AJOUTE JUSTE ÇA
   
-  // 1. Affiche le message user et GARDE une référence
-  const userMsgEl = addMessage(msg, 'user', now);
-  
+  addMessage(msg, 'user', now);
+
   let currentConv = conversations.find(c => c.id === currentConvId);
 
   if (!currentConv) {
@@ -633,7 +632,8 @@ async function sendMessage() {
 
     hideTypingIndicator();
 
-    if (!res.ok || !res.body) {
+    // erreur HTTP
+    if (!res.ok ||!res.body) {
       isDone = true;
       streamWrapper.remove();
       addMessage("⚠️ AurX n’arrive pas à se connecter au serveur.\nRéessaie dans quelques secondes.", 'bot', botTime, true);
@@ -658,10 +658,12 @@ async function sendMessage() {
 
         const data = trimmed.slice(5).trim();
 
+        // FIX 1: [DONE] arrive en string brute
         if (data === '[DONE]') {
           isDone = true;
           streamWrapper.remove();
 
+          // FIX 2: si rawText vide, affiche erreur au lieu de message vide
           if (!rawText.trim()) {
             addMessage("🤖 AurX a répondu vide. Réessaie.", 'bot', botTime, true);
           } else {
@@ -677,11 +679,13 @@ async function sendMessage() {
           return;
         }
 
+        // FIX 3: parse JSON seulement si ça commence par {
         if (!data.startsWith('{')) continue;
 
         try {
           const parsed = JSON.parse(data);
 
+          // FIX 4: check error en premier
           if (parsed.error) {
             isDone = true;
             streamWrapper.remove();
@@ -702,6 +706,7 @@ async function sendMessage() {
       }
     }
 
+    // fallback si pas de [DONE]
     if (!isDone) {
       streamWrapper.remove();
       if (!rawText.trim()) {
@@ -726,27 +731,6 @@ async function sendMessage() {
     sendBtnEl.disabled = false;
     hideTypingIndicator();
   }
-}
-
-// Modifie aussi addMessage pour retourner l'élément
-function addMessage(text, type, timestamp, isError = false) {
-  const chat = document.getElementById('chat');
-  if (!chat) return null;
-
-  const wrapper = document.createElement('div');
-  wrapper.className = `msg-wrapper ${type}-full`;
-  wrapper.dataset.timestamp = timestamp;
-
-  const msgEl = document.createElement('div');
-  msgEl.className = `msg ${type}-full-text`;
-  if (isError) msgEl.classList.add('error');
-  msgEl.textContent = text;
-  
-  wrapper.appendChild(msgEl);
-  chat.appendChild(wrapper);
-  chat.scrollTop = chat.scrollHeight;
-  
-  return wrapper; // ← Important
 }
 
 
