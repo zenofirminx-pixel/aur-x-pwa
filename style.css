@@ -571,12 +571,21 @@ header {
 }
 
 /* Pas de marge si plaintext */
-.msg.bot pre code[data-lang="plaintext"]::before {
+.msg.bot pre code.language-plaintext::before,
+.msg.bot pre code.language-text::before,
+.msg.bot pre code.language-plain::before {
   display: none;
 }
-.msg.bot pre:has(code[data-lang="plaintext"]) {
+.msg.bot pre:has(code.language-plaintext),
+.msg.bot pre:has(code.language-text),
+.msg.bot pre:has(code.language-plain) {
   margin-top: 12px;
 }
+
+/* Ajoute plaintext dans la liste des langages supportés */
+.msg.bot pre code.language-plaintext::before { content: "text"; }
+.msg.bot pre code.language-text::before { content: "text"; }
+.msg.bot pre code.language-plain::before { content: "text"; }
 /* ===== LANGAGES SUPPORTÉS ===== */
 
 .msg.bot pre code.language-javascript::before { content: "javascript"; }
