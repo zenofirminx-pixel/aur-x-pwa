@@ -681,51 +681,5 @@ header {
 .code-block-wrapper .copy-btn:active {
   transform: scale(0.95) !important;
 }
-/* OVERRIDE FINAL - LIENS LINKIFY */
-.msg a.code-frame,
-.msg.user a.code-frame,
-.msg.bot a.code-frame,
-.msg.bot-full-text a.code-frame,
-a.code-frame {
-  color: #0A84FF !important;
-  background: rgba(10, 132, 255, 0.12) !important;
-  border: 1px solid rgba(10, 132, 255, 0.25) !important;
-  padding: 3px 8px !important;
-  border-radius: 6px !important;
-  text-decoration: none !important;
-  display: inline-block !important;
-  max-width: 100% !important;
-  word-break: break-all !important;
-  overflow-wrap: anywhere !important;
-  white-space: normal !important;
-  font-weight: 600 !important;
-  font-size: 14px !important;
-  line-height: 1.4 !important;
-  vertical-align: baseline !important;
-  transition: all 0.15s ease !important;
-}
-
-.msg a.code-frame:hover,
-.msg.user a.code-frame:hover,
-.msg.bot a.code-frame:hover,
-.msg.bot-full-text a.code-frame:hover,
-a.code-frame:hover {
-  color: #5aa9ff !important;
-  background: rgba(10, 132, 255, 0.2) !important;
-  border-color: rgba(10, 132, 255, 0.4) !important;
-  text-decoration: underline !important;
-  box-shadow: 0 0 12px rgba(10, 132, 255, 0.3) !important;
-}
-
-.msg a.code-frame:active,
-a.code-frame:active {
-  transform: scale(0.97) !important;
-}
-
-/* Mobile */
-@media (max-width: 768px) {
-  a.code-frame {
-    font-size: 12px !important;
-    padding: 2px 6px !important;
-  }
-}
+color: #d1d5db !important; /* normal */
+color: #f3f4f6 !important; /* hover */
