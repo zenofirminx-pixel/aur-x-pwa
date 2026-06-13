@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -156,25 +156,41 @@ header .btn:active { opacity: 0.7; }
 }
 .google-user-info {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 8px;
-  padding: 10px;
+  padding: 12px;
   background: #1a1a1a;
   border-radius: 8px;
-  font-size: 13px;
+  font-size: 12px;
   color: #fff;
   margin-bottom: 8px;
 }
+.google-user-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .google-user-info img {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
 }
-.google-user-info span {
+.google-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+.google-user-detail {
+  font-size: 11px;
+  color: #888;
+  padding-left: 40px;
+}
+.google-user-detail strong {
+  color: #ccc;
 }
 .danger-btn-small { width: 100%; padding: 10px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .danger-btn-small:active { background: #ff3b30; color: #fff; }
@@ -377,8 +393,12 @@ AurX AI
 <div class="list" id="convList"></div>
 <div class="sidebar-footer">
 <div id="googleUserInfo" class="google-user-info" style="display:none;">
+<div class="google-user-row">
 <img id="googleUserPic" src="" alt="">
-<span id="googleUserName"></span>
+<span class="google-user-name" id="googleUserName"></span>
+</div>
+<div class="google-user-detail"><strong>Email:</strong> <span id="googleUserEmail"></span></div>
+<div class="google-user-detail"><strong>ID:</strong> <span id="googleUserId"></span></div>
 </div>
 <button class="google-btn" id="googleAuthBtn">
 <svg width="18" height="18" viewBox="0 0 18 18" style="vertical-align: -3px; margin-right: 8px;">
@@ -464,13 +484,17 @@ function updateGoogleUI(isConnected) {
   const userInfo = document.getElementById('googleUserInfo');
   const userPic = document.getElementById('googleUserPic');
   const userName = document.getElementById('googleUserName');
+  const userEmail = document.getElementById('googleUserEmail');
+  const userId = document.getElementById('googleUserId');
 
   if (isConnected && googleUser) {
     googleBtn.classList.add('connected');
     googleText.textContent = 'Se déconnecter';
     userInfo.style.display = 'flex';
     userPic.src = googleUser.picture || '';
-    userName.textContent = googleUser.name || googleUser.email;
+    userName.textContent = googleUser.name || 'Utilisateur';
+    userEmail.textContent = googleUser.email || 'N/A';
+    userId.textContent = googleUser.sub || googleUser.id || 'N/A';
   } else {
     googleBtn.classList.remove('connected');
     googleText.textContent = 'Se connecter avec Google';
@@ -487,8 +511,10 @@ document.getElementById('googleAuthBtn')?.addEventListener('click', async () => 
       });
       googleUser = null;
       updateGoogleUI(false);
+      window.location.href = 'https://aurx_link.vercel.app';
     } catch (e) {
       console.error('Erreur déconnexion:', e);
+      window.location.href = 'https://aurx_link.vercel.app';
     }
   } else {
     window.location.href = `${BACKEND_URL}/api/auth/google`;
