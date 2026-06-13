@@ -104,7 +104,10 @@ function selectConversation(id) {
 
 function linkify(text) {
   if (!text) return '';
-  const urlPattern = /(https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
+  
+  // Ignore les URLs qui sont déjà dans [texte](url)
+  const urlPattern = /(?<!\]\()((https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))(?!\))/g;
+  
   return text.replace(urlPattern, (url) => {
     if (url.includes('@')) {
       return `<a href="mailto:${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
