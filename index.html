@@ -511,10 +511,10 @@ document.getElementById('googleAuthBtn')?.addEventListener('click', async () => 
       });
       googleUser = null;
       updateGoogleUI(false);
-      window.location.href = 'https://aurx_link.vercel.app';
+      window.location.href = 'https://aurxlink.vercel.app/';
     } catch (e) {
       console.error('Erreur déconnexion:', e);
-      window.location.href = 'https://aurx-link.vercel.app/';
+      window.location.href = 'https://aurxlink.vercel.app/';
     }
   } else {
     window.location.href = `${BACKEND_URL}/api/auth/google`;
