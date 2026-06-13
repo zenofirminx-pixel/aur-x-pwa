@@ -9,17 +9,17 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="msapplication-navbutton-color" content="#000">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preload" href="icon-static.png" as="image">
 
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
 <style>
-/* Votre CSS existant */
+/* Ton CSS existant */
 header .btn {
   position: absolute;
   top: 50%;
@@ -265,18 +265,27 @@ header .btn:active { opacity: 0.7; }
 }
 .typing-text.show { opacity: 1; }
 
-/* FIX KATEX VISIBILITÉ SOMBRE */
+/* KATEX THEME SOMBRE + NO FRAME FIX */
 .katex { 
-  color: #ffffff !important; 
-  font-size: 1.15em;
+  color: #fff !important; 
+  font-size: 1.1em;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
 }
 .katex-display { 
   margin: 1.2em 0; 
   overflow-x: auto;
-  overflow-y: hidden;
+  border: none !important;
   background: transparent !important;
 }
+.katex-display > .katex { 
+  display: block; 
+  text-align: center;
+  border: none !important;
+}
 .katex-html {
+  border: none !important;
   background: transparent !important;
 }
 
@@ -498,11 +507,11 @@ document.getElementById('googleAuthBtn')?.addEventListener('click', async () => 
         method: 'POST',
         credentials: 'include' 
       });
-      googleUser = null;
-      updateGoogleUI(false);
-      window.location.href = 'https://aurx_link.vercel.app';
     } catch (e) {
       console.error('Erreur déconnexion:', e);
+    } finally {
+      googleUser = null;
+      updateGoogleUI(false);
       window.location.href = 'https://aurx_link.vercel.app';
     }
   } else {
@@ -519,10 +528,18 @@ function toggleWelcome() {
   const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
+// === ATTENDRE QUE KATEX SOIT CHARGÉ ===
+function waitForKatex(callback) {
+  if (window.renderMathInElement) {
+    callback();
+  } else {
+    setTimeout(() => waitForKatex(callback), 100);
+  }
+}
 
-// === RENDER MATH KATEX SÉCURISÉ ===
+// === RENDER MATH KATEX ===
 function renderMath(element = document.getElementById('chat')) {
-  if (!element || typeof renderMathInElement === 'undefined') return;
+  if (typeof renderMathInElement === 'undefined') return;
 
   renderMathInElement(element, {
     delimiters: [
@@ -537,38 +554,30 @@ function renderMath(element = document.getElementById('chat')) {
 
 let renderTimeout = null;
 
-// === INIT DOM & OBSERVER ===
+// === INIT DOM ===
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   toggleWelcome();
 
-  // On s'assure que KaTeX est disponible avant d'exécuter
-  const initObserver = () => {
-    renderMath();
-    
+  waitForKatex(() => {
+    setTimeout(() => renderMath(), 300);
+
     const chat = document.getElementById('chat');
-    if (!chat) return;
 
     const observer = new MutationObserver(() => {
       clearTimeout(renderTimeout);
+
       renderTimeout = setTimeout(() => {
         renderMath(chat);
         toggleWelcome();
-      }, 50); // Délai réduit pour plus de réactivité lors du streaming de l'IA
+      }, 200);
     });
 
     observer.observe(chat, {
       childList: true,
       subtree: true
     });
-  };
-
-  if (typeof renderMathInElement !== 'undefined') {
-    initObserver();
-  } else {
-    // Fallback de sécurité si le script externe met du temps à se charger
-    window.addEventListener('load', initObserver);
-  }
+  });
 });
 </script>
 </body>
