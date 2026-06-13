@@ -1,6 +1,6 @@
 const CONFIG = {
   ACTIVE_API: 'openai',
-  ENDPOINTS: { openai: 'https://aurx-security.vercel.app/api/secure-chat.js' },
+  ENDPOINTS: { openai: 'https://aurx-security.vercel.app/api/chat.js' },
   MODELS: { openai: 'gpt-4o-mini' }
 };
 
