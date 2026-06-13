@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -21,7 +21,7 @@
 
 <style>
 /* Ton CSS existant */
-header .btn {
+header.btn {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -33,7 +33,7 @@ header .btn {
   z-index: 1001;
   cursor: pointer;
 }
-header .btn:active { opacity: 0.7; }
+header.btn:active { opacity: 0.7; }
 #historyBtn { left: 16px; }
 #settingsBtn { right: 16px; }
 .settings-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
@@ -59,8 +59,8 @@ header .btn:active { opacity: 0.7; }
   cursor: not-allowed;
 }
 #continueBtn.active { background: #0A84FF; color: #fff; cursor: pointer; }
-#continueBtn.loading .btn-text { opacity: 0; position: absolute; }
-#continueBtn .loader {
+#continueBtn.loading.btn-text { opacity: 0; position: absolute; }
+#continueBtn.loader {
   display: none;
   width: 18px;
   height: 18px;
@@ -69,7 +69,7 @@ header .btn:active { opacity: 0.7; }
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-#continueBtn.loading .loader { display: block; }
+#continueBtn.loading.loader { display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .send-btn {
   width: 40px;
@@ -87,7 +87,7 @@ header .btn:active { opacity: 0.7; }
 }
 .send-btn:active { transform: scale(0.92); }
 .send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.send-btn .loader {
+.send-btn.loader {
   display: none;
   width: 18px;
   height: 18px;
@@ -96,7 +96,7 @@ header .btn:active { opacity: 0.7; }
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
-.send-btn.loading .loader { display: block; }
+.send-btn.loading.loader { display: block; }
 .send-btn.loading svg { display: none; }
 .circle-progress { position: relative; width: 32px; height: 32px; flex-shrink: 0; margin-left: 8px; list-style: none; }
 .circle-progress svg { transform: rotate(-90deg); }
@@ -113,21 +113,23 @@ header .btn:active { opacity: 0.7; }
 .settings-body { overflow-y: auto; padding: 16px; background: #111; color: #fff; }
 .danger-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .danger-btn:active { background: #ff3b30; color: #fff; }
+.account-btn { width: 100%; padding: 12px; background: #0A84FF; border: none; color: #fff; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.account-btn:active { opacity: 0.8; }
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1999; pointer-events: auto; }
 .overlay.open { display: block; }
 .sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #111; border-right: 1px solid #2a2a2a; transition: left 0.3s ease; z-index: 1500; display: flex; flex-direction: column; }
 .sidebar.open { left: 0; }
 .sidebar header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #2a2a2a; font-weight: 600; flex-shrink: 0; }
 .sidebar-header-left { display: flex; align-items: center; gap: 10px; }
-.new-chat-btn { position: static !important; transform: none; padding: 4px 8px; font-size: 13px; border-radius: 8px; }
+.new-chat-btn { position: static!important; transform: none; padding: 4px 8px; font-size: 13px; border-radius: 8px; }
 .list { padding: 8px; overflow-y: auto; flex: 1; }
-.sidebar-footer { 
-  padding: 12px; 
-  border-top: 1px solid #2a2a2a; 
-  flex-shrink: 0; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 10px; 
+.sidebar-footer {
+  padding: 12px;
+  border-top: 1px solid #2a2a2a;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .google-btn {
   width: 100%;
@@ -205,11 +207,11 @@ header .btn:active { opacity: 0.7; }
 }
 
 /* TYPING INDICATOR FIXÉ - PLUS DE CROP */
-.typing-wrapper { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  padding: 8px 16px; 
+.typing-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
   margin-bottom: 12px;
 }
 
@@ -242,58 +244,149 @@ header .btn:active { opacity: 0.7; }
   to { transform: rotate(360deg); }
 }
 
-.typing-text { 
-  font-size: 14px; 
-  color: #888; 
-  opacity: 0; 
+.typing-text {
+  font-size: 14px;
+  color: #888;
+  opacity: 0;
   transition: opacity 0.3s;
 }
 .typing-text.show { opacity: 1; }
 
 /* KATEX THEME SOMBRE + NO FRAME FIX */
-.katex { 
-  color: #fff !important; 
+.katex {
+  color: #fff!important;
   font-size: 1.1em;
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
+  border: none!important;
+  background: transparent!important;
+  padding: 0!important;
 }
-.katex-display { 
-  margin: 1.2em 0; 
+.katex-display {
+  margin: 1.2em 0;
   overflow-x: auto;
-  border: none !important;
-  background: transparent !important;
+  border: none!important;
+  background: transparent!important;
 }
-.katex-display > .katex { 
-  display: block; 
+.katex-display >.katex {
+  display: block;
   text-align: center;
-  border: none !important;
+  border: none!important;
 }
 .katex-html {
-  border: none !important;
-  background: transparent !important;
+  border: none!important;
+  background: transparent!important;
 }
 
 /* VIRE LES FRAMES SUR LES LIENS ET CODE */
-a, a:has(.katex), a .katex {
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
+a, a:has(.katex), a.katex {
+  border: none!important;
+  background: transparent!important;
+  padding: 0!important;
   text-decoration: none;
 }
 a:hover {
   text-decoration: underline;
 }
 .code-frame {
-  border: none !important;
-  padding: 0 !important;
-  background: transparent !important;
+  border: none!important;
+  padding: 0!important;
+  background: transparent!important;
 }
 .inline-code {
   background: #1a1a1a;
   padding: 2px 6px;
   border-radius: 4px;
   font-family: monospace;
+}
+
+/* ESPACE COMPTE - MÉMOIRE */
+.memory-item {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.memory-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.memory-item-key {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0A84FF;
+}
+.memory-delete {
+  background: transparent;
+  border: none;
+  color: #ff3b30;
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+}
+.memory-item-value {
+  font-size: 14px;
+  color: #ccc;
+  line-height: 1.4;
+}
+.memory-add-form {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 12px;
+  margin-top: 12px;
+}
+.memory-input {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-family: inherit;
+}
+.memory-input:focus {
+  outline: none;
+  border-color: #0A84FF;
+}
+.memory-textarea {
+  width: 100%;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+}
+.memory-textarea:focus {
+  outline: none;
+  border-color: #0A84FF;
+}
+.memory-save-btn {
+  width: 100%;
+  padding: 10px;
+  background: #0A84FF;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.memory-save-btn:active { opacity: 0.8; }
+.memory-empty {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  font-size: 14px;
 }
 </style>
 </head>
@@ -424,7 +517,32 @@ AurX AI
 </div>
 </div>
 <div class="settings-section">
+<button class="account-btn" id="accountBtn">Espace Compte</button>
+</div>
+<div class="settings-section">
 <button class="danger-btn" id="reviewTermsBtn">Revoir les conditions</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- MODAL ESPACE COMPTE -->
+<div class="modal" id="accountModal">
+<div>
+<div class="settings-header">
+<h3>Espace Compte</h3>
+<button class="close-btn" id="closeAccount">×</button>
+</div>
+<div class="settings-body">
+<div class="settings-section">
+<h3>🧠 Mémoire Personnalisée</h3>
+<p style="font-size: 13px; color: #888; margin-bottom: 12px;">Ajoute des infos sur toi pour que l'IA te connaisse mieux</p>
+<div id="memoryList"></div>
+<div class="memory-add-form">
+<input type="text" id="memoryKey" class="memory-input" placeholder="Clé (ex: Prénom, Métier, Passion)">
+<textarea id="memoryValue" class="memory-textarea" placeholder="Valeur (ex: Firmin, Développeur, Tech)"></textarea>
+<button class="memory-save-btn" id="saveMemoryBtn">Ajouter à la mémoire</button>
+</div>
 </div>
 </div>
 </div>
@@ -481,9 +599,9 @@ function updateGoogleUI(isConnected) {
 document.getElementById('googleAuthBtn')?.addEventListener('click', async () => {
   if (googleUser) {
     try {
-      await fetch(`${BACKEND_URL}/api/auth/logout`, { 
+      await fetch(`${BACKEND_URL}/api/auth/logout`, {
         method: 'POST',
-        credentials: 'include' 
+        credentials: 'include'
       });
       googleUser = null;
       updateGoogleUI(false);
@@ -501,8 +619,8 @@ function toggleWelcome() {
   const welcome = document.getElementById('welcome');
   if (!welcome) return;
 
-  const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
-  welcome.style.display = hasMessages ? 'none' : 'flex';
+  const hasMessages = chat.querySelector('.msg-wrapper,.typing-wrapper');
+  welcome.style.display = hasMessages? 'none' : 'flex';
 }
 // === ATTENDRE QUE KATEX SOIT CHARGÉ ===
 function waitForKatex(callback) {
@@ -529,6 +647,73 @@ function renderMath(element = document.getElementById('chat')) {
 }
 
 let renderTimeout = null;
+
+// === GESTION MÉMOIRE PERSO ===
+function loadMemory() {
+  const memory = JSON.parse(localStorage.getItem('aurx_memory') || '{}');
+  const memoryList = document.getElementById('memoryList');
+  memoryList.innerHTML = '';
+
+  const keys = Object.keys(memory);
+  if (keys.length === 0) {
+    memoryList.innerHTML = '<div class="memory-empty">Aucune info enregistrée</div>';
+    return;
+  }
+
+  keys.forEach(key => {
+    const item = document.createElement('div');
+    item.className = 'memory-item';
+    item.innerHTML = `
+      <div class="memory-item-header">
+        <div class="memory-item-key">${key}</div>
+        <button class="memory-delete" data-key="${key}">×</button>
+      </div>
+      <div class="memory-item-value">${memory[key]}</div>
+    `;
+    memoryList.appendChild(item);
+  });
+
+  document.querySelectorAll('.memory-delete').forEach(btn => {
+    btn.onclick = () => {
+      const key = btn.dataset.key;
+      const memory = JSON.parse(localStorage.getItem('aurx_memory') || '{}');
+      delete memory[key];
+      localStorage.setItem('aurx_memory', JSON.stringify(memory));
+      loadMemory();
+    };
+  });
+}
+
+document.getElementById('saveMemoryBtn')?.addEventListener('click', () => {
+  const key = document.getElementById('memoryKey').value.trim();
+  const value = document.getElementById('memoryValue').value.trim();
+
+  if (!key ||!value) {
+    alert('Remplis les deux champs');
+    return;
+  }
+
+  const memory = JSON.parse(localStorage.getItem('aurx_memory') || '{}');
+  memory[key] = value;
+  localStorage.setItem('aurx_memory', JSON.stringify(memory));
+
+  document.getElementById('memoryKey').value = '';
+  document.getElementById('memoryValue').value = '';
+  loadMemory();
+});
+
+// === MODALS ===
+document.getElementById('accountBtn')?.addEventListener('click', () => {
+  document.getElementById('settingsModal').classList.remove('open');
+  document.getElementById('accountModal').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+  loadMemory();
+});
+
+document.getElementById('closeAccount')?.addEventListener('click', () => {
+  document.getElementById('accountModal').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+});
 
 // === INIT DOM ===
 document.addEventListener('DOMContentLoaded', () => {
