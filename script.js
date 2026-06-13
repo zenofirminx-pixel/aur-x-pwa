@@ -101,17 +101,16 @@ function selectConversation(id) {
   renderMessages();
 }
 
-
 function linkify(text) {
   if (!text) return '';
 
-  // 1. On convertit d'abord la syntaxe Markdown [Texte](URL) en vrais liens HTML
+  // 1. On gère d'abord le Markdown [Texte](URL)
   const markdownPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
   let formattedText = text.replace(markdownPattern, (match, linkText, url) => {
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${linkText}</a>`;
   });
 
-  // 2. On convertit les URL brutes restantes (sans toucher à celles déjà intégrées dans href)
+  // 2. On gère ensuite les URL brutes, les www. et les emails restants
   const urlPattern = /(?<!href=")(https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
   
   return formattedText.replace(urlPattern, (url) => {
@@ -124,6 +123,8 @@ function linkify(text) {
     return `<a href="${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
   });
 }
+
+
 
 
 function autoMathify(text) {
