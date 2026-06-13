@@ -105,10 +105,18 @@ function selectConversation(id) {
 function linkify(text) {
   if (!text) return '';
   
-  // Ignore les URLs qui sont déjà dans [texte](url)
-  const urlPattern = /(?<!\]\()((https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}))(?!\))/g;
+  // Match tout mais on skip si c'est dans du markdown
+  const urlPattern = /(https?:\/\/[^\s<]+)|(www\.[^\s<]+)|([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
   
-  return text.replace(urlPattern, (url) => {
+  return text.replace(urlPattern, (url, offset) => {
+    // Check si l'URL est dans [texte](url)
+    const before = text.slice(Math.max(0, offset - 2), offset);
+    const after = text[offset + url.length];
+    
+    if (before === '](' && after === ')') {
+      return url; // Laisse intact si c'est du markdown
+    }
+    
     if (url.includes('@')) {
       return `<a href="mailto:${url}" class="code-frame" target="_blank" rel="noopener">${url}</a>`;
     }
