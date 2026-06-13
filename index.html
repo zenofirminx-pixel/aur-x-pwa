@@ -9,18 +9,17 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
 <meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="msapplication-navbutton-color" content="#000">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preload" href="icon-static.png" as="image">
 
-<!-- KATEX CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-
 <style>
-/* Ton CSS existant */
+/* Votre CSS existant */
 header .btn {
   position: absolute;
   top: 50%;
@@ -266,27 +265,18 @@ header .btn:active { opacity: 0.7; }
 }
 .typing-text.show { opacity: 1; }
 
-/* KATEX THEME SOMBRE + NO FRAME FIX */
+/* FIX KATEX VISIBILITÉ SOMBRE */
 .katex { 
-  color: #fff !important; 
-  font-size: 1.1em;
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
+  color: #ffffff !important; 
+  font-size: 1.15em;
 }
 .katex-display { 
   margin: 1.2em 0; 
   overflow-x: auto;
-  border: none !important;
+  overflow-y: hidden;
   background: transparent !important;
 }
-.katex-display > .katex { 
-  display: block; 
-  text-align: center;
-  border: none !important;
-}
 .katex-html {
-  border: none !important;
   background: transparent !important;
 }
 
@@ -455,7 +445,6 @@ AurX AI
 <script src="config.js"></script>
 <script src="script.js"></script>
 
-<!-- KATEX JS -->
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
@@ -530,18 +519,10 @@ function toggleWelcome() {
   const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
-// === ATTENDRE QUE KATEX SOIT CHARGÉ ===
-function waitForKatex(callback) {
-  if (window.renderMathInElement) {
-    callback();
-  } else {
-    setTimeout(() => waitForKatex(callback), 100);
-  }
-}
 
-// === RENDER MATH KATEX ===
+// === RENDER MATH KATEX SÉCURISÉ ===
 function renderMath(element = document.getElementById('chat')) {
-  if (typeof renderMathInElement === 'undefined') return;
+  if (!element || typeof renderMathInElement === 'undefined') return;
 
   renderMathInElement(element, {
     delimiters: [
@@ -556,30 +537,38 @@ function renderMath(element = document.getElementById('chat')) {
 
 let renderTimeout = null;
 
-// === INIT DOM ===
+// === INIT DOM & OBSERVER ===
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   toggleWelcome();
 
-  waitForKatex(() => {
-    setTimeout(() => renderMath(), 300);
-
+  // On s'assure que KaTeX est disponible avant d'exécuter
+  const initObserver = () => {
+    renderMath();
+    
     const chat = document.getElementById('chat');
+    if (!chat) return;
 
     const observer = new MutationObserver(() => {
       clearTimeout(renderTimeout);
-
       renderTimeout = setTimeout(() => {
         renderMath(chat);
         toggleWelcome();
-      }, 200);
+      }, 50); // Délai réduit pour plus de réactivité lors du streaming de l'IA
     });
 
     observer.observe(chat, {
       childList: true,
       subtree: true
     });
-  });
+  };
+
+  if (typeof renderMathInElement !== 'undefined') {
+    initObserver();
+  } else {
+    // Fallback de sécurité si le script externe met du temps à se charger
+    window.addEventListener('load', initObserver);
+  }
 });
 </script>
 </body>
