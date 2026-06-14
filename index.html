@@ -9,18 +9,17 @@
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+
 <meta name="theme-color" content="#000">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="msapplication-navbutton-color" content="#000">
 <link rel="apple-touch-icon" href="icon-192.png">
 <link rel="preload" href="icon-static.png" as="image">
 
-<!-- KATEX CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
-
 <style>
-/* Ton CSS existant */
+/* CSS Existant et ajustements */
 header .btn {
   position: absolute;
   top: 50%;
@@ -184,10 +183,22 @@ header .btn:active { opacity: 0.7; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.google-user-verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 10px;
+  color: #34A853;
+  background: rgba(52, 168, 83, 0.1);
+  padding: 2px 6px;
+  border-radius: 20px;
+  font-weight: 500;
+}
 .google-user-detail {
   font-size: 11px;
   color: #888;
   padding-left: 40px;
+  word-break: break-all;
 }
 .google-user-detail strong {
   color: #ccc;
@@ -395,10 +406,14 @@ AurX AI
 <div id="googleUserInfo" class="google-user-info" style="display:none;">
 <div class="google-user-row">
 <img id="googleUserPic" src="" alt="">
-<span class="google-user-name" id="googleUserName"></span>
+<div>
+<div class="google-user-name" id="googleUserName"></div>
+<div class="google-user-verified" id="googleUserVerified">✓ Vérifié</div>
+</div>
 </div>
 <div class="google-user-detail"><strong>Email:</strong> <span id="googleUserEmail"></span></div>
 <div class="google-user-detail"><strong>ID:</strong> <span id="googleUserId"></span></div>
+<div class="google-user-detail"><strong>Langue:</strong> <span id="googleUserLang"></span></div>
 </div>
 <button class="google-btn" id="googleAuthBtn">
 <svg width="18" height="18" viewBox="0 0 18 18" style="vertical-align: -3px; margin-right: 8px;">
@@ -420,6 +435,14 @@ AurX AI
 <button class="close-btn" id="closeSettings">×</button>
 </div>
 <div class="settings-body">
+<div class="settings-section" style="margin-top: 0; border-top: none; padding-top: 0;">
+<h3>👤 Statut du Compte</h3>
+<div class="setting-item">
+<label>Synchronisation Cloud</label>
+<div class="info-text" id="accountSyncStatus">Non connecté — Mode local actif</div>
+</div>
+</div>
+
 <div class="settings-section">
 <h3>👑 Créateur FIRMINX</h3>
 <div class="setting-item">
@@ -455,7 +478,6 @@ AurX AI
 <script src="config.js"></script>
 <script src="script.js"></script>
 
-<!-- KATEX JS -->
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
@@ -472,9 +494,12 @@ async function checkAuth() {
     if (res.ok) {
       googleUser = await res.json();
       updateGoogleUI(true);
+    } else {
+      updateGoogleUI(false);
     }
   } catch (e) {
     console.log('Pas encore connecté');
+    updateGoogleUI(false);
   }
 }
 
@@ -486,19 +511,45 @@ function updateGoogleUI(isConnected) {
   const userName = document.getElementById('googleUserName');
   const userEmail = document.getElementById('googleUserEmail');
   const userId = document.getElementById('googleUserId');
+  const userLang = document.getElementById('googleUserLang');
+  const userVerified = document.getElementById('googleUserVerified');
+  const accountSyncStatus = document.getElementById('accountSyncStatus');
 
   if (isConnected && googleUser) {
     googleBtn.classList.add('connected');
     googleText.textContent = 'Se déconnecter';
     userInfo.style.display = 'flex';
+    
+    // Remplissage des anciennes + nouvelles données
     userPic.src = googleUser.picture || '';
     userName.textContent = googleUser.name || 'Utilisateur';
     userEmail.textContent = googleUser.email || 'N/A';
     userId.textContent = googleUser.sub || googleUser.id || 'N/A';
+    userLang.textContent = (googleUser.locale || 'fr').toUpperCase();
+    
+    // Badge de vérification Google
+    if (googleUser.email_verified === false) {
+      userVerified.textContent = 'Non vérifié';
+      userVerified.style.color = '#ff3b30';
+      userVerified.style.background = 'rgba(255, 59, 48, 0.1)';
+    } else {
+      userVerified.textContent = '✓ Vérifié';
+      userVerified.style.color = '#34A853';
+      userVerified.style.background = 'rgba(52, 168, 83, 0.1)';
+    }
+
+    // Mise à jour du paramètre dans la Modal
+    if (accountSyncStatus) {
+      accountSyncStatus.innerHTML = `Connecté en tant que <strong>${googleUser.name}</strong>. Vos préférences et conversations sont sauvegardées de manière sécurisée.`;
+    }
   } else {
     googleBtn.classList.remove('connected');
     googleText.textContent = 'Se connecter avec Google';
     userInfo.style.display = 'none';
+    
+    if (accountSyncStatus) {
+      accountSyncStatus.textContent = 'Non connecté — Mode local actif';
+    }
   }
 }
 
@@ -530,6 +581,7 @@ function toggleWelcome() {
   const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
+
 // === ATTENDRE QUE KATEX SOIT CHARGÉ ===
 function waitForKatex(callback) {
   if (window.renderMathInElement) {
