@@ -383,7 +383,7 @@ a:hover { text-decoration: underline; }
 
 <div id="termsScreen">
   <div id="termsContent">
-    <h1>Confidentialité & Utilisation</h1>
+    <h2>Confidentialité & Utilisation</h2>
     <p class="subtitle">ChatAurX - Dernière mise à jour : Juin 2026</p>
 
     <div class="section">
@@ -625,7 +625,7 @@ AurX AI
     <div class="setting-item">
       <label>Espace de stockage local</label>
       <button class="settings-action-btn" onclick="alert('IndexDB nettoyé avec succès !')">Vider le cache des messages</button>
-      <button class="settings-action-btn" onclick="alert('Exportation au format JSON lancée.')">Exporter les conversations (.json)</button>
+      <button class="settings-action-btn" id="exportConvsBtn">Exporter les conversations (.json)</button>
     </div>
   </div>
 
@@ -774,6 +774,35 @@ document.getElementById('reviewTermsBtn')?.addEventListener('click', () => {
   document.getElementById('settingsModal').classList.remove('open');
   document.getElementById('overlay').classList.remove('open');
   if (termsScreen) termsScreen.style.display = 'flex';
+});
+
+// === EXPORTATION DES CONVERSATIONS EN JSON ===
+document.getElementById('exportConvsBtn')?.addEventListener('click', () => {
+  try {
+    // Récupération des conversations stockées localement
+    const conversations = localStorage.getItem('aurx_conversations');
+    
+    if (!conversations || conversations === '[]') {
+      alert('Aucune conversation à exporter dans votre historique local.');
+      return;
+    }
+
+    // Création du fichier téléchargeable au format JSON
+    const blob = new Blob([conversations], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aurx-conversations-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Erreur d'exportation :", error);
+    alert("Impossible d'exporter vos données pour le moment.");
+  }
 });
 
 // === WELCOME TOGGLE ===
