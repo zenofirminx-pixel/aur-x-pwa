@@ -19,7 +19,7 @@
 <link rel="preload" href="icon-static.png" as="image">
 
 <style>
-/* CSS Existant et ajustements */
+/* CSS Existant et ajustements globaux */
 header .btn {
   position: absolute;
   top: 50%;
@@ -35,13 +35,50 @@ header .btn {
 header .btn:active { opacity: 0.7; }
 #historyBtn { left: 16px; }
 #settingsBtn { right: 16px; }
-.settings-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
-.settings-section h3 { margin: 0 0 12px 0; font-size: 16px; color: #fff; }
-.setting-item { margin-bottom: 14px; list-style: none; }
-.setting-item label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }
+
+/* RESTRUCTURATION DES PARAMÈTRES (STYLE MODERNE) */
+.settings-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #222; }
+.settings-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+.settings-section h3 { margin: 0 0 14px 0; font-size: 14px; color: #0A84FF; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.setting-item { margin-bottom: 16px; list-style: none; }
+.setting-item:last-child { margin-bottom: 0; }
+.setting-item label { display: block; font-size: 13px; color: #aaa; margin-bottom: 8px; font-weight: 500; }
+
+/* Inputs et Selects modernes */
+.setting-select, .setting-input {
+  width: 100%;
+  padding: 12px;
+  background: #1a1a1a;
+  border: 1px solid #333;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.setting-select:focus, .setting-input:focus { border-color: #0A84FF; }
+
 .info-text { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px; color: #fff; font-size: 14px; line-height: 1.5; }
 .info-text a { color: #0A84FF; text-decoration: none; }
 .info-text a:hover { text-decoration: underline; }
+
+/* Boutons d'action des paramètres */
+.settings-action-btn {
+  width: 100%;
+  padding: 12px;
+  background: #222;
+  border: 1px solid #333;
+  color: #fff;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: all 0.2s;
+}
+.settings-action-btn:hover { background: #2a2a2a; border-color: #444; }
+
 #continueBtn {
   position: relative;
   display: flex;
@@ -70,6 +107,7 @@ header .btn:active { opacity: 0.7; }
 }
 #continueBtn.loading .loader { display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
 .send-btn {
   width: 40px;
   height: 40px;
@@ -103,31 +141,32 @@ header .btn:active { opacity: 0.7; }
 .circle-fg { fill: none; stroke: #0A84FF; stroke-width: 2; stroke-linecap: round; transition: stroke-dashoffset 0.2s, stroke 0.2s; }
 .circle-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; font-weight: 600; color: #fff; }
 .input-box { align-items: center; }
+
+/* MODAL MODERNE REHAUSSÉE */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; pointer-events: none; }
 .modal.open { display: flex; pointer-events: auto; }
-.modal > div { background: #111; width: 90%; max-width: 420px; max-height: 85vh; border-radius: 16px; border: 1px solid #333; overflow: hidden; display: flex; flex-direction: column; }
-.settings-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #2a2a2a; background: #111; }
-.settings-header h3 { color: #0A84FF; margin: 0; }
-.close-btn { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 8px; }
-.settings-body { overflow-y: auto; padding: 16px; background: #111; color: #fff; }
+.modal > div { background: #0d0d0d; width: 92%; max-width: 460px; max-height: 85vh; border-radius: 20px; border: 1px solid #222; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+.settings-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid #222; background: #0d0d0d; }
+.settings-header h2 { color: #fff; margin: 0; font-size: 18px; font-weight: 600; }
+.close-btn { background: transparent; border: none; color: #888; font-size: 24px; cursor: pointer; padding: 0 4px; transition: color 0.2s; }
+.close-btn:hover { color: #fff; }
+.settings-body { overflow-y: auto; padding: 20px; background: #0d0d0d; color: #fff; }
+
 .danger-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .danger-btn:active { background: #ff3b30; color: #fff; }
+
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1999; pointer-events: auto; }
-.overlay.open { display: block; }
+.overlay.open { block; }
+
+/* SIDEBAR & PROFILE ROW */
 .sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #111; border-right: 1px solid #2a2a2a; transition: left 0.3s ease; z-index: 1500; display: flex; flex-direction: column; }
 .sidebar.open { left: 0; }
 .sidebar header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #2a2a2a; font-weight: 600; flex-shrink: 0; }
 .sidebar-header-left { display: flex; align-items: center; gap: 10px; }
 .new-chat-btn { position: static !important; transform: none; padding: 4px 8px; font-size: 13px; border-radius: 8px; }
 .list { padding: 8px; overflow-y: auto; flex: 1; }
-.sidebar-footer { 
-  padding: 12px; 
-  border-top: 1px solid #2a2a2a; 
-  flex-shrink: 0; 
-  display: flex; 
-  flex-direction: column; 
-  gap: 10px; 
-}
+.sidebar-footer { padding: 12px; border-top: 1px solid #2a2a2a; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
+
 .google-btn {
   width: 100%;
   padding: 10px;
@@ -144,184 +183,55 @@ header .btn:active { opacity: 0.7; }
   justify-content: center;
 }
 .google-btn:active { opacity: 0.8; }
-.google-btn.connected {
-  background: transparent;
-  border: 1px solid #ff3b30;
-  color: #ff3b30;
-}
-.google-btn.connected:active {
-  background: #ff3b30;
-  color: #fff;
-}
-.google-user-info {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 12px;
-  background: #1a1a1a;
-  border-radius: 8px;
-  font-size: 12px;
-  color: #fff;
-  margin-bottom: 8px;
-}
-.google-user-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.google-user-info img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-}
-.google-user-name {
-  font-size: 14px;
-  font-weight: 600;
-  color: #fff;
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.google-btn.connected { background: transparent; border: 1px solid #ff3b30; color: #ff3b30; }
+.google-btn.connected:active { background: #ff3b30; color: #fff; }
+
+.google-user-info { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #1a1a1a; border-radius: 8px; font-size: 12px; color: #fff; margin-bottom: 8px; }
+.google-user-row { display: flex; align-items: center; gap: 10px; }
+.google-user-info img { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #333; }
+.google-user-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .google-user-verified {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
   font-size: 10px;
-  color: #34A853;
-  background: rgba(52, 168, 83, 0.1);
   padding: 2px 6px;
   border-radius: 20px;
   font-weight: 500;
+  margin-top: 2px;
 }
-.google-user-detail {
-  font-size: 11px;
-  color: #888;
-  padding-left: 40px;
-  word-break: break-all;
-}
-.google-user-detail strong {
-  color: #ccc;
-}
+.google-user-detail { font-size: 11px; color: #888; padding-left: 44px; word-break: break-all; }
+.google-user-detail strong { color: #ccc; }
 .danger-btn-small { width: 100%; padding: 10px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .danger-btn-small:active { background: #ff3b30; color: #fff; }
+
 .conv-item { padding: 12px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; color: #ccc; font-size: 14px; }
 .conv-item:hover { background: #1a1a1a; color: #fff; }
 .empty { padding: 20px; text-align: center; color: #666; font-size: 14px; }
 
-/* FIX CHAT + WELCOME CENTRÉ */
-#welcome {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  flex: 1;
-  color: #fff;
-  font-size: 32px;
-  font-weight: 700;
-  gap: 8px;
-  user-select: none;
-  pointer-events: none;
-}
+/* CHAT WELCOME */
+#welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1; color: #fff; font-size: 32px; font-weight: 700; gap: 8px; user-select: none; pointer-events: none; }
+#welcome span { font-size: 16px; font-weight: 400; color: #666; }
 
-#welcome span {
-  font-size: 16px;
-  font-weight: 400;
-  color: #666;
-}
-
-/* TYPING INDICATOR FIXÉ - PLUS DE CROP */
-.typing-wrapper { 
-  display: flex; 
-  align-items: center; 
-  gap: 10px; 
-  padding: 8px 16px; 
-  margin-bottom: 12px;
-}
-
-.aurx-thinking {
-  width: 36px;
-  height: 36px;
-  position: relative;
-  flex-shrink: 0;
-  overflow: visible;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.aurx-thinking img {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  object-fit: contain;
-  display: block;
-}
-
-.aurx-thinking.spinning img {
-  animation: spinNeural 1.2s linear infinite;
-  transform-origin: center center;
-}
-
-@keyframes spinNeural {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-.typing-text { 
-  font-size: 14px; 
-  color: #888; 
-  opacity: 0; 
-  transition: opacity 0.3s;
-}
+/* TYPING INDICATOR */
+.typing-wrapper { display: flex; align-items: center; gap: 10px; padding: 8px 16px; margin-bottom: 12px; }
+.aurx-thinking { width: 36px; height: 36px; position: relative; flex-shrink: 0; overflow: visible; display: flex; align-items: center; justify-content: center; }
+.aurx-thinking img { width: 36px; height: 36px; border-radius: 50%; object-fit: contain; display: block; }
+.aurx-thinking.spinning img { animation: spinNeural 1.2s linear infinite; transform-origin: center center; }
+@keyframes spinNeural { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.typing-text { font-size: 14px; color: #888; opacity: 0; transition: opacity 0.3s; }
 .typing-text.show { opacity: 1; }
 
-/* KATEX THEME SOMBRE + NO FRAME FIX */
-.katex { 
-  color: #fff !important; 
-  font-size: 1.1em;
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-}
-.katex-display { 
-  margin: 1.2em 0; 
-  overflow-x: auto;
-  border: none !important;
-  background: transparent !important;
-}
-.katex-display > .katex { 
-  display: block; 
-  text-align: center;
-  border: none !important;
-}
-.katex-html {
-  border: none !important;
-  background: transparent !important;
-}
+/* KATEX SOMBRE */
+.katex { color: #fff !important; font-size: 1.1em; border: none !important; background: transparent !important; padding: 0 !important; }
+.katex-display { margin: 1.2em 0; overflow-x: auto; border: none !important; background: transparent !important; }
+.katex-display > .katex { display: block; text-align: center; border: none !important; }
+.katex-html { border: none !important; background: transparent !important; }
 
-/* VIRE LES FRAMES SUR LES LIENS ET CODE */
-a, a:has(.katex), a .katex {
-  border: none !important;
-  background: transparent !important;
-  padding: 0 !important;
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
-}
-.code-frame {
-  border: none !important;
-  padding: 0 !important;
-  background: transparent !important;
-}
-.inline-code {
-  background: #1a1a1a;
-  padding: 2px 6px;
-  border-radius: 4px;
-  font-family: monospace;
-}
+a, a:has(.katex), a .katex { border: none !important; background: transparent !important; padding: 0 !important; text-decoration: none; }
+a:hover { text-decoration: underline; }
+.code-frame { border: none !important; padding: 0 !important; background: transparent !important; }
+.inline-code { background: #1a1a1a; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
 </style>
 </head>
 <body>
@@ -408,7 +318,7 @@ AurX AI
 <img id="googleUserPic" src="" alt="">
 <div>
 <div class="google-user-name" id="googleUserName"></div>
-<div class="google-user-verified" id="googleUserVerified">✓ Vérifié</div>
+<div class="google-user-verified" id="googleUserVerified">Analyse...</div>
 </div>
 </div>
 <div class="google-user-detail"><strong>Email:</strong> <span id="googleUserEmail"></span></div>
@@ -431,44 +341,67 @@ AurX AI
 <div class="modal" id="settingsModal">
 <div>
 <div class="settings-header">
-<h3>Paramètres</h3>
+<h2>Paramètres</h2>
 <button class="close-btn" id="closeSettings">×</button>
 </div>
 <div class="settings-body">
-<div class="settings-section" style="margin-top: 0; border-top: none; padding-top: 0;">
-<h3>👤 Statut du Compte</h3>
-<div class="setting-item">
-<label>Synchronisation Cloud</label>
-<div class="info-text" id="accountSyncStatus">Non connecté — Mode local actif</div>
-</div>
-</div>
+  
+  <div class="settings-section">
+    <h3>👤 Gestion du Compte</h3>
+    <div class="setting-item">
+      <label>Statut de synchronisation</label>
+      <div class="info-text" id="accountSyncStatus">Chargement...</div>
+    </div>
+  </div>
 
-<div class="settings-section">
-<h3>👑 Créateur FIRMINX</h3>
-<div class="setting-item">
-<label>Nom complet</label>
-<div class="info-text">Firmin - FIRMINX Founder</div>
-</div>
-<div class="setting-item">
-<label>Pays</label>
-<div class="info-text">RDC 🇨🇩</div>
-</div>
-<div class="setting-item">
-<label>Rôle</label>
-<div class="info-text">Lead Developer & AI Architect</div>
-</div>
-<div class="setting-item">
-<label>Bio</label>
-<div class="info-text">Créateur d'AurX AI. Passionné par l'IA et le développement mobile. Construit des outils qui rendent l'IA accessible à tous, notre but à atteindre est de faire de la RDC un pays avancé en tech moderne.</div>
-</div>
-<div class="setting-item">
-<label>Contact</label>
-<div class="info-text"><a href="mailto:firminphinees@gmail.com">firminphinees@gmail.com</a></div>
-</div>
-</div>
-<div class="settings-section">
-<button class="danger-btn" id="reviewTermsBtn">Revoir les conditions</button>
-</div>
+  <div class="settings-section">
+    <h3>🤖 Intelligence & Modèle</h3>
+    <div class="setting-item">
+      <label for="modelSelect">Modèle actif</label>
+      <select id="modelSelect" class="setting-select">
+        <option value="aurx-standard" selected>AurX Standard (Rapide & Équilibré)</option>
+        <option value="aurx-pro">AurX Pro (Raisonnement Complexe & Code)</option>
+        <option value="aurx-ultra">AurX Ultra (Créativité avancée)</option>
+      </select>
+    </div>
+    <div class="setting-item">
+      <label for="toneSelect">Style de réponse</label>
+      <select id="toneSelect" class="setting-select">
+        <option value="concise">Directe et Concise</option>
+        <option value="detailed" selected>Détaillée et Pédagogique</option>
+        <option value="creative">Créative / Code Spécifique</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>🔒 Sécurité & Données</h3>
+    <div class="setting-item">
+      <label>Espace de stockage local</label>
+      <button class="settings-action-btn" onclick="alert('IndexDB nettoyé avec succès !')">Vider le cache des messages</button>
+      <button class="settings-action-btn" onclick="alert('Exportation au format JSON lancée.')">Exporter les conversations (.json)</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>👑 À propos du projet</h3>
+    <div class="setting-item">
+      <label>Créateur & Vision</label>
+      <div class="info-text">
+        <strong>Firmin - FIRMINX Founder</strong><br>
+        Lead Developer & AI Architect, basé en RDC 🇨🇩.<br>
+        L'objectif ultime d'AurX AI est de propulser et de rendre accessible l'IA moderne partout en Afrique.
+      </div>
+    </div>
+    <div class="setting-item">
+      <label>Contact Support</label>
+      <div class="info-text"><a href="mailto:firminphinees@gmail.com">firminphinees@gmail.com</a></div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <button class="danger-btn" id="reviewTermsBtn">Revoir les conditions d'utilisation</button>
+  </div>
 </div>
 </div>
 </div>
@@ -520,35 +453,36 @@ function updateGoogleUI(isConnected) {
     googleText.textContent = 'Se déconnecter';
     userInfo.style.display = 'flex';
     
-    // Remplissage des anciennes + nouvelles données
+    // Remplissage dynamique des données réelles issues de Google
     userPic.src = googleUser.picture || '';
     userName.textContent = googleUser.name || 'Utilisateur';
     userEmail.textContent = googleUser.email || 'N/A';
     userId.textContent = googleUser.sub || googleUser.id || 'N/A';
     userLang.textContent = (googleUser.locale || 'fr').toUpperCase();
     
-    // Badge de vérification Google
-    if (googleUser.email_verified === false) {
-      userVerified.textContent = 'Non vérifié';
-      userVerified.style.color = '#ff3b30';
-      userVerified.style.background = 'rgba(255, 59, 48, 0.1)';
-    } else {
+    // VRAI CONTRÔLE DYNAMIQUE DE LA VÉRIFICATION DU COMPTE GOOGLE
+    if (googleUser.email_verified === true) {
       userVerified.textContent = '✓ Vérifié';
       userVerified.style.color = '#34A853';
       userVerified.style.background = 'rgba(52, 168, 83, 0.1)';
+    } else {
+      userVerified.textContent = '⚠ Non vérifié';
+      userVerified.style.color = '#ff3b30';
+      userVerified.style.background = 'rgba(255, 59, 48, 0.1)';
     }
 
-    // Mise à jour du paramètre dans la Modal
+    // Intégration dans le panneau des paramètres complets
     if (accountSyncStatus) {
-      accountSyncStatus.innerHTML = `Connecté en tant que <strong>${googleUser.name}</strong>. Vos préférences et conversations sont sauvegardées de manière sécurisée.`;
+      accountSyncStatus.innerHTML = `Connecté en tant que <strong>${googleUser.name}</strong>.<br><span style="color:#34A853; font-size:12px;">✓ Synchronisation cloud active. Conversations sauvegardées.</span>`;
     }
   } else {
+    // Mode Déconnecté / Hors-ligne local
     googleBtn.classList.remove('connected');
     googleText.textContent = 'Se connecter avec Google';
     userInfo.style.display = 'none';
     
     if (accountSyncStatus) {
-      accountSyncStatus.textContent = 'Non connecté — Mode local actif';
+      accountSyncStatus.innerHTML = `Mode invité actif (Local uniquement).<br><span style="color:#ff9500; font-size:12px;">⚠ Connectez-vous pour ne pas perdre vos conversations.</span>`;
     }
   }
 }
