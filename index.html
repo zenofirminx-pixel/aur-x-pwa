@@ -45,7 +45,6 @@ header .btn:active { opacity: 0.7; }
 .setting-item:last-child { margin-bottom: 0; }
 .setting-item label { display: block; font-size: 13px; color: #aaa; margin-bottom: 8px; font-weight: 500; }
 
-/* Inputs et Selects modernes */
 .setting-select, .setting-input {
   width: 100%;
   padding: 12px;
@@ -63,7 +62,6 @@ header .btn:active { opacity: 0.7; }
 .info-text a { color: #0A84FF; text-decoration: none; }
 .info-text a:hover { text-decoration: underline; }
 
-/* Boutons d'action des paramètres */
 .settings-action-btn {
   width: 100%;
   padding: 12px;
@@ -79,12 +77,127 @@ header .btn:active { opacity: 0.7; }
 }
 .settings-action-btn:hover { background: #2a2a2a; border-color: #444; }
 
+/* ÉCRAN ET CONTENU DES CONDITIONS (STYLE SPECIFIQUEMENT INTEGRÉ) */
+#termsScreen {
+  position: fixed;
+  inset: 0;
+  background: #000;
+  z-index: 5000;
+  padding: 40px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+#termsContent {
+  max-width: 800px;
+  margin: 0 auto w 24px auto;
+  flex: 1;
+}
+#termsScreen h2 {
+  font-size: 32px;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: #fff;
+  letter-spacing: -0.5px;
+  text-align: left;
+}
+.subtitle-terms {
+  font-size: 14px;
+  color: #888;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1a1a1a;
+}
+.terms-section-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #8ab4f8;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.terms-section-title::before {
+  content: '';
+  width: 4px;
+  height: 24px;
+  background: #8ab4f8;
+  border-radius: 2px;
+}
+.content-block {
+  background: #0a0a0a;
+  border: 1px solid #1a1a1a;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  text-align: left;
+}
+.content-block h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #fff;
+  margin-bottom: 12px;
+}
+.content-block p {
+  font-size: 15px;
+  color: #ccc;
+  line-height: 1.7;
+  margin-bottom: 12px;
+}
+.content-block p:last-child { margin-bottom: 0; }
+.content-block ul { list-style: none; padding-left: 0; }
+.content-block ul li {
+  font-size: 15px;
+  color: #ccc;
+  padding: 8px 0 8px 28px;
+  position: relative;
+  line-height: 1.6;
+}
+.content-block ul li::before {
+  content: '→';
+  position: absolute;
+  left: 0;
+  color: #8ab4f8;
+  font-weight: 700;
+}
+.highlight { color: #8ab4f8; font-weight: 600; }
+.warning-box {
+  background: #1a0a0a;
+  border: 1px solid #2a1515;
+  border-left: 3px solid #ff6b6b;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.warning-box p { color: #ff9999; font-size: 14px; margin: 0; }
+.info-box {
+  background: #0a0f1a;
+  border: 1px solid #1a1f2a;
+  border-left: 3px solid #8ab4f8;
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 16px;
+}
+.info-box p { color: #a8b5d1; font-size: 14px; margin: 0; }
+.terms-check {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 32px 0;
+  font-size: 16px;
+  color: #fff;
+}
+.terms-check input { width: 20px; height: 20px; cursor: pointer; }
+
 #continueBtn {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
   padding: 14px;
   background: #444;
   color: #888;
@@ -108,6 +221,7 @@ header .btn:active { opacity: 0.7; }
 #continueBtn.loading .loader { display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* INTERFACE MESSAGES & ENTRÉES */
 .send-btn {
   width: 40px;
   height: 40px;
@@ -142,7 +256,7 @@ header .btn:active { opacity: 0.7; }
 .circle-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; font-weight: 600; color: #fff; }
 .input-box { align-items: center; }
 
-/* MODAL MODERNE REHAUSSÉE */
+/* MODAL MODERNE */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; pointer-events: none; }
 .modal.open { display: flex; pointer-events: auto; }
 .modal > div { background: #0d0d0d; width: 92%; max-width: 460px; max-height: 85vh; border-radius: 20px; border: 1px solid #222; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
@@ -156,9 +270,9 @@ header .btn:active { opacity: 0.7; }
 .danger-btn:active { background: #ff3b30; color: #fff; }
 
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1999; pointer-events: auto; }
-.overlay.open { block; }
+.overlay.open { display: block; }
 
-/* SIDEBAR & PROFILE ROW */
+/* SIDEBAR */
 .sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #111; border-right: 1px solid #2a2a2a; transition: left 0.3s ease; z-index: 1500; display: flex; flex-direction: column; }
 .sidebar.open { left: 0; }
 .sidebar header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #2a2a2a; font-weight: 600; flex-shrink: 0; }
@@ -222,6 +336,34 @@ header .btn:active { opacity: 0.7; }
 .typing-text { font-size: 14px; color: #888; opacity: 0; transition: opacity 0.3s; }
 .typing-text.show { opacity: 1; }
 
+/* STYLE APPUIS SÉCURISÉS DU MENU CONTEXTUEL */
+.context-menu {
+  position: fixed;
+  background: #1c1c1e;
+  border: 1px solid #3a3a3c;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 3000;
+  display: none;
+  flex-direction: column;
+  min-width: 160px;
+  overflow: hidden;
+  padding: 4px;
+}
+.context-menu-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.context-menu-item:hover { background: #2c2c2e; }
+.msg-wrapper { cursor: pointer; -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
+
 /* KATEX SOMBRE */
 .katex { color: #fff !important; font-size: 1.1em; border: none !important; background: transparent !important; padding: 0 !important; }
 .katex-display { margin: 1.2em 0; overflow-x: auto; border: none !important; background: transparent !important; }
@@ -232,43 +374,144 @@ a, a:has(.katex), a .katex { border: none !important; background: transparent !i
 a:hover { text-decoration: underline; }
 .code-frame { border: none !important; padding: 0 !important; background: transparent !important; }
 .inline-code { background: #1a1a1a; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+
+@media (max-width: 768px) {
+  #termsScreen h2 { font-size: 26px; }
+  .terms-section-title { font-size: 20px; }
+  .content-block { padding: 20px; }
+}
 </style>
 </head>
 <body>
 <button id="installBtn">Installer l'app</button>
 
 <div id="termsScreen">
-<h2>Conditions d'utilisation AurX AI</h2>
-<div id="termsContent">
-<h3>1. Acceptation</h3><p>En utilisant AurX AI, vous acceptez toutes les conditions.</p>
-<h3>2. Service IA</h3><p>Assistant IA pouvant générer des réponses imparfaites.</p>
-<h3>3. Âge minimum</h3><p>13 ans minimum requis.</p>
-<h3>4. Usage légal</h3><p>Utilisation uniquement légale autorisée.</p>
-<h3>5. Contenus interdits</h3><p>Spam, fraude, violence interdits.</p>
-<h3>6. Responsabilité</h3><p>L'utilisateur est responsable de l’usage.</p>
-<h3>7. Données</h3><p>Données stockées localement uniquement.</p>
-<h3>8. Sécurité</h3><p>Ne partagez pas d'informations sensibles.</p>
-<h3>9. Disponibilité</h3><p>Service non garanti 100% uptime.</p>
-<h3>10. Modifications</h3><p>Conditions modifiables à tout moment.</p>
-<h3>11. API externe</h3><p>Utilisation d’API tierces possible.</p>
-<h3>12. Limitation</h3><p>Service fourni "tel quel".</p>
-<h3>13. Confidentialité</h3><p>Aucune vente de données.</p>
-<h3>14. Performance</h3><p>Dépend du réseau utilisateur.</p>
-<h3>15. Connexion</h3><p>Internet requis pour fonctionner.</p>
-<h3>16. Interdiction copie</h3><p>Reverse engineering interdit.</p>
-<h3>17. Mise à jour</h3><p>App évolutive en continu.</p>
-<h3>18. Support</h3><p>Support limité.</p>
-<h3>19. Mobile</h3><p>Optimisé Android PWA.</p>
-<h3>20. Accord final</h3><p>Vous acceptez toutes les règles.</p>
-<div class="terms-check">
-<input type="checkbox" id="acceptTerms">
-<label for="acceptTerms">J'accepte les 20 conditions</label>
-</div>
-</div>
-<button id="continueBtn" disabled>
-<span class="loader"></span>
-<span class="btn-text">Continuer</span>
-</button>
+  <div id="termsContent">
+    <h2>Confidentialité & Utilisation</h2>
+    <p class="subtitle-terms">ChatAurX — Dernière mise à jour : Juin 2026</p>
+
+    <div class="terms-section-title">Confidentialité</div>
+
+    <div class="content-block">
+      <h3>1. Stockage des données</h3>
+      <p>Toutes vos conversations sont <span class="highlight">stockées localement</span> sur votre appareil. ChatAurX n'envoie aucune donnée vers des serveurs externes.</p>
+      <p>Vos messages, historiques et préférences restent dans le <span class="highlight">localStorage</span> de votre navigateur. Vous gardez le contrôle total.</p>
+    </div>
+
+    <div class="content-block">
+      <h3>2. Aucune collecte</h3>
+      <ul>
+        <li>Nous ne collectons pas vos conversations</li>
+        <li>Nous ne vendons aucune donnée personnelle</li>
+        <li>Nous ne trackons pas votre activité</li>
+        <li>Aucun cookie tiers ou analytics</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h3>3. API externes</h3>
+      <p>ChatAurX utilise des API tierces pour générer les réponses IA. Vos prompts sont envoyés uniquement pour traitement et <span class="highlight">ne sont pas conservés</span> par les fournisseurs.</p>
+      <div class="info-box">
+        <p>Les fournisseurs d'API respectent leurs propres politiques de confidentialité. Nous recommandons de ne jamais partager d'informations sensibles.</p>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h3>4. Sécurité</h3>
+      <p>Ne partagez jamais :</p>
+      <ul>
+        <li>Mots de passe ou identifiants</li>
+        <li>Numéros de carte bancaire</li>
+        <li>Informations médicales sensibles</li>
+        <li>Documents confidentiels</li>
+      </ul>
+      <div class="warning-box">
+        <p>L'IA peut générer des réponses inexactes. Ne vous fiez pas à ChatAurX pour des décisions critiques : médicales, juridiques ou financières.</p>
+      </div>
+    </div>
+
+    <div class="terms-section-title">Comment utiliser ChatAurX</div>
+
+    <div class="content-block">
+      <h3>1. Démarrer une conversation</h3>
+      <p>Tapez votre message dans la zone de saisie en bas et appuyez sur <span class="highlight">Envoyer</span> ou la touche Entrée.</p>
+      <p>L'IA répond en temps réel. Vous pouvez poser des questions, demander de l'aide, générer du texte, du code, etc.</p>
+    </div>
+
+    <div class="content-block">
+      <h3>2. Historique des chats</h3>
+      <p>Cliquez sur l'icône <span class="highlight">Historique</span> en haut à gauche pour voir toutes vos conversations.</p>
+      <ul>
+        <li>Créer un nouveau chat avec le bouton +</li>
+        <li>Reprendre une conversation existante</li>
+        <li>Supprimer l'historique complet si besoin</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h3>3. Paramètres</h3>
+      <p>Accédez aux paramètres via l'icône en haut à droite :</p>
+      <ul>
+        <li>Changer la taille de police : Petit / Moyen / Grand</li>
+        <li>Voir les infos de l'app</li>
+        <li>Gérer les données locales</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h3>4. Fonctionnalités</h3>
+      <ul>
+        <li><span class="highlight">Markdown</span> : formatage riche avec **gras**, *italique*, listes</li>
+        <li><span class="highlight">Code</span> : coloration syntaxique pour 20+ langages</li>
+        <li><span class="highlight">Maths</span> : formules LaTeX automatiques $$x^2 + y^2$$</li>
+        <li><span class="highlight">Liens</span> : URLs cliquables automatiquement</li>
+        <li><span class="highlight">PWA</span> : installable comme app mobile</li>
+      </ul>
+    </div>
+
+    <div class="content-block">
+      <h3>5. Raccourcis</h3>
+      <ul>
+        <li><span class="highlight">Entrée</span> : envoyer le message</li>
+        <li><span class="highlight">Shift + Entrée</span> : retour à la ligne</li>
+        <li><span class="highlight">Swipe</span> : ouvrir/fermer l'historique sur mobile</li>
+      </ul>
+    </div>
+
+    <div class="terms-section-title">Limites & Responsabilités</div>
+
+    <div class="content-block">
+      <h3>Ce que ChatAurX ne fait PAS</h3>
+      <ul>
+        <li>Donner des conseils médicaux, juridiques ou financiers fiables</li>
+        <li>Accéder à Internet en temps réel</li>
+        <li>Mémoriser vos infos entre les sessions</li>
+        <li>Garantir 100% de précision</li>
+      </ul>
+      <div class="warning-box">
+        <p>Vous êtes responsable de l'usage que vous faites des réponses. Vérifiez toujours les informations critiques auprès de sources officielles.</p>
+      </div>
+    </div>
+
+    <div class="content-block">
+      <h3>Usage interdit</h3>
+      <ul>
+        <li>Générer du spam ou du contenu frauduleux</li>
+        <li>Harceler ou menacer des personnes</li>
+        <li>Créer du contenu illégal ou violent</li>
+        <li>Reverse engineering de l'app</li>
+      </ul>
+    </div>
+
+    <div class="terms-check">
+      <input type="checkbox" id="acceptTerms">
+      <label for="acceptTerms">J'ai lu et j'accepte les conditions d'utilisation</label>
+    </div>
+  </div>
+  <button id="continueBtn" disabled>
+    <span class="loader"></span>
+    <span class="btn-text">Continuer</span>
+  </button>
 </div>
 
 <header>
@@ -279,6 +522,12 @@ AurX AI
 
 <div id="chat">
 <div id="welcome">AurX AI<span>Pose-moi une question</span></div>
+</div>
+
+<div id="msgContextMenu" class="context-menu">
+  <div class="context-menu-item" id="ctxEdit">✏️ Modifier</div>
+  <div class="context-menu-item" id="ctxShare">🔗 Copier / Partager</div>
+  <div class="context-menu-item" id="ctxRetry">🔄 Réessayer</div>
 </div>
 
 <div class="input-area">
@@ -415,12 +664,136 @@ AurX AI
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
 <script>
-// === CONFIG BACKEND ===
 const BACKEND_URL = 'https://aur-x-backend.vercel.app';
-
-// === GOOGLE AUTH VIA BACKEND VERCEL ===
 let googleUser = null;
 
+// GESTION COMPLÈTE DE L'ÉDITION POUR RESTER FLUIDE SANS DOUBLONS
+let currentEditingElement = null;
+let targetContextElement = null;
+let touchTimer = null;
+
+const contextMenu = document.getElementById('msgContextMenu');
+
+function showMenu(e, element) {
+  e.preventDefault();
+  targetContextElement = element;
+
+  const isUser = element.classList.contains('user');
+  document.getElementById('ctxEdit').style.display = isUser ? 'flex' : 'none';
+  document.getElementById('ctxRetry').style.display = !isUser ? 'flex' : 'none';
+
+  contextMenu.style.display = 'flex';
+  contextMenu.style.top = Math.min(e.clientY, window.innerHeight - 140) + 'px';
+  contextMenu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
+}
+
+function hideMenu() {
+  contextMenu.style.display = 'none';
+}
+
+function addContextToMessage(msgEl) {
+  msgEl.addEventListener('contextmenu', (e) => showMenu(e, msgEl));
+
+  msgEl.addEventListener('touchstart', (e) => {
+    touchTimer = setTimeout(() => {
+      showMenu(e.touches[0], msgEl);
+    }, 600);
+  }, { passive: true });
+
+  msgEl.addEventListener('touchend', () => {
+    clearTimeout(touchTimer);
+  });
+}
+
+// Actions du menu
+document.getElementById('ctxEdit').addEventListener('click', () => {
+  if (targetContextElement) {
+    const inputField = document.getElementById('input');
+    inputField.value = targetContextElement.innerText || targetContextElement.textContent;
+    currentEditingElement = targetContextElement;
+    inputField.focus();
+  }
+  hideMenu();
+});
+
+document.getElementById('ctxShare').addEventListener('click', () => {
+  if (targetContextElement) {
+    navigator.clipboard.writeText(targetContextElement.innerText || targetContextElement.textContent);
+  }
+  hideMenu();
+});
+
+document.getElementById('ctxRetry').addEventListener('click', () => {
+  hideMenu();
+  alert('Régénération de la réponse demandée...');
+});
+
+document.addEventListener('click', (e) => {
+  if (!contextMenu.contains(e.target)) hideMenu();
+});
+
+// Intercepter l'envoi classique pour remplacer le texte en cas de modification
+document.getElementById('sendBtn')?.addEventListener('click', (e) => {
+  const inputField = document.getElementById('input');
+  const text = inputField.value.trim();
+  if (!text) return;
+
+  if (currentEditingElement) {
+    currentEditingElement.innerText = text;
+    currentEditingElement = null;
+    inputField.value = '';
+    e.stopImmediatePropagation(); // Empêche script.js d'en créer un nouveau
+  }
+});
+
+// Observation dynamique des nouveaux messages pour leur lier le menu contextuel
+const chatObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType === 1) {
+        if (node.classList.contains('msg-wrapper')) {
+          addContextToMessage(node);
+        } else {
+          const innerEl = node.querySelector('.msg-wrapper');
+          if (innerEl) addContextToMessage(innerEl);
+        }
+      }
+    });
+  });
+});
+
+const chatContainer = document.getElementById('chat');
+if (chatContainer) {
+  chatObserver.observe(chatContainer, { childList: true, subtree: true });
+}
+
+// Gestion des Conditions d'utilisation (Checkbox & Continuer)
+const acceptCheckbox = document.getElementById('acceptTerms');
+const continueBtn = document.getElementById('continueBtn');
+if(acceptCheckbox && continueBtn) {
+  acceptCheckbox.addEventListener('change', () => {
+    if(acceptCheckbox.checked) {
+      continueBtn.disabled = false;
+      continueBtn.classList.add('active');
+    } else {
+      continueBtn.disabled = true;
+      continueBtn.classList.remove('active');
+    }
+  });
+  
+  continueBtn.addEventListener('click', () => {
+    document.getElementById('termsScreen').style.display = 'none';
+  });
+}
+
+// Revoir les conditions depuis les paramètres
+document.getElementById('reviewTermsBtn')?.addEventListener('click', () => {
+  document.getElementById('settingsModal').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.getElementById('termsScreen').style.display = 'flex';
+});
+
+// === GOOGLE AUTH VIA BACKEND VERCEL ===
 async function checkAuth() {
   try {
     const res = await fetch(`${BACKEND_URL}/api/auth/me`, { credentials: 'include' });
@@ -453,14 +826,12 @@ function updateGoogleUI(isConnected) {
     googleText.textContent = 'Se déconnecter';
     userInfo.style.display = 'flex';
     
-    // Remplissage dynamique des données réelles issues de Google
     userPic.src = googleUser.picture || '';
     userName.textContent = googleUser.name || 'Utilisateur';
     userEmail.textContent = googleUser.email || 'N/A';
     userId.textContent = googleUser.sub || googleUser.id || 'N/A';
     userLang.textContent = (googleUser.locale || 'fr').toUpperCase();
     
-    // VRAI CONTRÔLE DYNAMIQUE DE LA VÉRIFICATION DU COMPTE GOOGLE
     if (googleUser.email_verified === true) {
       userVerified.textContent = '✓ Vérifié';
       userVerified.style.color = '#34A853';
@@ -471,12 +842,10 @@ function updateGoogleUI(isConnected) {
       userVerified.style.background = 'rgba(255, 59, 48, 0.1)';
     }
 
-    // Intégration dans le panneau des paramètres complets
     if (accountSyncStatus) {
       accountSyncStatus.innerHTML = `Connecté en tant que <strong>${googleUser.name}</strong>.<br><span style="color:#34A853; font-size:12px;">✓ Synchronisation cloud active. Conversations sauvegardées.</span>`;
     }
   } else {
-    // Mode Déconnecté / Hors-ligne local
     googleBtn.classList.remove('connected');
     googleText.textContent = 'Se connecter avec Google';
     userInfo.style.display = 'none';
@@ -506,17 +875,15 @@ document.getElementById('googleAuthBtn')?.addEventListener('click', async () => 
   }
 });
 
-// === WELCOME TOGGLE ===
+// WELCOME TOGGLE
 function toggleWelcome() {
   const chat = document.getElementById('chat');
   const welcome = document.getElementById('welcome');
   if (!welcome) return;
-
   const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
   welcome.style.display = hasMessages ? 'none' : 'flex';
 }
 
-// === ATTENDRE QUE KATEX SOIT CHARGÉ ===
 function waitForKatex(callback) {
   if (window.renderMathInElement) {
     callback();
@@ -525,10 +892,8 @@ function waitForKatex(callback) {
   }
 }
 
-// === RENDER MATH KATEX ===
 function renderMath(element = document.getElementById('chat')) {
   if (typeof renderMathInElement === 'undefined') return;
-
   renderMathInElement(element, {
     delimiters: [
       { left: '$$', right: '$$', display: true },
@@ -542,29 +907,21 @@ function renderMath(element = document.getElementById('chat')) {
 
 let renderTimeout = null;
 
-// === INIT DOM ===
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   toggleWelcome();
 
   waitForKatex(() => {
     setTimeout(() => renderMath(), 300);
-
     const chat = document.getElementById('chat');
-
     const observer = new MutationObserver(() => {
       clearTimeout(renderTimeout);
-
       renderTimeout = setTimeout(() => {
         renderMath(chat);
         toggleWelcome();
       }, 200);
     });
-
-    observer.observe(chat, {
-      childList: true,
-      subtree: true
-    });
+    observer.observe(chat, { childList: true, subtree: true });
   });
 });
 </script>
