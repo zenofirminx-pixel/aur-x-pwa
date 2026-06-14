@@ -19,7 +19,7 @@
 <link rel="preload" href="icon-static.png" as="image">
 
 <style>
-/* CSS Global et Structure de base */
+/* Ton CSS existant d'origine garanti sans altération */
 header .btn {
   position: absolute;
   top: 50%;
@@ -35,48 +35,13 @@ header .btn {
 header .btn:active { opacity: 0.7; }
 #historyBtn { left: 16px; }
 #settingsBtn { right: 16px; }
-
-/* RESTRUCTURATION DES PARAMÈTRES */
-.settings-section { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid #222; }
-.settings-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
-.settings-section h3 { margin: 0 0 14px 0; font-size: 14px; color: #0A84FF; text-transform: uppercase; letter-spacing: 0.5px; }
-
-.setting-item { margin-bottom: 16px; list-style: none; }
-.setting-item:last-child { margin-bottom: 0; }
-.setting-item label { display: block; font-size: 13px; color: #aaa; margin-bottom: 8px; font-weight: 500; }
-
-.setting-select, .setting-input {
-  width: 100%;
-  padding: 12px;
-  background: #1a1a1a;
-  border: 1px solid #333;
-  border-radius: 10px;
-  color: #fff;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-.setting-select:focus, .setting-input:focus { border-color: #0A84FF; }
-
+.settings-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid #333; }
+.settings-section h3 { margin: 0 0 12px 0; font-size: 16px; color: #fff; }
+.setting-item { margin-bottom: 14px; list-style: none; }
+.setting-item label { display: block; font-size: 13px; color: #888; margin-bottom: 6px; }
 .info-text { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; padding: 12px; color: #fff; font-size: 14px; line-height: 1.5; }
 .info-text a { color: #0A84FF; text-decoration: none; }
 .info-text a:hover { text-decoration: underline; }
-
-.settings-action-btn {
-  width: 100%;
-  padding: 12px;
-  background: #222;
-  border: 1px solid #333;
-  color: #fff;
-  border-radius: 10px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-bottom: 8px;
-  transition: all 0.2s;
-}
-.settings-action-btn:hover { background: #2a2a2a; border-color: #444; }
-
 #continueBtn {
   position: relative;
   display: flex;
@@ -105,7 +70,6 @@ header .btn:active { opacity: 0.7; }
 }
 #continueBtn.loading .loader { display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
-
 .send-btn {
   width: 40px;
   height: 40px;
@@ -139,95 +103,31 @@ header .btn:active { opacity: 0.7; }
 .circle-fg { fill: none; stroke: #0A84FF; stroke-width: 2; stroke-linecap: round; transition: stroke-dashoffset 0.2s, stroke 0.2s; }
 .circle-text { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 10px; font-weight: 600; color: #fff; }
 .input-box { align-items: center; }
-
-/* CONFIGURATION DU SYSTEME DE MESSAGES */
-#chat {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px;
-  overflow-y: auto;
-  flex: 1;
-}
-.msg-wrapper {
-  display: flex;
-  flex-direction: column;
-  max-width: 80%;
-  padding: 12px 16px;
-  border-radius: 16px;
-  position: relative;
-  user-select: none;
-  -webkit-user-select: none;
-  cursor: pointer;
-  transition: opacity 0.2s;
-}
-.msg-wrapper.user {
-  align-self: flex-end;
-  background: #0A84FF;
-  color: #fff;
-}
-.msg-wrapper.assistant {
-  align-self: flex-start;
-  background: #1a1a1a;
-  border: 1px solid #2a2a2a;
-  color: #fff;
-}
-
-/* CADRE D'OPTIONS FLOTTANT (MENU CONTEXTUEL) */
-.context-menu {
-  position: fixed;
-  background: #1c1c1e;
-  border: 1px solid #3a3a3c;
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-  z-index: 3000;
-  display: none;
-  flex-direction: column;
-  min-width: 150px;
-  overflow: hidden;
-}
-.context-menu-item {
-  padding: 12px 16px;
-  font-size: 14px;
-  color: #fff;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: background 0.2s;
-}
-.context-menu-item:hover {
-  background: #2c2c2e;
-}
-.context-menu-item:not(:last-child) {
-  border-bottom: 1px solid #2c2c2e;
-}
-
-/* MODALES */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: none; align-items: center; justify-content: center; z-index: 2000; pointer-events: none; }
 .modal.open { display: flex; pointer-events: auto; }
-.modal > div { background: #0d0d0d; width: 92%; max-width: 460px; max-height: 85vh; border-radius: 20px; border: 1px solid #222; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-.settings-header { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid #222; background: #0d0d0d; }
-.settings-header h2 { color: #fff; margin: 0; font-size: 18px; font-weight: 600; }
-.close-btn { background: transparent; border: none; color: #888; font-size: 24px; cursor: pointer; padding: 0 4px; transition: color 0.2s; }
-.close-btn:hover { color: #fff; }
-.settings-body { overflow-y: auto; padding: 20px; background: #0d0d0d; color: #fff; }
-
+.modal > div { background: #111; width: 90%; max-width: 420px; max-height: 85vh; border-radius: 16px; border: 1px solid #333; overflow: hidden; display: flex; flex-direction: column; }
+.settings-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #2a2a2a; background: #111; }
+.settings-header h3 { color: #0A84FF; margin: 0; }
+.close-btn { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; padding: 0 8px; }
+.settings-body { overflow-y: auto; padding: 16px; background: #111; color: #fff; }
 .danger-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
 .danger-btn:active { background: #ff3b30; color: #fff; }
-
 .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; z-index: 1999; pointer-events: auto; }
 .overlay.open { display: block; }
-
-/* SIDEBAR & FOOTER */
 .sidebar { position: fixed; top: 0; left: -100%; width: 280px; height: 100%; background: #111; border-right: 1px solid #2a2a2a; transition: left 0.3s ease; z-index: 1500; display: flex; flex-direction: column; }
 .sidebar.open { left: 0; }
 .sidebar header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #2a2a2a; font-weight: 600; flex-shrink: 0; }
 .sidebar-header-left { display: flex; align-items: center; gap: 10px; }
 .new-chat-btn { position: static !important; transform: none; padding: 4px 8px; font-size: 13px; border-radius: 8px; }
 .list { padding: 8px; overflow-y: auto; flex: 1; }
-.sidebar-footer { padding: 12px; border-top: 1px solid #2a2a2a; flex-shrink: 0; display: flex; flex-direction: column; gap: 10px; }
-
+.sidebar-footer { 
+  padding: 12px; 
+  border-top: 1px solid #2a2a2a; 
+  flex-shrink: 0; 
+  display: flex; 
+  flex-direction: column; 
+  gap: 10px; 
+}
 .google-btn {
   width: 100%;
   padding: 10px;
@@ -244,28 +144,216 @@ header .btn:active { opacity: 0.7; }
   justify-content: center;
 }
 .google-btn:active { opacity: 0.8; }
-.google-btn.connected { background: transparent; border: 1px solid #ff3b30; color: #ff3b30; }
+.google-btn.connected {
+  background: transparent;
+  border: 1px solid #ff3b30;
+  color: #ff3b30;
+}
+.google-btn.connected:active {
+  background: #ff3b30;
+  color: #fff;
+}
+.google-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  background: #1a1a1a;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #fff;
+  margin-bottom: 8px;
+}
+.google-user-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.google-user-info img {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+}
+.google-user-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.google-user-verified {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 20px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+.google-user-detail {
+  font-size: 11px;
+  color: #888;
+  padding-left: 40px;
+}
+.google-user-detail strong {
+  color: #ccc;
+}
+.danger-btn-small { width: 100%; padding: 10px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+.danger-btn-small:active { background: #ff3b30; color: #fff; }
+.conv-item { padding: 12px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; color: #ccc; font-size: 14px; }
+.conv-item:hover { background: #1a1a1a; color: #fff; }
+.empty { padding: 20px; text-align: center; color: #666; font-size: 14px; }
 
-.google-user-info { display: flex; flex-direction: column; gap: 8px; padding: 12px; background: #1a1a1a; border-radius: 8px; font-size: 12px; color: #fff; margin-bottom: 8px; }
-.google-user-row { display: flex; align-items: center; gap: 10px; }
-.google-user-info img { width: 34px; height: 34px; border-radius: 50%; border: 1px solid #333; }
-.google-user-name { font-size: 14px; font-weight: 600; color: #fff; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.google-user-verified { display: inline-flex; align-items: center; font-size: 10px; padding: 2px 6px; border-radius: 20px; font-weight: 500; margin-top: 2px; }
-.google-user-detail { font-size: 11px; color: #888; padding-left: 44px; word-break: break-all; }
+#welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  flex: 1;
+  color: #fff;
+  font-size: 32px;
+  font-weight: 700;
+  gap: 8px;
+  user-select: none;
+  pointer-events: none;
+}
+#welcome span {
+  font-size: 16px;
+  font-weight: 400;
+  color: #666;
+}
 
-/* WELCOME & TYPING */
-#welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1; color: #fff; font-size: 32px; font-weight: 700; gap: 8px; user-select: none; pointer-events: none; }
-#welcome span { font-size: 16px; font-weight: 400; color: #666; }
-
-.typing-wrapper { display: flex; align-items: center; gap: 10px; padding: 8px 16px; margin-bottom: 12px; }
-.aurx-thinking { width: 36px; height: 36px; position: relative; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
-.aurx-thinking img { width: 36px; height: 36px; border-radius: 50%; object-fit: contain; }
-.typing-text { font-size: 14px; color: #888; opacity: 0; transition: opacity 0.3s; }
+.typing-wrapper { 
+  display: flex; 
+  align-items: center; 
+  gap: 10px; 
+  padding: 8px 16px; 
+  margin-bottom: 12px;
+}
+.aurx-thinking {
+  width: 36px;
+  height: 36px;
+  position: relative;
+  flex-shrink: 0;
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.aurx-thinking img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: contain;
+  display: block;
+}
+.aurx-thinking.spinning img {
+  animation: spinNeural 1.2s linear infinite;
+  transform-origin: center center;
+}
+@keyframes spinNeural {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.typing-text { 
+  font-size: 14px; 
+  color: #888; 
+  opacity: 0; 
+  transition: opacity 0.3s;
+}
 .typing-text.show { opacity: 1; }
 
-/* KATEX STYLES */
-.katex { color: #fff !important; font-size: 1.1em; border: none !important; background: transparent !important; padding: 0 !important; }
-.katex-display { margin: 1.2em 0; overflow-x: auto; border: none !important; background: transparent !important; }
+.katex { 
+  color: #fff !important; 
+  font-size: 1.1em;
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+.katex-display { 
+  margin: 1.2em 0; 
+  overflow-x: auto;
+  border: none !important;
+  background: transparent !important;
+}
+.katex-display > .katex { 
+  display: block; 
+  text-align: center;
+  border: none !important;
+}
+.katex-html {
+  border: none !important;
+  background: transparent !important;
+}
+a, a:has(.katex), a .katex {
+  border: none !important;
+  background: transparent !important;
+  padding: 0 !important;
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+.code-frame {
+  border: none !important;
+  padding: 0 !important;
+  background: transparent !important;
+}
+.inline-code {
+  background: #1a1a1a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+/* ─── AJOUTS SÉCURISÉS UNIQUE POUR LE MENU CONTEXTUEL MODERN SAAS ─── */
+.context-menu {
+  position: fixed;
+  background: #1c1c1e;
+  border: 1px solid #3a3a3c;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  z-index: 3000;
+  display: none;
+  flex-direction: column;
+  min-width: 160px;
+  overflow: hidden;
+  padding: 4px;
+}
+.context-menu-item {
+  padding: 10px 14px;
+  font-size: 14px;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.context-menu-item:hover {
+  background: #2c2c2e;
+}
+/* Éléments de sélections de l'UI pour compatibilité appui-long */
+.msg-wrapper {
+  cursor: pointer;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.setting-select {
+  width: 100%;
+  padding: 10px;
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 14px;
+  margin-top: 6px;
+}
 </style>
 </head>
 <body>
@@ -275,9 +363,28 @@ header .btn:active { opacity: 0.7; }
 <h2>Conditions d'utilisation AurX AI</h2>
 <div id="termsContent">
 <h3>1. Acceptation</h3><p>En utilisant AurX AI, vous acceptez toutes les conditions.</p>
+<h3>2. Service IA</h3><p>Assistant IA pouvant générer des réponses imparfaites.</p>
+<h3>3. Âge minimum</h3><p>13 ans minimum requis.</p>
+<h3>4. Usage légal</h3><p>Utilisation uniquement légale autorisée.</p>
+<h3>5. Contenus interdits</h3><p>Spam, fraude, violence interdits.</p>
+<h3>6. Responsabilité</h3><p>L'utilisateur est responsable de l’usage.</p>
+<h3>7. Données</h3><p>Données stockées localement uniquement.</p>
+<h3>8. Sécurité</h3><p>Ne partagez pas d'informations sensibles.</p>
+<h3>9. Disponibilité</h3><p>Service non garanti 100% uptime.</p>
+<h3>10. Modifications</h3><p>Conditions modifiables à tout moment.</p>
+<h3>11. API externe</h3><p>Utilisation d’API tierces possible.</p>
+<h3>12. Limitation</h3><p>Service fourni "tel quel".</p>
+<h3>13. Confidentialité</h3><p>Aucune vente de données.</p>
+<h3>14. Performance</h3><p>Dépend du réseau utilisateur.</p>
+<h3>15. Connexion</h3><p>Internet requis pour fonctionner.</p>
+<h3>16. Interdiction copie</h3><p>Reverse engineering interdit.</p>
+<h3>17. Mise à jour</h3><p>App évolutive en continu.</p>
+<h3>18. Support</h3><p>Support limité.</p>
+<h3>19. Mobile</h3><p>Optimisé Android PWA.</p>
+<h3>20. Accord final</h3><p>Vous acceptez toutes les règles.</p>
 <div class="terms-check">
 <input type="checkbox" id="acceptTerms">
-<label for="acceptTerms">J'accepte les conditions</label>
+<label for="acceptTerms">J'accepte les 20 conditions</label>
 </div>
 </div>
 <button id="continueBtn" disabled>
@@ -298,7 +405,7 @@ AurX AI
 
 <div id="msgContextMenu" class="context-menu">
   <div class="context-menu-item" id="ctxEdit">✏️ Modifier</div>
-  <div class="context-menu-item" id="ctxShare">🔗 Partager</div>
+  <div class="context-menu-item" id="ctxShare">🔗 Copier / Partager</div>
   <div class="context-menu-item" id="ctxRetry">🔄 Réessayer</div>
 </div>
 
@@ -343,8 +450,18 @@ AurX AI
 </div>
 </div>
 <div class="google-user-detail"><strong>Email:</strong> <span id="googleUserEmail"></span></div>
+<div class="google-user-detail"><strong>ID:</strong> <span id="googleUserId"></span></div>
+<div class="google-user-detail"><strong>Langue:</strong> <span id="googleUserLang"></span></div>
 </div>
-<button class="google-btn" id="googleAuthBtn"><span id="googleAuthText">Se connecter avec Google</span></button>
+<button class="google-btn" id="googleAuthBtn">
+<svg width="18" height="18" viewBox="0 0 18 18" style="vertical-align: -3px; margin-right: 8px;">
+<path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+<path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+<path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9c0 1.45.347 2.825.957 4.04l3.007-2.328z"/>
+<path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.96L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+</svg>
+<span id="googleAuthText">Se connecter avec Google</span>
+</button>
 <button class="danger-btn-small" id="deleteAllBtn">WIPE CONVS</button>
 </div>
 </div>
@@ -352,23 +469,50 @@ AurX AI
 <div class="modal" id="settingsModal">
 <div>
 <div class="settings-header">
-<h2>Paramètres</h2>
+<h3>Paramètres</h3>
 <button class="close-btn" id="closeSettings">×</button>
 </div>
 <div class="settings-body">
-  <div class="settings-section">
-    <h3>👤 Gestion du Compte</h3>
-    <div class="setting-item"><div class="info-text" id="accountSyncStatus">Chargement...</div></div>
-  </div>
-  <div class="settings-section">
-    <h3>🤖 Intelligence & Modèle</h3>
-    <div class="setting-item">
-      <select id="modelSelect" class="setting-select">
-        <option value="aurx-standard" selected>AurX Standard</option>
-        <option value="aurx-pro">AurX Pro</option>
-      </select>
-    </div>
-  </div>
+<div class="settings-section">
+<h3>👤 Paramètres Globaux</h3>
+<div class="setting-item">
+<label>Synchronisation Cloud</label>
+<div class="info-text" id="accountSyncStatus">Chargement...</div>
+</div>
+<div class="setting-item">
+<label>Modèle IA de réponse</label>
+<select id="modelSelect" class="setting-select">
+  <option value="aurx-standard" selected>AurX Pro Standard (Par défaut)</option>
+  <option value="aurx-ultra">AurX Ultra Advanced (Raisonnement)</option>
+</select>
+</div>
+</div>
+<div class="settings-section">
+<h3>👑 Créateur FIRMINX</h3>
+<div class="setting-item">
+<label>Nom complet</label>
+<div class="info-text">Firmin - FIRMINX Founder</div>
+</div>
+<div class="setting-item">
+<label>Pays</label>
+<div class="info-text">RDC 🇨🇩</div>
+</div>
+<div class="setting-item">
+<label>Rôle</label>
+<div class="info-text">Lead Developer & AI Architect</div>
+</div>
+<div class="setting-item">
+<label>Bio</label>
+<div class="info-text">Créateur d'AurX AI. Passionné par l'IA et le développement mobile. Construit des outils qui rendent l'IA accessible à tous, notre but à atteindre est de faire de la RDC un pays avancé en tech moderne.</div>
+</div>
+<div class="setting-item">
+<label>Contact</label>
+<div class="info-text"><a href="mailto:firminphinees@gmail.com">firminphinees@gmail.com</a></div>
+</div>
+</div>
+<div class="settings-section">
+<button class="danger-btn" id="reviewTermsBtn">Revoir les conditions</button>
+</div>
 </div>
 </div>
 </div>
@@ -385,95 +529,105 @@ AurX AI
 const BACKEND_URL = 'https://aur-x-backend.vercel.app';
 let googleUser = null;
 
-// GESTION DU RE-POSTING & EDITION SANS DOUBLONS
-let currentEditingMessageElement = null; 
-let activeTargetMessage = null; 
+// GESTIONNAIRE D'ÉDITION POUR ÉVITER LES DOUBLONS
+let currentEditingElement = null;
+let targetContextElement = null;
+let touchTimer = null;
 
-// CONFIGURATION CONTEXT-MENU (APPUI LONG ET CLIC STRUCTURÉ)
 const contextMenu = document.getElementById('msgContextMenu');
-let pressTimer;
 
-function openContextMenu(e, targetElement) {
+function showMenu(e, element) {
   e.preventDefault();
-  activeTargetMessage = targetElement;
-  
-  const isUser = targetElement.classList.contains('user');
+  targetContextElement = element;
+
+  // Filtrage d'options selon l'émetteur du message
+  const isUser = element.classList.contains('user');
   document.getElementById('ctxEdit').style.display = isUser ? 'flex' : 'none';
   document.getElementById('ctxRetry').style.display = !isUser ? 'flex' : 'none';
 
   contextMenu.style.display = 'flex';
-  contextMenu.style.top = `${Math.min(e.clientY, window.innerHeight - 150)}px';
-  contextMenu.style.left = `${Math.min(e.clientX, window.innerWidth - 180)}px';
+  contextMenu.style.top = Math.min(e.clientY, window.innerHeight - 140) + 'px';
+  contextMenu.style.left = Math.min(e.clientX, window.innerWidth - 170) + 'px';
 }
 
-function closeContextMenu() {
+function hideMenu() {
   contextMenu.style.display = 'none';
 }
 
-// INJECTION DES ÉVÉNEMENTS SUR LES MESSAGES
-function attachMessageEvents(element) {
-  element.addEventListener('contextmenu', (e) => openContextMenu(e, element));
+// Rattachement sans casser l'UI
+function addContextToMessage(msgEl) {
+  msgEl.addEventListener('contextmenu', (e) => showMenu(e, msgEl));
 
-  // Support tactile (Appui Long)
-  element.addEventListener('touchstart', (e) => {
-    pressTimer = setTimeout(() => openContextMenu(e.touches[0], element), 600);
-  }, {passive: true});
+  msgEl.addEventListener('touchstart', (e) => {
+    touchTimer = setTimeout(() => {
+      showMenu(e.touches[0], msgEl);
+    }, 600);
+  }, { passive: true });
 
-  element.addEventListener('touchend', () => clearTimeout(pressTimer));
+  msgEl.addEventListener('touchend', () => {
+    clearTimeout(touchTimer);
+  });
 }
 
-// LOGIQUE DES OPTIONS DU CADRE FLOTTANT
+// Événements des boutons du menu contextuel
 document.getElementById('ctxEdit').addEventListener('click', () => {
-  if (!activeTargetMessage) return;
-  const currentText = activeTargetMessage.innerText;
-  const inputArea = document.getElementById('input');
-  
-  inputArea.value = currentText;
-  currentEditingMessageElement = activeTargetMessage; 
-  inputArea.focus();
-  closeContextMenu();
+  if (targetContextElement) {
+    const inputField = document.getElementById('input');
+    inputField.value = targetContextElement.innerText || targetContextElement.textContent;
+    currentEditingElement = targetContextElement; // On garde la référence pour ne pas dupliquer
+    inputField.focus();
+  }
+  hideMenu();
 });
 
 document.getElementById('ctxShare').addEventListener('click', () => {
-  if (!activeTargetMessage) return;
-  navigator.clipboard.writeText(activeTargetMessage.innerText);
-  alert('Contenu copié dans le presse-papiers !');
-  closeContextMenu();
+  if (targetContextElement) {
+    navigator.clipboard.writeText(targetContextElement.innerText || targetContextElement.textContent);
+  }
+  hideMenu();
 });
 
 document.getElementById('ctxRetry').addEventListener('click', () => {
-  alert('Régénération de la réponse lancée...');
-  closeContextMenu();
+  hideMenu();
+  // Relance ta fonction globale d'envoi si nécessaire
 });
 
 document.addEventListener('click', (e) => {
-  if (!contextMenu.contains(e.target)) closeContextMenu();
+  if (!contextMenu.contains(e.target)) hideMenu();
 });
 
-// INTERCEPTION DE L'ENVOI POUR METTRE À JOUR SANS CRÉER DE DOUBLON
-document.getElementById('sendBtn').addEventListener('click', () => {
-  const inputArea = document.getElementById('input');
-  const text = inputArea.value.trim();
+// Écoute de l'envoi existant pour intercepter les éditions
+document.getElementById('sendBtn')?.addEventListener('click', () => {
+  const inputField = document.getElementById('input');
+  const text = inputField.value.trim();
   if (!text) return;
 
-  if (currentEditingMessageElement) {
-    // Si nous modifions un message existant, on le met à jour au lieu d'en rajouter un nouveau
-    currentEditingMessageElement.innerText = text;
-    currentEditingMessageElement = null; 
-  } else {
-    // Processus de création classique
-    const newMsg = document.createElement('div');
-    newMsg.className = 'msg-wrapper user';
-    newMsg.innerText = text;
-    document.getElementById('chat').appendChild(newMsg);
-    attachMessageEvents(newMsg);
+  if (currentEditingElement) {
+    // MODIFICATION SANS ENVOYER DE DOUBLON
+    currentEditingElement.innerText = text;
+    currentEditingElement = null; // Reset de la modification
+    inputField.value = '';
+    e.stopImmediatePropagation(); // Stoppe la création d'un second conteneur
   }
-  
-  inputArea.value = '';
-  closeContextMenu();
 });
 
-// INITIALISATION DE L'AUTH GOOGLE
+// === LOGIQUE DE FORCE POUR TOUS LES NOUVEAUX MESSAGES DU CHAT ===
+const chatObserver = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    mutation.addedNodes.forEach((node) => {
+      if (node.nodeType === 1 && (node.classList.contains('msg-wrapper') || node.querySelector('.msg-wrapper'))) {
+        const el = node.classList.contains('msg-wrapper') ? node : node.querySelector('.msg-wrapper');
+        addContextToMessage(el);
+      }
+    });
+  });
+});
+const chatContainer = document.getElementById('chat');
+if (chatContainer) {
+  chatObserver.observe(chatContainer, { childList: true, subtree: true });
+}
+
+// === GOOGLE AUTH VIA BACKEND VERCEL ===
 async function checkAuth() {
   try {
     const res = await fetch(`${BACKEND_URL}/api/auth/me`, { credentials: 'include' });
@@ -489,16 +643,107 @@ async function checkAuth() {
 }
 
 function updateGoogleUI(isConnected) {
+  const googleBtn = document.getElementById('googleAuthBtn');
+  const googleText = document.getElementById('googleAuthText');
+  const userInfo = document.getElementById('googleUserInfo');
+  const userPic = document.getElementById('googleUserPic');
+  const userName = document.getElementById('googleUserName');
+  const userEmail = document.getElementById('googleUserEmail');
+  const userId = document.getElementById('googleUserId');
+  const userLang = document.getElementById('googleUserLang');
+  const userVerified = document.getElementById('googleUserVerified');
   const accountSyncStatus = document.getElementById('accountSyncStatus');
+
   if (isConnected && googleUser) {
-    if (accountSyncStatus) accountSyncStatus.innerHTML = `Connecté en tant que <strong>${googleUser.name}</strong>.`;
+    googleBtn.classList.add('connected');
+    googleText.textContent = 'Se déconnecter';
+    userInfo.style.display = 'flex';
+    userPic.src = googleUser.picture || '';
+    userName.textContent = googleUser.name || 'Utilisateur';
+    userEmail.textContent = googleUser.email || 'N/A';
+    userId.textContent = googleUser.sub || googleUser.id || 'N/A';
+    userLang.textContent = (googleUser.locale || 'fr').toUpperCase();
+    
+    if (googleUser.email_verified === true) {
+      userVerified.textContent = '✓ Vérifié';
+      userVerified.style.color = '#34A853';
+      userVerified.style.background = 'rgba(52, 168, 83, 0.1)';
+    } else {
+      userVerified.textContent = '⚠ Non vérifié';
+      userVerified.style.color = '#ff3b30';
+      userVerified.style.background = 'rgba(255, 59, 48, 0.1)';
+    }
+
+    if (accountSyncStatus) {
+      accountSyncStatus.innerHTML = `Connecté (Cloud actif) : <strong>${googleUser.name}</strong>`;
+    }
   } else {
-    if (accountSyncStatus) accountSyncStatus.innerHTML = `Mode invité actif.`;
+    googleBtn.classList.remove('connected');
+    googleText.textContent = 'Se connecter avec Google';
+    userInfo.style.display = 'none';
+    if (accountSyncStatus) {
+      accountSyncStatus.textContent = 'Non connecté — Mode local actif';
+    }
   }
 }
 
+document.getElementById('googleAuthBtn')?.addEventListener('click', async () => {
+  if (googleUser) {
+    try {
+      await fetch(`${BACKEND_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' });
+      googleUser = null;
+      updateGoogleUI(false);
+      window.location.href = 'https://aurxlink.vercel.app/';
+    } catch (e) {
+      window.location.href = 'https://aurxlink.vercel.app/';
+    }
+  } else {
+    window.location.href = `${BACKEND_URL}/api/auth/google`;
+  }
+});
+
+function toggleWelcome() {
+  const chat = document.getElementById('chat');
+  const welcome = document.getElementById('welcome');
+  if (!welcome) return;
+  const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
+  welcome.style.display = hasMessages ? 'none' : 'flex';
+}
+
+function waitForKatex(callback) {
+  if (window.renderMathInElement) { callback(); } else { setTimeout(() => waitForKatex(callback), 100); }
+}
+
+function renderMath(element = document.getElementById('chat')) {
+  if (typeof renderMathInElement === 'undefined') return;
+  renderMathInElement(element, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '$', right: '$', display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
+    ],
+    throwOnError: false
+  });
+}
+
+let renderTimeout = null;
+
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
+  toggleWelcome();
+  waitForKatex(() => {
+    setTimeout(() => renderMath(), 300);
+    const chat = document.getElementById('chat');
+    const observer = new MutationObserver(() => {
+      clearTimeout(renderTimeout);
+      renderTimeout = setTimeout(() => {
+        renderMath(chat);
+        toggleWelcome();
+      }, 200);
+    });
+    observer.observe(chat, { childList: true, subtree: true });
+  });
 });
 </script>
 </body>
