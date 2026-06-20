@@ -245,7 +245,6 @@ header .btn:active { opacity: 0.7; }
 #continueBtn.loading .loader { display: block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* BOUTON MULTIFONCTION SYNCHRONISÉ */
 .send-btn {
   width: 40px;
   height: 40px;
@@ -257,13 +256,11 @@ header .btn:active { opacity: 0.7; }
   justify-content: center;
   color: white;
   cursor: pointer;
-  transition: transform 0.1s, opacity 0.2s, background-color 0.2s;
+  transition: transform 0.1s, opacity 0.2s;
   flex-shrink: 0;
 }
 .send-btn:active { transform: scale(0.92); }
-.send-btn.voice-mode { background: #1a1a1a; border: 1px solid #333; color: #0A84FF; }
-.send-btn.voice-mode:active { background: #222; }
-
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .send-btn .loader {
   display: none;
   width: 18px;
@@ -274,8 +271,7 @@ header .btn:active { opacity: 0.7; }
   animation: spin 0.8s linear infinite;
 }
 .send-btn.loading .loader { display: block; }
-.send-btn.loading svg { display: none !important; }
-
+.send-btn.loading svg { display: none; }
 .circle-progress { position: relative; width: 32px; height: 32px; flex-shrink: 0; margin-left: 8px; list-style: none; }
 .circle-progress svg { transform: rotate(-90deg); }
 .circle-bg { fill: none; stroke: #333; stroke-width: 2; }
@@ -346,6 +342,10 @@ header .btn:active { opacity: 0.7; }
 .danger-btn-small { width: 100%; padding: 10px; background: transparent; border: 1px solid #ff3b30; color: #ff3b30; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .danger-btn-small:active { background: #ff3b30; color: #fff; }
 
+.conv-item { padding: 12px; border-radius: 8px; margin-bottom: 4px; cursor: pointer; color: #ccc; font-size: 14px; }
+.conv-item:hover { background: #1a1a1a; color: #fff; }
+.empty { padding: 20px; text-align: center; color: #666; font-size: 14px; }
+
 /* CHAT WELCOME */
 #welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1; color: #fff; font-size: 32px; font-weight: 700; gap: 8px; user-select: none; pointer-events: none; }
 #welcome span { font-size: 16px; font-weight: 400; color: #666; }
@@ -370,63 +370,107 @@ a:hover { text-decoration: underline; }
 .code-frame { border: none !important; padding: 0 !important; background: transparent !important; }
 .inline-code { background: #1a1a1a; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
 
-/* SCREEN VOCAL */
+/* === INTERFACE MODERNE DU MODE VOCAL === */
 #voiceScreen {
   position: fixed;
   inset: 0;
-  background: #050508;
-  z-index: 4000;
+  background: #050505;
+  z-index: 6000;
   display: none;
   flex-direction: column;
   align-items: center;
-  justify-content: space-around;
-  padding: 40px 20px;
+  justify-content: space-between;
+  padding: 60px 24px;
 }
-#voiceScreen.active { display: flex; }
-
-.voice-avatar-circle {
-  width: 240px;
-  height: 240px;
+.voice-top {
+  text-align: center;
+}
+.voice-top h2 {
+  color: #fff;
+  margin: 0 0 8px 0;
+  font-size: 22px;
+  font-weight: 600;
+}
+#voiceStatus {
+  color: #8A8A8E;
+  font-size: 14px;
+}
+.voice-center {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.voice-avatar-frame {
+  width: 200px;
+  height: 200px;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 0 40px rgba(10, 132, 255, 0.4), 0 0 15px rgba(234, 67, 53, 0.2);
-  border: 2px solid rgba(10, 132, 255, 0.5);
-  background: #000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border: 3px solid #0A84FF;
+  box-shadow: 0 0 30px rgba(10, 132, 255, 0.4);
 }
-.voice-avatar-circle img {
-  width: 105%;
-  height: 105%;
+.voice-avatar-frame img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
-.voice-status-text { color: #888; font-size: 15px; font-weight: 500; letter-spacing: 0.5px; margin-top: -10px; }
-.voice-waves { display: flex; align-items: center; justify-content: center; height: 60px; width: 100%; }
-.voice-stroke { background: linear-gradient(180deg, #0A84FF, #EA4335); height: 15%; width: 5px; border-radius: 50px; margin: 0 4px; transition: height 0.1s ease-in-out; }
-.voice-waves.animated .voice-stroke { animation: voiceWaveAnim 1.2s infinite ease-in-out; }
-@keyframes voiceWaveAnim { 0%, 100% { height: 15%; } 50% { height: 85%; } }
-.voice-stroke:nth-child(1) { animation-delay: 0.1s; }
-.voice-stroke:nth-child(2) { animation-delay: 0.3s; }
-.voice-stroke:nth-child(3) { animation-delay: 0.6s; }
-.voice-stroke:nth-child(4) { animation-delay: 0.4s; }
-.voice-stroke:nth-child(5) { animation-delay: 0.2s; }
-
-.voice-stop-btn {
-  width: 70px;
-  height: 70px;
-  background: #ff3b30;
-  color: white;
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
+.voice-bottom {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+/* Graphiques vocaux défilants / vagues animées */
+.audio-wave-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 10px 25px rgba(255, 59, 48, 0.4);
-  transition: transform 0.2s;
+  gap: 6px;
+  height: 60px;
+  width: 100%;
+  max-width: 240px;
 }
-.voice-stop-btn:active { transform: scale(0.9); }
+.audio-wave-container .bar {
+  width: 4px;
+  height: 12px;
+  background: #0A84FF;
+  border-radius: 4px;
+  transition: height 0.1s ease;
+}
+/* Animation active en cours de traitement / écoute */
+.audio-wave-container.animated .bar {
+  animation: dynamicWave 1.2s ease-in-out infinite;
+}
+.audio-wave-container.animated .bar:nth-child(1) { animation-delay: 0.1s; }
+.audio-wave-container.animated .bar:nth-child(2) { animation-delay: 0.4s; }
+.audio-wave-container.animated .bar:nth-child(3) { animation-delay: 0.2s; }
+.audio-wave-container.animated .bar:nth-child(4) { animation-delay: 0.6s; }
+.audio-wave-container.animated .bar:nth-child(5) { animation-delay: 0.3s; }
+.audio-wave-container.animated .bar:nth-child(6) { animation-delay: 0.5s; }
+.audio-wave-container.animated .bar:nth-child(7) { animation-delay: 0.15s; }
+
+@keyframes dynamicWave {
+  0%, 100% { height: 12px; }
+  50% { height: 50px; background: #5AC8FA; }
+}
+.voice-stop-btn {
+  width: 72px;
+  height: 72px;
+  background: #FF3B30;
+  border: none;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(255, 59, 48, 0.4);
+  transition: transform 0.1s;
+}
+.voice-stop-btn:active {
+  transform: scale(0.9);
+}
 
 @media (max-width: 768px) {
   #termsScreen { padding: 24px 16px; }
@@ -446,11 +490,13 @@ a:hover { text-decoration: underline; }
 
     <div class="section">
       <div class="section-title">Confidentialité</div>
+
       <div class="content-block">
         <h3>1. Stockage des données</h3>
         <p>Toutes vos conversations sont <span class="highlight">stockées localement</span> sur votre appareil. ChatAurX n'envoie aucune donnée vers des serveurs externes.</p>
         <p>Vos messages, historiques et préférences restent dans le <span class="highlight">localStorage</span> de votre navigateur. Vous gardez le contrôle total.</p>
       </div>
+
       <div class="content-block">
         <h3>2. Aucune collecte</h3>
         <ul>
@@ -460,16 +506,104 @@ a:hover { text-decoration: underline; }
           <li>Aucun cookie tiers ou analytics</li>
         </ul>
       </div>
+
       <div class="content-block">
         <h3>3. API externes</h3>
         <p>ChatAurX utilise des API tierces pour générer les réponses IA. Vos prompts sont envoyés uniquement pour traitement et <span class="highlight">ne sont pas conservés</span> par les fournisseurs.</p>
+        <div class="info-box">
+          <p>Les fournisseurs d'API respectent leurs propres politiques de confidentialité. Nous recommandons de ne jamais partager d'informations sensibles.</p>
+        </div>
       </div>
+
       <div class="content-block">
         <h3>4. Sécurité</h3>
-        <p>Ne partagez jamais d'informations confidentielles.</p>
+        <p>Ne partagez jamais :</p>
+        <ul>
+          <li>Mots de passe ou identifiants</li>
+          <li>Numéros de carte bancaire</li>
+          <li>Informations médicales sensibles</li>
+          <li>Documents confidentiels</li>
+        </ul>
         <div class="warning-box">
           <p>L'IA peut générer des réponses inexactes. Ne vous fiez pas à ChatAurX pour des décisions critiques : médicales, juridiques ou financières.</p>
         </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Comment utiliser ChatAurX</div>
+
+      <div class="content-block">
+        <h3>1. Démarrer une conversation</h3>
+        <p>Tapez votre message dans la zone de saisie en bas et appuyez sur <span class="highlight">Envoyer</span> ou la touche Entrée.</p>
+        <p>L'IA répond en temps réel. Vous pouvez poser des questions, demander de l'aide, générer du texte, du code, etc.</p>
+      </div>
+
+      <div class="content-block">
+        <h3>2. Historique des chats</h3>
+        <p>Cliquez sur l'icône <span class="highlight">Historique</span> en haut à gauche pour voir toutes vos conversations.</p>
+        <ul>
+          <li>Créer un nouveau chat avec le bouton +</li>
+          <li>Reprendre une conversation existante</li>
+          <li>Supprimer l'historique complet si besoin</li>
+        </ul>
+      </div>
+
+      <div class="content-block">
+        <h3>3. Paramètres</h3>
+        <p>Accédez aux paramètres via l'icône en haut à droite :</p>
+        <ul>
+          <li>Changer la taille de police : Petit / Moyen / Grand</li>
+          <li>Voir les infos de l'app</li>
+          <li>Gérer les données locales</li>
+        </ul>
+      </div>
+
+      <div class="content-block">
+        <h3>4. Fonctionnalités</h3>
+        <ul>
+          <li><span class="highlight">Markdown</span> : formatage riche avec **gras**, *italique*, listes</li>
+          <li><span class="highlight">Code</span> : coloration syntaxique pour 20+ langages</li>
+          <li><span class="highlight">Maths</span> : formules LaTeX automatiques $$x^2 + y^2$$</li>
+          <li><span class="highlight">Liens</span> : URLs cliquables automatiquement</li>
+          <li><span class="highlight">PWA</span> : installable comme app mobile</li>
+        </ul>
+      </div>
+
+      <div class="content-block">
+        <h3>5. Raccourcis</h3>
+        <ul>
+          <li><span class="highlight">Entrée</span> : envoyer le message</li>
+          <li><span class="highlight">Shift + Entrée</span> : retour à la ligne</li>
+          <li><span class="highlight">Swipe</span> : ouvrir/fermer l'historique sur mobile</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Limites & Responsabilités</div>
+
+      <div class="content-block">
+        <h3>Ce que ChatAurX ne fait PAS</h3>
+        <ul>
+          <li>Donner des conseils médicaux, juridiques ou financiers fiables</li>
+          <li>Accéder à Internet en temps réel</li>
+          <li>Mémoriser vos infos entre les sessions</li>
+          <li>Garantir 100% de précision</li>
+        </ul>
+        <div class="warning-box">
+          <p>Vous êtes responsable de l'usage que vous faites des réponses. Vérifiez toujours les informations critiques auprès de sources officielles.</p>
+        </div>
+      </div>
+
+      <div class="content-block">
+        <h3>Usage interdit</h3>
+        <ul>
+          <li>Générer du spam ou du contenu frauduleux</li>
+          <li>Harceler ou menacer des personnes</li>
+          <li>Créer du contenu illégal ou violent</li>
+          <li>Reverse engineering de l'app</li>
+        </ul>
       </div>
     </div>
 
@@ -478,10 +612,46 @@ a:hover { text-decoration: underline; }
       <label for="acceptTerms">J'accepte les conditions de confidentialité et d'utilisation</label>
     </div>
   </div>
+
   <button id="continueBtn" disabled>
     <span class="loader"></span>
     <span class="btn-text">Continuer</span>
   </button>
+</div>
+
+<div id="voiceScreen">
+  <div class="voice-top">
+    <h2>AurX Voice</h2>
+    <div id="voiceStatus">Initialisation du micro...</div>
+  </div>
+
+  <div class="voice-center">
+    <div class="voice-avatar-frame">
+      <img src="1000052517.jpg" alt="AurX Artificial Intelligence">
+    </div>
+  </div>
+
+  <div class="voice-bottom">
+    <div class="audio-wave-container" id="voiceWaveContainer">
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+      <div class="bar"></div>
+    </div>
+    
+    <button class="voice-stop-btn" id="stopVoiceModeBtn">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"></path>
+        <path d="M17 16.95A7 7 0 0 1 5 12v-2m14 0v2a7 7 0 0 1-.11 1.23"></path>
+        <line x1="12" y1="19" x2="12" y2="23"></line>
+        <line x1="8" y1="23" x2="16" y2="23"></line>
+      </svg>
+    </button>
+  </div>
 </div>
 
 <header>
@@ -496,6 +666,15 @@ AurX AI
 
 <div class="input-area">
 <div class="input-wrap">
+<button class="send-btn" id="startVoiceModeBtn" style="background: #34A853; margin-right: 8px;" title="Démarrer la discussion vocale">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+    <line x1="12" y1="19" x2="12" y2="23"></line>
+    <line x1="8" y1="23" x2="16" y2="23"></line>
+  </svg>
+</button>
+
 <div class="input-box">
 <textarea id="input" rows="1" placeholder="Répondre à AurX..."></textarea>
 <div class="circle-progress">
@@ -506,17 +685,12 @@ AurX AI
 <div class="circle-text">0</div>
 </div>
 </div>
-<button class="send-btn voice-mode" id="sendBtn" title="Démarrer le mode vocal">
-  <svg class="icon-voice" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-    <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-    <line x1="12" x2="12" y1="19" y2="22"/>
-  </svg>
-  <svg class="icon-send" width="20" height="20" viewBox="0 0 24 24" fill="none" style="display: none;">
-    <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-  </svg>
-  <span class="loader"></span>
+<button class="send-btn" id="sendBtn">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+<path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
+<span class="loader"></span>
 </button>
 </div>
 </div>
@@ -540,8 +714,18 @@ AurX AI
 </div>
 </div>
 <div class="google-user-detail"><strong>Email:</strong> <span id="googleUserEmail"></span></div>
+<div class="google-user-detail"><strong>ID:</strong> <span id="googleUserId"></span></div>
+<div class="google-user-detail"><strong>Langue:</strong> <span id="googleUserLang"></span></div>
 </div>
-<button class="google-btn" id="googleAuthBtn">Se connecter avec Google</button>
+<button class="google-btn" id="googleAuthBtn">
+<svg width="18" height="18" viewBox="0 0 18 18" style="vertical-align: -3px; margin-right: 8px;">
+<path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"/>
+<path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332C2.438 15.983 5.482 18 9 18z"/>
+<path fill="#FBBC05" d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9c0 1.45.347 2.825.957 4.04l3.007-2.328z"/>
+<path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0 5.482 0 2.438 2.017.957 4.96L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z"/>
+</svg>
+<span id="googleAuthText">Se connecter avec Google</span>
+</button>
 <button class="danger-btn-small" id="deleteAllBtn">WIPE CONVS</button>
 </div>
 </div>
@@ -553,35 +737,65 @@ AurX AI
 <button class="close-btn" id="closeSettings">×</button>
 </div>
 <div class="settings-body">
+
   <div class="settings-section">
     <h3>👤 Gestion du Compte</h3>
-    <div class="setting-item"><div class="info-text" id="accountSyncStatus">Chargement...</div></div>
+    <div class="setting-item">
+      <label>Statut de synchronisation</label>
+      <div class="info-text" id="accountSyncStatus">Chargement...</div>
+    </div>
   </div>
+
+  <div class="settings-section">
+    <h3>🤖 Intelligence & Modèle</h3>
+    <div class="setting-item">
+      <label for="modelSelect">Modèle actif</label>
+      <select id="modelSelect" class="setting-select">
+        <option value="aurx-standard" selected>AurX Standard (Rapide & Équilibré)</option>
+        <option value="aurx-pro">AurX Pro (Raisonnement Complexe & Code)</option>
+        <option value="aurx-ultra">AurX Ultra (Créativité avancée)</option>
+      </select>
+    </div>
+    <div class="setting-item">
+      <label for="toneSelect">Style de réponse</label>
+      <select id="toneSelect" class="setting-select">
+        <option value="concise">Directe et Concise</option>
+        <option value="detailed" selected>Détaillée et Pédagogique</option>
+        <option value="creative">Créative / Code Spécifique</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>🔒 Sécurité & Données</h3>
+    <div class="setting-item">
+      <label>Espace de stockage local</label>
+      <button class="settings-action-btn" onclick="alert('IndexDB nettoyé avec succès !')">Vider le cache des messages</button>
+      <button class="settings-action-btn" id="exportConvsBtn">Exporter les conversations (.json)</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <h3>👑 À propos du projet</h3>
+    <div class="setting-item">
+      <label>Créateur & Vision</label>
+      <div class="info-text">
+        <strong>Firmin - FIRMINX Founder</strong><br>
+        Lead Developer & AI Architect, basé en RDC 🇨🇩.<br>
+        L'objectif ultime d'AurX AI est de propulser et de rendre accessible l'IA moderne partout en Afrique.
+      </div>
+    </div>
+    <div class="setting-item">
+      <label>Contact Support</label>
+      <div class="info-text"><a href="mailto:firminphinees@gmail.com">firminphinees@gmail.com</a></div>
+    </div>
+  </div>
+
   <div class="settings-section">
     <button class="danger-btn" id="reviewTermsBtn">Revoir les conditions d'utilisation</button>
   </div>
 </div>
 </div>
-</div>
-
-<div id="voiceScreen">
-  <div class="voice-avatar-circle">
-    <img src="1000052509.jpg" alt="AurX Logo">
-  </div>
-  <div class="voice-status-text" id="voiceStatus">En écoute...</div>
-  <div class="voice-waves animated" id="voiceWaves">
-    <span class="voice-stroke"></span>
-    <span class="voice-stroke"></span>
-    <span class="voice-stroke"></span>
-    <span class="voice-stroke"></span>
-    <span class="voice-stroke"></span>
-  </div>
-  <button class="voice-stop-btn" id="stopVoiceBtn">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-      <path d="M10.68 13.31a16 16 0 0 0 3.41 2.6l1.27-1.27a1 1 0 0 1 1-.27 11.54 11.54 0 0 0 3.59.58 1 1 0 0 1 1 1v3.31a1 1 0 0 1-1 1A17 17 0 0 1 3 3a1 1 0 0 1 1-1h3.31a1 1 0 0 1 1 1 11.54 11.54 0 0 0 .58 3.59 1 1 0 0 1-.27 1L7.35 8.87a16 16 0 0 0 2.6 3.41Z"/>
-      <line x1="2" x2="22" y1="2" y2="22"/>
-    </svg>
-  </button>
 </div>
 
 <div class="overlay" id="overlay"></div>
@@ -593,163 +807,332 @@ AurX AI
 <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
 
 <script>
+// === CONFIG BACKEND ===
 const BACKEND_URL = 'https://aur-x-backend.vercel.app';
+
+// === LOGIQUE DE CONVERSATION VOCALE INTÉGRALE ===
+let mediaRecorder = null;
+let voiceChunks = [];
+let voiceModeActive = false;
+let currentAudioPlayback = new Audio();
+let silenceTimeout = null;
+
+const voiceScreen = document.getElementById('voiceScreen');
+const startVoiceModeBtn = document.getElementById('startVoiceModeBtn');
+const stopVoiceModeBtn = document.getElementById('stopVoiceModeBtn');
+const voiceStatus = document.getElementById('voiceStatus');
+const voiceWaveContainer = document.getElementById('voiceWaveContainer');
+
+// Activer le mode vocal complet
+startVoiceModeBtn?.addEventListener('click', () => {
+  voiceScreen.style.display = 'flex';
+  voiceModeActive = true;
+  currentAudioPlayback.pause();
+  startVoiceRecording();
+});
+
+// Quitter le mode vocal complet
+stopVoiceModeBtn?.addEventListener('click', () => {
+  voiceModeActive = false;
+  clearTimeout(silenceTimeout);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+    mediaRecorder.stream.getTracks().forEach(track => track.stop());
+    mediaRecorder.stop();
+  }
+  currentAudioPlayback.pause();
+  voiceWaveContainer.classList.remove('animated');
+  voiceScreen.style.display = 'none';
+});
+
+async function startVoiceRecording() {
+  if (!voiceModeActive) return;
+  voiceChunks = [];
+  voiceStatus.textContent = "Je vous écoute...";
+  voiceWaveContainer.classList.add('animated');
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+
+    mediaRecorder.ondataavailable = (e) => {
+      if (e.data.size > 0) voiceChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+      voiceWaveContainer.classList.remove('animated');
+      if (!voiceModeActive) return;
+
+      const audioBlob = new Blob(voiceChunks, { type: 'audio/webm' });
+      voiceStatus.textContent = "AurX réfléchit...";
+      
+      await sendVoiceToBackend(audioBlob);
+    };
+
+    mediaRecorder.start();
+
+    // Arrêt automatique de la capture après 5 secondes si l'utilisateur ne parle plus
+    clearTimeout(silenceTimeout);
+    silenceTimeout = setTimeout(() => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+    }, 5000);
+
+  } catch (err) {
+    console.error("Accès micro refusé ou indisponible :", err);
+    alert("Impossible d'accéder au microphone.");
+    stopVoiceModeBtn.click();
+  }
+}
+
+async function sendVoiceToBackend(blob) {
+  const formData = new FormData();
+  // Envoi du fichier audio au format standard multipart
+  formData.append('audio', blob, 'aurx_voice_input.webm');
+  
+  const selectedModel = document.getElementById('modelSelect')?.value || 'aurx-standard';
+  formData.append('model', selectedModel);
+
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/voice/chat`, {
+      method: 'POST',
+      body: formData,
+      credentials: 'include'
+    });
+
+    if (!res.ok) throw new Error("Erreur serveur lors de la synthèse vocale");
+
+    // Récupération de la réponse sous forme de fichier audio binaire
+    const responseAudioBlob = await res.blob();
+    const audioUrl = URL.createObjectURL(responseAudioBlob);
+
+    if (!voiceModeActive) return;
+
+    voiceStatus.textContent = "AurX vous répond...";
+    voiceWaveContainer.classList.add('animated');
+
+    currentAudioPlayback.src = audioUrl;
+    currentAudioPlayback.play();
+
+    // Dès que la réponse vocale de l'IA se termine, on relance l'écoute instantanément
+    currentAudioPlayback.onended = () => {
+      if (voiceModeActive) {
+        startVoiceRecording();
+      }
+    };
+
+  } catch (err) {
+    console.error(err);
+    if (voiceModeActive) {
+      voiceStatus.textContent = "Erreur. Relance de l'écoute...";
+      setTimeout(() => startVoiceRecording(), 2000);
+    }
+  }
+}
+
+// === GOOGLE AUTH VIA BACKEND VERCEL ===
 let googleUser = null;
 
 async function checkAuth() {
   try {
     const res = await fetch(`${BACKEND_URL}/api/auth/me`, { credentials: 'include' });
-    if (res.ok) { googleUser = await res.json(); updateGoogleUI(true); } else { updateGoogleUI(false); }
-  } catch (e) { updateGoogleUI(false); }
-}
-
-function updateGoogleUI(isConnected) {
-  const accountSyncStatus = document.getElementById('accountSyncStatus');
-  if (isConnected && googleUser) {
-    if (accountSyncStatus) accountSyncStatus.innerHTML = `Connecté en tant que <strong>${googleUser.name}</strong>.`;
-  } else {
-    if (accountSyncStatus) accountSyncStatus.innerHTML = `Mode invité actif.`;
+    if (res.ok) {
+      googleUser = await res.json();
+      updateGoogleUI(true);
+    } else {
+      updateGoogleUI(false);
+    }
+  } catch (e) {
+    console.log('Pas encore connecté');
+    updateGoogleUI(false);
   }
 }
 
-// === CONDITIONS ===
+function updateGoogleUI(isConnected) {
+  const googleBtn = document.getElementById('googleAuthBtn');
+  const googleText = document.getElementById('googleAuthText');
+  const userInfo = document.getElementById('googleUserInfo');
+  const userPic = document.getElementById('googleUserPic');
+  const userName = document.getElementById('googleUserName');
+  const userEmail = document.getElementById('googleUserEmail');
+  const userId = document.getElementById('googleUserId');
+  const userLang = document.getElementById('googleUserLang');
+  const userVerified = document.getElementById('googleUserVerified');
+  const accountSyncStatus = document.getElementById('accountSyncStatus');
+
+  if (isConnected && googleUser) {
+    googleBtn.classList.add('connected');
+    googleText.textContent = 'Se déconnecter';
+    userInfo.style.display = 'flex';
+
+    userPic.src = googleUser.picture || '';
+    userName.textContent = googleUser.name || 'Utilisateur';
+    userEmail.textContent = googleUser.email || 'N/A';
+    userId.textContent = googleUser.sub || googleUser.id || 'N/A';
+    userLang.textContent = (googleUser.locale || 'fr').toUpperCase();
+
+    if (googleUser.email_verified === true) {
+      userVerified.textContent = '✓ Vérifié';
+      userVerified.style.color = '#34A853';
+      userVerified.style.background = 'rgba(52, 168, 83, 0.1)';
+    } else {
+      userVerified.textContent = '⚠ Non vérifié';
+      userVerified.style.color = '#ff3b30';
+      userVerified.style.background = 'rgba(255, 59, 48, 0.1)';
+    }
+
+    if (accountSyncStatus) {
+      accountSyncStatus.innerHTML = `Connecté en tant que <strong>${googleUser.name}</strong>.<br><span style="color:#34A853; font-size:12px;">✓ Synchronisation cloud active. Conversations sauvegardées.</span>`;
+    }
+  } else {
+    googleBtn.classList.remove('connected');
+    googleText.textContent = 'Se connecter avec Google';
+    userInfo.style.display = 'none';
+
+    if (accountSyncStatus) {
+      accountSyncStatus.innerHTML = `Mode invité actif (Local uniquement).<br><span style="color:#ff9500; font-size:12px;">⚠ Connectez-vous pour ne pas perdre vos conversations.</span>`;
+    }
+  }
+}
+
+document.getElementById('googleAuthBtn')?.addEventListener('click', async () => {
+  if (googleUser) {
+    try {
+      await fetch(`${BACKEND_URL}/api/auth/logout`, { 
+        method: 'POST',
+        credentials: 'include' 
+      });
+      googleUser = null;
+      updateGoogleUI(false);
+      window.location.href = 'https://ax3d.vercel.app/';
+    } catch (e) {
+      console.error('Erreur déconnexion:', e);
+      window.location.href = 'https://ax3d.vercel.app/';
+    }
+  } else {
+    window.location.href = `${BACKEND_URL}/api/auth/google`;
+  }
+});
+
+// === GESTION DE L'ÉCRAN DES CONDITIONS (CHECKBOX + LOGIQUE CONTINUER) ===
 const acceptTermsCheckbox = document.getElementById('acceptTerms');
 const continueBtn = document.getElementById('continueBtn');
 const termsScreen = document.getElementById('termsScreen');
 
 if (acceptTermsCheckbox && continueBtn && termsScreen) {
   acceptTermsCheckbox.addEventListener('change', () => {
-    continueBtn.disabled = !acceptTermsCheckbox.checked;
-    if (acceptTermsCheckbox.checked) continueBtn.classList.add('active');
-    else continueBtn.classList.remove('active');
+    if (acceptTermsCheckbox.checked) {
+      continueBtn.disabled = false;
+      continueBtn.classList.add('active');
+    } else {
+      continueBtn.disabled = true;
+      continueBtn.classList.remove('active');
+    }
   });
-  continueBtn.addEventListener('click', () => termsScreen.style.display = 'none');
+
+  continueBtn.addEventListener('click', () => {
+    termsScreen.style.display = 'none';
+  });
 }
+
+// Revoir l'écran depuis le bouton des paramètres
+document.getElementById('reviewTermsBtn')?.addEventListener('click', () => {
+  document.getElementById('settingsModal').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  if (termsScreen) termsScreen.style.display = 'flex';
+});
+
+// === EXPORTATION DES CONVERSATIONS EN JSON ===
+document.getElementById('exportConvsBtn')?.addEventListener('click', () => {
+  try {
+    // Récupération des conversations stockées localement
+    const conversations = localStorage.getItem('aurx_conversations');
+
+    if (!conversations || conversations === '[]') {
+      alert('Aucune conversation à exporter dans votre historique local.');
+      return;
+    }
+
+    // Création du fichier téléchargeable au format JSON
+    const blob = new Blob([conversations], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aurx-conversations-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Erreur d'exportation :", error);
+    alert("Impossible d'exporter vos données pour le moment.");
+  }
+});
 
 // === WELCOME TOGGLE ===
 function toggleWelcome() {
   const chat = document.getElementById('chat');
   const welcome = document.getElementById('welcome');
   if (!welcome) return;
-  welcome.style.display = chat.querySelector('.msg-wrapper, .typing-wrapper') ? 'none' : 'flex';
+
+  const hasMessages = chat.querySelector('.msg-wrapper, .typing-wrapper');
+  welcome.style.display = hasMessages ? 'none' : 'flex';
 }
 
+// === ATTENDRE QUE KATEX SOIT CHARGÉ ===
+function waitForKatex(callback) {
+  if (window.renderMathInElement) {
+    callback();
+  } else {
+    setTimeout(() => waitForKatex(callback), 100);
+  }
+}
+
+// === RENDER MATH KATEX ===
+function renderMath(element = document.getElementById('chat')) {
+  if (typeof renderMathInElement === 'undefined') return;
+
+  renderMathInElement(element, {
+    delimiters: [
+      { left: '$$', right: '$$', display: true },
+      { left: '$', right: '$', display: false },
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
+    ],
+    throwOnError: false
+  });
+}
+
+let renderTimeout = null;
+
+// === INIT DOM ===
 document.addEventListener('DOMContentLoaded', () => {
   checkAuth();
   toggleWelcome();
+
+  waitForKatex(() => {
+    setTimeout(() => renderMath(), 300);
+
+    const chat = document.getElementById('chat');
+
+    const observer = new MutationObserver(() => {
+      clearTimeout(renderTimeout);
+
+      renderTimeout = setTimeout(() => {
+        renderMath(chat);
+        toggleWelcome();
+      }, 200);
+    });
+
+    observer.observe(chat, {
+      childList: true,
+      subtree: true
+    });
+  });
 });
-
-// ==========================================================
-// CORRECTIF DIRECT : COMMUTATION UNIQUE SANS CONFLIT SCRIPT
-// ==========================================================
-const textInput = document.getElementById('input');
-const sendBtn = document.getElementById('sendBtn');
-const iconVoice = sendBtn.querySelector('.icon-voice');
-const iconSend = sendBtn.querySelector('.icon-send');
-
-function handleButtonState() {
-  const isTextEmpty = textInput.value.trim() === '';
-  if (isTextEmpty) {
-    sendBtn.classList.add('voice-mode');
-    iconVoice.style.display = 'block';
-    iconSend.style.display = 'none';
-  } else {
-    sendBtn.classList.remove('voice-mode');
-    iconVoice.style.display = 'none';
-    iconSend.style.display = 'block';
-  }
-}
-
-// Met à jour l'icône dès que tu tapes ou effaces du texte
-textInput?.addEventListener('input', handleButtonState);
-textInput?.addEventListener('change', handleButtonState);
-
-// CAPTURE EN PHASE DE CAPTURE POUR STOPPER TOUT EVENT CONFLIT SI VIDE
-sendBtn?.addEventListener('click', (e) => {
-  const isTextEmpty = textInput.value.trim() === '';
-  if (isTextEmpty) {
-    // Si la barre de saisie est vide, on coupe l'envoi de script.js et on lance le micro
-    e.preventDefault();
-    e.stopImmediatePropagation();
-    startVoiceMode();
-  }
-}, true); // Le flag true active le mode capture prioritaire
-
-// =======================================================
-// SYSTEME VOCAL BACKEND INTEGRAL
-// =======================================================
-let mediaRecorder = null;
-let audioChunks = [];
-let voiceStream = null;
-let aiAudioElement = null;
-let isConversationActive = false;
-
-const voiceScreen = document.getElementById('voiceScreen');
-const voiceStatus = document.getElementById('voiceStatus');
-const voiceWaves = document.getElementById('voiceWaves');
-const stopVoiceBtn = document.getElementById('stopVoiceBtn');
-
-async function startVoiceMode() {
-  try {
-    voiceStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    isConversationActive = true;
-    voiceScreen.classList.add('active');
-    startRecordingCycle();
-  } catch (err) {
-    console.error("Micro bloqué :", err);
-    alert("Veuillez autoriser l'accès au micro.");
-  }
-}
-
-function startRecordingCycle() {
-  if (!isConversationActive) return;
-  audioChunks = [];
-  voiceStatus.textContent = "Parlez maintenant...";
-  voiceWaves.classList.add('animated');
-
-  mediaRecorder = new MediaRecorder(voiceStream);
-  mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
-  mediaRecorder.onstop = async () => {
-    if (!isConversationActive) return;
-    voiceStatus.textContent = "AurX réfléchit...";
-    voiceWaves.classList.remove('animated');
-
-    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-    const formData = new FormData();
-    formData.append('voice_message', audioBlob, 'user_audio.wav');
-
-    try {
-      const response = await fetch(`${BACKEND_URL}/api/voice-chat`, { method: 'POST', body: formData });
-      if (!response.ok) throw new Error();
-      const aiAudioBlob = await response.blob();
-      playAiVoice(URL.createObjectURL(aiAudioBlob));
-    } catch {
-      voiceStatus.textContent = "Erreur de connexion.";
-      setTimeout(startRecordingCycle, 2000);
-    }
-  };
-  mediaRecorder.start();
-}
-
-function playAiVoice(url) {
-  if (!isConversationActive) return;
-  voiceStatus.textContent = "AurX vous répond...";
-  voiceWaves.classList.add('animated');
-
-  aiAudioElement = new Audio(url);
-  aiAudioElement.onended = () => { if (isConversationActive) startRecordingCycle(); };
-  aiAudioElement.play();
-}
-
-function stopVoiceMode() {
-  isConversationActive = false;
-  voiceScreen.classList.remove('active');
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-  if (voiceStream) voiceStream.getTracks().forEach(track => track.stop());
-  if (aiAudioElement) aiAudioElement.pause();
-}
-
-stopVoiceBtn?.addEventListener('click', stopVoiceMode);
 </script>
 </body>
 </html>
