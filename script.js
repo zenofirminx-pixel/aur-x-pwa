@@ -441,78 +441,89 @@ function loadConversation(id) {
   }
 function formatMessage(text) {
     if (!text) return "";
-    
-    // 1. On protège d'abord les maths et code pour éviter les conflits
+
     const mathBlocks = [];
     const codeBlocks = [];
-    
+
+    // Sauvegarde maths
     text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g, match => {
-      const id = `__MATH_${mathBlocks.length}__`;
-      mathBlocks.push(match);
-      return id;
+        const id = `__MATH_${mathBlocks.length}__`;
+        mathBlocks.push(match);
+        return id;
     });
-    
+
+    // Sauvegarde code
     text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-      const id = `__CODE_${codeBlocks.length}__`;
-      codeBlocks.push({ lang: lang || "plaintext", code });
-      return id;
+        const id = `__CODE_${codeBlocks.length}__`;
+        codeBlocks.push({
+            lang: lang || "plaintext",
+            code
+        });
+        return id;
     });
 
-    // 2. Échappement HTML du texte restant uniquement
-    text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    // Escape HTML
+    text = text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
 
-    // 3. Titres - du plus spécifique au plus général
+    // Titres
     text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
     text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
     text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
 
-    // 4. Blockquotes - on gère les multi-lignes
-    text = text.replace(/^&gt;\s?(.*)$/gm, "<blockquote>$1</blockquote>");
-    text = text.replace(/(<\/blockquote>\n<blockquote>)/g, "<br>"); // fusionne les lignes
-
-    // 5. Listes - on capture des blocs entiers
-    text = text.replace(/(?:^|\n)(?:[\-\*]\s.*(?:\n|$))+/gm, match => {
-        const items = match.trim().split('\n').map(line => 
-            line.replace(/^[\-\*]\s(.*)$/, "<li>$1</li>")
-        ).join('');
-        return `\n<ul>${items}</ul>\n`;
-    });
-
-    // 6. Inline formatting
+    // Styles
     text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
     text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
     text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
 
-    // 7. Liens - à faire après l'échappement
+    // Blockquotes
+    text = text.replace(/^>\s?(.*)$/gm, "<blockquote>$1</blockquote>");
+
+    // Listes
+    text = text.replace(/^(?:-|\*) (.*)$/gm, "<li>$1</li>");
+    text = text.replace(/(<li>[\s\S]*?<\/li>)/g, match => `<ul>${match}</ul>`);
+    text = text.replace(/<\/ul>\s*<ul>/g, "");
+
+    // Liens
     text = linkify(text);
 
-    // 8. Paragraphes - on split sur les doubles sauts de ligne
-    const blocks = text.split(/\n{2,}/).map(block => {
-        block = block.trim();
-        if (!block) return '';
-        // On n'enveloppe pas si c'est déjà un bloc HTML
-        if (/^<(h[1-6]|ul|ol|blockquote|div|pre)/.test(block)) {
-            return block;
-        }
-        return `<p>${block.replace(/\n/g, "<br>")}</p>`;
-    });
-    
-    text = blocks.join('\n');
+    // Paragraphes (comme ChatGPT)
+    const blocks = text.split(/\n{2,}/);
 
-    // 9. On remet les blocs de code
+    text = blocks.map(block => {
+        if (/^\s*</.test(block)) return block;
+        return `<p>${block.replace(/\n/g, "<br>")}</p>`;
+    }).join("");
+
+    // Restaure code
     codeBlocks.forEach((block, i) => {
-      const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-      const langLabel = block.lang !== "plaintext" ? `<div class="code-lang">${block.lang}</div>` : '';
-      const html = `<div class="code-block-wrapper">${langLabel}<button class="copy-btn" onclick="copyCode(this)">Copier</button><pre><code class="language-${block.lang}">${escapedCode}</code></pre></div>`;
-      text = text.replace(`__CODE_${i}__`, html);
+        const escaped = block.code
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        const lang = block.lang !== "plaintext"
+            ? `<div class="code-lang">${block.lang}</div>`
+            : "";
+
+        text = text.replace(
+            `__CODE_${i}__`,
+            `<div class="code-block-wrapper">
+                ${lang}
+                <button class="copy-btn" onclick="copyCode(this)">Copier</button>
+                <pre><code class="language-${block.lang}">${escaped}</code></pre>
+            </div>`
+        );
     });
-    
-    // 10. On remet les maths
+
+    // Restaure maths
     mathBlocks.forEach((math, i) => {
-      text = text.replace(`__MATH_${i}__`, math);
+        text = text.replace(`__MATH_${i}__`, math);
     });
-    
+
     return text;
 }
   
