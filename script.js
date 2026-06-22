@@ -441,91 +441,46 @@ function loadConversation(id) {
   }
 function formatMessage(text) {
     if (!text) return "";
-
     const mathBlocks = [];
     const codeBlocks = [];
-
-    // Sauvegarde maths
     text = text.replace(/(\$\$[\s\S]*?\$\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/g, match => {
-        const id = `__MATH_${mathBlocks.length}__`;
-        mathBlocks.push(match);
-        return id;
+      const id = `__MATH_${mathBlocks.length}__`;
+      mathBlocks.push(match);
+      return id;
     });
-
-    // Sauvegarde code
     text = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-        const id = `__CODE_${codeBlocks.length}__`;
-        codeBlocks.push({
-            lang: lang || "plaintext",
-            code
-        });
-        return id;
+      const id = `__CODE_${codeBlocks.length}__`;
+      codeBlocks.push({ lang: lang || "plaintext", code });
+      return id;
     });
-
-    // Escape HTML
-    text = text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
-
-    // Titres
+    text = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     text = text.replace(/^### (.*)$/gm, "<h3>$1</h3>");
     text = text.replace(/^## (.*)$/gm, "<h2>$1</h2>");
     text = text.replace(/^# (.*)$/gm, "<h1>$1</h1>");
-
-    // Styles
     text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
     text = text.replace(/\*(.*?)\*/g, "<em>$1</em>");
     text = text.replace(/~~(.*?)~~/g, "<del>$1</del>");
     text = text.replace(/`([^`]+)`/g, '<code class="inline-code">$1</code>');
-
-    // Blockquotes
-    text = text.replace(/^>\s?(.*)$/gm, "<blockquote>$1</blockquote>");
-
-    // Listes
-    text = text.replace(/^(?:-|\*) (.*)$/gm, "<li>$1</li>");
-    text = text.replace(/(<li>[\s\S]*?<\/li>)/g, match => `<ul>${match}</ul>`);
-    text = text.replace(/<\/ul>\s*<ul>/g, "");
-
-    // Liens
+    text = text.replace(/^\- (.*)$/gm, "<li>$1</li>");
+    text = text.replace(/^\* (.*)$/gm, "<li>$1</li>");
+    text = text.replace(/(<li>.*<\/li>)/s, "<ul>$1</ul>");
+    text = text.replace(/^>\s+(.*)$/gm, "<blockquote>$1</blockquote>");
     text = linkify(text);
-
-    // Paragraphes (comme ChatGPT)
-    const blocks = text.split(/\n{2,}/);
-
-    text = blocks.map(block => {
-        if (/^\s*</.test(block)) return block;
-        return `<p>${block.replace(/\n/g, "<br>")}</p>`;
-    }).join("");
-
-    // Restaure code
+    text = text.replace(/\n\n+/g, "</p><p>");
+    text = text.replace(/\n/g, "<br>");
+    if (!text.startsWith("<h") && !text.startsWith("<ul") && !text.startsWith("<pre") && !text.startsWith("<blockquote")) {
+      text = "<p>" + text + "</p>";
+    }
     codeBlocks.forEach((block, i) => {
-        const escaped = block.code
-            .replace(/&/g, "&amp;")
-            .replace(/</g, "&lt;")
-            .replace(/>/g, "&gt;");
-
-        const lang = block.lang !== "plaintext"
-            ? `<div class="code-lang">${block.lang}</div>`
-            : "";
-
-        text = text.replace(
-            `__CODE_${i}__`,
-            `<div class="code-block-wrapper">
-                ${lang}
-                <button class="copy-btn" onclick="copyCode(this)">Copier</button>
-                <pre><code class="language-${block.lang}">${escaped}</code></pre>
-            </div>`
-        );
+      const escapedCode = block.code.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      const langLabel = block.lang !== "plaintext" ? `<div class="code-lang">${block.lang}</div>` : '';
+      text = text.replace(`__CODE_${i}__`, `<div class="code-block-wrapper">${langLabel}<button class="copy-btn" onclick="copyCode(this)">Copier</button><pre><code class="language-${block.lang}">${escapedCode}</code></pre></div>`);
     });
-
-    // Restaure maths
     mathBlocks.forEach((math, i) => {
-        text = text.replace(`__MATH_${i}__`, math);
+      text = text.replace(`__MATH_${i}__`, math);
     });
-
     return text;
-}
+  }
   
     
   function addMessage(text, type, timestamp = null, isNew = true) {
