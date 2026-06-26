@@ -350,37 +350,103 @@ header .btn:active { opacity: 0.7; }
 #welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1; color: #fff; font-size: 32px; font-weight: 700; gap: 8px; user-select: none; pointer-events: none; }
 #welcome span { font-size: 16px; font-weight: 400; color: #666; }
 
-/* TYPING INDICATOR - TROIS POINTS REBONDISSANTS (CORRIGÉ SANS IMAGES) */
-.typing-wrapper { 
-  display: flex; 
-  align-items: center; 
-  gap: 12px; 
-  padding: 12px 16px; 
-  margin-bottom: 12px; 
-}
-.aurx-thinking { 
-  display: flex; 
-  align-items: center; 
-  gap: 5px; 
-  height: 20px;
-}
-.bounce-dot {
-  width: 8px;
-  height: 8px;
-  background-color: #0A84FF;
-  border-radius: 50%;
-  display: inline-block;
-  animation: bounceNeural 1.4s infinite ease-in-out both;
-}
-.bounce-dot:nth-child(1) { animation-delay: -0.32s; }
-.bounce-dot:nth-child(2) { animation-delay: -0.16s; }
 
-@keyframes bounceNeural {
-  0%, 80%, 100% { transform: scale(0); }
-  40% { transform: scale(1.0); }
+/* TYPING INDICATOR - 3 POINTS */
+
+.typing-wrapper {
+display:flex;
+align-items:center;
+gap:10px;
+padding:8px 16px;
+margin-bottom:12px;
 }
-.typing-text { font-size: 14px; color: #888; opacity: 0; transition: opacity 0.3s; }
-.typing-text.show { opacity: 1; }
+
+
+.aurx-thinking {
+
+width:40px;
+height:20px;
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+gap:5px;
+flex-shrink:0;
+
+}
+
+
+/* Les 3 points */
+
+.aurx-thinking .dot {
+
+width:8px;
+height:8px;
+
+background:#0A84FF;
+
+border-radius:50%;
+
+animation:bounce 1.4s infinite ease-in-out;
+
+}
+
+
+.aurx-thinking .dot:nth-child(1){
+animation-delay:-0.32s;
+}
+
+
+.aurx-thinking .dot:nth-child(2){
+animation-delay:-0.16s;
+}
+
+
+.aurx-thinking .dot:nth-child(3){
+animation-delay:0s;
+}
+
+
+
+@keyframes bounce {
+
+0%,80%,100% {
+
+transform:scale(.6);
+opacity:.5;
+
+}
+
+
+40% {
+
+transform:scale(1);
+opacity:1;
+
+}
+
+}
+
+
+
+.typing-text {
+
+font-size:14px;
+color:#888;
+
+opacity:0;
+
+transition:opacity .3s;
+
+}
+
+
+.typing-text.show {
+
+opacity:1;
+
+}
 
 /* KATEX SOMBRE */
 .katex { color: #fff !important; font-size: 1.1em; border: none !important; background: transparent !important; padding: 0 !important; }
@@ -771,41 +837,7 @@ document.getElementById('googleAuthBtn')?.addEventListener('click', async () => 
   }
 });
 
-// === GESTION DES NOTIFICATIONS PUSH ANDROID ===
-async function configurePushNotifications() {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log("Les notifications push ne sont pas supportées sur ce navigateur.");
-    return;
-  }
-
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') {
-    console.log("Permission de notification refusée.");
-    return;
-  }
-
-  try {
-    const registration = await navigator.serviceWorker.ready;
-    console.log("Prêt à recevoir des notifications push Android !");
-  } catch (err) {
-    console.error("Erreur d'initialisation Push Manager:", err);
-  }
-}
-
-function sendLocalNotification(title, body) {
-  if (Notification.permission === 'granted' && navigator.serviceWorker.controller) {
-    navigator.serviceWorker.ready.then(registration => {
-      registration.showNotification(title, {
-        body: body,
-        icon: 'icon-192.png',
-        vibrate: [200, 100, 200],
-        badge: 'icon-static.png'
-      });
-    });
-  }
-}
-
-// === GESTION DE L'ÉCRAN DES CONDITIONS ===
+// === GESTION DE L'ÉCRAN DES CONDITIONS (CHECKBOX + LOGIQUE CONTINUER) ===
 const acceptTermsCheckbox = document.getElementById('acceptTerms');
 const continueBtn = document.getElementById('continueBtn');
 const termsScreen = document.getElementById('termsScreen');
@@ -823,7 +855,6 @@ if (acceptTermsCheckbox && continueBtn && termsScreen) {
 
   continueBtn.addEventListener('click', () => {
     termsScreen.style.display = 'none';
-    setTimeout(configurePushNotifications, 1000);
   });
 }
 
@@ -837,6 +868,7 @@ document.getElementById('reviewTermsBtn')?.addEventListener('click', () => {
 // === EXPORTATION DES CONVERSATIONS EN JSON ===
 document.getElementById('exportConvsBtn')?.addEventListener('click', () => {
   try {
+    // Récupération des conversations stockées localement
     const conversations = localStorage.getItem('aurx_conversations');
 
     if (!conversations || conversations === '[]') {
@@ -844,6 +876,7 @@ document.getElementById('exportConvsBtn')?.addEventListener('click', () => {
       return;
     }
 
+    // Création du fichier téléchargeable au format JSON
     const blob = new Blob([conversations], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 
