@@ -350,7 +350,7 @@ header .btn:active { opacity: 0.7; }
 #welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; flex: 1; color: #fff; font-size: 32px; font-weight: 700; gap: 8px; user-select: none; pointer-events: none; }
 #welcome span { font-size: 16px; font-weight: 400; color: #666; }
 
-/* TYPING INDICATOR - TROIS POINTS REBONDISSANTS */
+/* TYPING INDICATOR - TROIS POINTS REBONDISSANTS (CORRIGÉ SANS IMAGES) */
 .typing-wrapper { 
   display: flex; 
   align-items: center; 
@@ -361,7 +361,7 @@ header .btn:active { opacity: 0.7; }
 .aurx-thinking { 
   display: flex; 
   align-items: center; 
-  gap: 4px; 
+  gap: 5px; 
   height: 20px;
 }
 .bounce-dot {
@@ -370,16 +370,17 @@ header .btn:active { opacity: 0.7; }
   background-color: #0A84FF;
   border-radius: 50%;
   display: inline-block;
-  animation: bounce 1.4s infinite ease-in-out both;
+  animation: bounceNeural 1.4s infinite ease-in-out both;
 }
 .bounce-dot:nth-child(1) { animation-delay: -0.32s; }
 .bounce-dot:nth-child(2) { animation-delay: -0.16s; }
 
-@keyframes bounce {
+@keyframes bounceNeural {
   0%, 80%, 100% { transform: scale(0); }
   40% { transform: scale(1.0); }
 }
-.typing-text { font-size: 14px; color: #888; }
+.typing-text { font-size: 14px; color: #888; opacity: 0; transition: opacity 0.3s; }
+.typing-text.show { opacity: 1; }
 
 /* KATEX SOMBRE */
 .katex { color: #fff !important; font-size: 1.1em; border: none !important; background: transparent !important; padding: 0 !important; }
@@ -770,7 +771,7 @@ document.getElementById('googleAuthBtn')?.addEventListener('click', async () => 
   }
 });
 
-// === GESTION DES NOTIFICATIONS PUSH ===
+// === GESTION DES NOTIFICATIONS PUSH ANDROID ===
 async function configurePushNotifications() {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     console.log("Les notifications push ne sont pas supportées sur ce navigateur.");
@@ -785,9 +786,9 @@ async function configurePushNotifications() {
 
   try {
     const registration = await navigator.serviceWorker.ready;
-    console.log("Prêt à recevoir des notifications push !");
+    console.log("Prêt à recevoir des notifications push Android !");
   } catch (err) {
-    console.error("Erreur lors de l'initialisation des notifications push:", err);
+    console.error("Erreur d'initialisation Push Manager:", err);
   }
 }
 
@@ -804,7 +805,7 @@ function sendLocalNotification(title, body) {
   }
 }
 
-// === GESTION DE L'ÉCRAN DES CONDITIONS (CHECKBOX + LOGIQUE CONTINUER) ===
+// === GESTION DE L'ÉCRAN DES CONDITIONS ===
 const acceptTermsCheckbox = document.getElementById('acceptTerms');
 const continueBtn = document.getElementById('continueBtn');
 const termsScreen = document.getElementById('termsScreen');
@@ -887,8 +888,8 @@ function renderMath(element = document.getElementById('chat')) {
     delimiters: [
       { left: '$$', right: '$$', display: true },
       { left: '$', right: '$', display: false },
-      { left: '\(', right: '\)', display: false },
-      { left: '\[', right: '\]', display: true }
+      { left: '\\(', right: '\\)', display: false },
+      { left: '\\[', right: '\\]', display: true }
     ],
     throwOnError: false
   });
